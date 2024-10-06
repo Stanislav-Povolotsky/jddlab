@@ -15,7 +15,7 @@ pkg_info_baksmali=$pkg_path/$cmd_baksmali.txt
 ls -al $bin_path
 
 mkdir -p $pkg_path $bin_path
-package_info_prefix=14.smali
+package_info_prefix=data/smali
 
 cp $package_info_prefix.smali.txt    $pkg_info_smali
 fname=`head -n 3 $pkg_info_smali | tail -n 1`

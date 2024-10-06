@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 set folder_to_serve="%CD%"
-set jddlab_docker_image=jddlab
+set jddlab_docker_image=stanislavpovolotsky/jddlab:latest
 
 set "args="
 :loop

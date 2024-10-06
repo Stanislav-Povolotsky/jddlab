@@ -3,16 +3,19 @@
 Docker image with all required tools to decompile and deobfuscate JAVA and Android APK.  
 
 To run it just install docker and run the latest version with the command:
+
+- On Linux/MacOS:
 ```
-# Linux/MacOS:
-docker run -it --rm -v "$pwd:/work" jddlab
-# Windows:
-docker run -it --rm -v "%CD%:/work" jddlab
+docker run -it --rm -v "$pwd:/work" stanislavpovolotsky/jddlab:latest
+```
+- On Windows:
+```
+docker run -it --rm -v "%CD%:/work" stanislavpovolotsky/jddlab:latest
 ```
 
 To run a specific command, just specify it at the end of the command line:
 ```
-docker run -it --rm -v "$pwd:/work" jddlab apktool -h
+docker run -it --rm -v "$pwd:/work" stanislavpovolotsky/jddlab:latest apktool -h
 ```
 
 ## Apktool - a tool for reverse engineering Android apk files

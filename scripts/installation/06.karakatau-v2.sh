@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -o xtrace
 
 pkg=krakatau2
 PKG=KRAKATAU2

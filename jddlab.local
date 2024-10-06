@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 folder_to_serve="$PWD"
-jddlab_docker_image="stanislavpovolotsky/jddlab:latest"
+jddlab_docker_image="jddlab"
 
 # Escape application args
 save () {
