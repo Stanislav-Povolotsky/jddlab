@@ -47,7 +47,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: true
+          push: false
           platforms: linux/amd64,linux/arm64
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
@@ -70,6 +70,11 @@ jobs:
           echo "Current hash of the software list file: $SOFTWARE_LIST_HASH"
           echo "SOFTWARE_LIST_HASH=$SOFTWARE_LIST_HASH" >> $GITHUB_ENV
 
+      - name: Push docker image
+        run: |
+          echo "Pushing docker image"
+          docker push ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
+
       # Create a GitHub release
       - name: Create GitHub Release
         id: create_release
@@ -79,7 +84,7 @@ jobs:
           release_name: Release ${{ env.NEW_VERSION }}
           body: |
             This release includes (**jddlab** docker image version ${{ env.NEW_VERSION }})[https://hub.docker.com/repository/docker/${{ vars.DOCKER_IMAGE }}/tags?name=${{ env.NEW_VERSION }}].  
-            You can be runned it with: `docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:${{ env.NEW_VERSION }} apktool -h` command.  
+            You can run it with: `docker run -it --rm -v "$PWD:/work" ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} apktool -h` command.
             You can pull it from Docker Hub: `docker pull ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`.
           draft: false
           prerelease: false
@@ -93,6 +98,8 @@ jobs:
           asset_path: ./software-list.txt  # Path to the file you want to upload
           asset_name: software-list.txt    # Name of the asset as it will appear on GitHub
           asset_content_type: application/octet-stream  # Content type of the asset
+       env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the token to authenticate
 
       # Tag the image as 'latest'
       - name: Tag Docker image as latest
