@@ -31,8 +31,9 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ secrets.DOCKER_USERNAME }}/jddlab:latest
 
-      # Optionally, log out of Docker Hub
+      # Log out of Docker Hub
       - name: Log out of Docker Hub
         run: docker logout
