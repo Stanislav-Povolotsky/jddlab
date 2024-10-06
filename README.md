@@ -4,7 +4,7 @@ Docker image with all required tools to decompile and deobfuscate JAVA and Andro
 
 To run it just install docker and run the latest version with the command:
 
-- On Linux/MacOS:
+- On Linux or MacOS:
 ```
 docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest
 ```
