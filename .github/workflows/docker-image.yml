@@ -6,6 +6,7 @@ on:
       - main
   schedule:
     - cron: "20 4 * * *"  # Run every night 4:20
+  workflow_dispatch:      # This enables manual triggering
 
 concurrency:
   group: main-build           # Name for the group of workflows to control concurrency
