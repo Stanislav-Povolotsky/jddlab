@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "20 4 * * *"  # Run every night 4:20
 
 jobs:
   build:
@@ -60,6 +62,7 @@ jobs:
       # Pull and extract file from current Docker image
       - name: Pull and Extract Software List from the Docker Image
         run: |
+          echo "TEMP_DOCKER_IMAGE_PREPARED=true" >> $GITHUB_ENV
           IMAGE=${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
           echo "Pulling Docker image: $IMAGE"
           docker pull $IMAGE
@@ -112,14 +115,21 @@ jobs:
         if: env.CONTINUE_BUILD != 'false'  
         run: |
           docker buildx imagetools create -t ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
-          docker buildx imagetools create -t ${{ vars.DOCKER_IMAGE }}:latest ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
+          docker buildx imagetools create -t ${{ vars.DOCKER_IMAGE }}:latest                 ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
 
       # Remove image which is not required anymore
       - name: Removing temp image
+        if: always()  # Ensures this step always runs
+        continue-on-error: true  # This ensures the workflow continues even if this step fails
         run: |
-          curl -f -X DELETE -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
-              "https://hub.docker.com/v2/repositories/${{ vars.DOCKER_IMAGE }}/tags/${{ env.NEW_VERSION }}-temp/"
+          if [ "$TEMP_DOCKER_IMAGE_PREPARED" == "true" ]; then
+              echo Removing temp image
+              curl -f -X DELETE -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
+                  "https://hub.docker.com/v2/repositories/${{ vars.DOCKER_IMAGE }}/tags/${{ env.NEW_VERSION }}-temp/"
+          fi
 
       # Log out of Docker Hub
       - name: Log out of Docker Hub
+        if: always()  # Ensures this step always runs
+        continue-on-error: true  # This ensures the workflow continues even if this step fails
         run: docker logout
