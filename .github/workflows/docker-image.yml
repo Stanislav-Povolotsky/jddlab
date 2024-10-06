@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: "20 4 * * *"  # Run every night 4:20
 
+concurrency:
+  group: main-build           # Name for the group of workflows to control concurrency
+  cancel-in-progress: true    # Cancel any currently running workflow if a new one starts
+
 jobs:
   build:
     runs-on: ubuntu-22.04
