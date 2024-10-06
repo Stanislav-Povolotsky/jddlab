@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+folder_to_serve="$PWD"
+jddlab_docker_image="jddlab"
+
+# Escape application args
+save () {
+    for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
+    echo " "
+}
+APP_ARGS=`save "$@"`
+
+eval set -- run -it --rm -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
+exec "docker" "$@"
