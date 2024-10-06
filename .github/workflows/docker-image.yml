@@ -28,11 +28,11 @@ jobs:
       - name: Get latest release version
         id: get_version
         run: |
-          PREVIOUS_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name) || PREVIOUS_VERSION=null
+          PREVIOUS_VERSION=$(curl -f --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name) || PREVIOUS_VERSION=null
           if [ "$PREVIOUS_VERSION" == "null" ]; then PREVIOUS_VERSION=1.0.0; fi
           echo "Previous version was $PREVIOUS_VERSION"
           echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
-          curl -o prev-software-list.txt https://github.com/${{ github.repository }}/releases/download/$PREVIOUS_VERSION/software-list.txt || touch prev-software-list.txt
+          curl -o prev-software-list.txt -f -L "https://github.com/${{ github.repository }}/releases/download/$PREVIOUS_VERSION/software-list.txt" || touch prev-software-list.txt
           PREV_SOFTWARE_LIST_HASH=$(sha256sum ./prev-software-list.txt | awk '{ print $1 }')
           echo "PREV_SOFTWARE_LIST_HASH=$PREV_SOFTWARE_LIST_HASH" >> $GITHUB_ENV
           echo "Previous hash of the software list file: $PREV_SOFTWARE_LIST_HASH"
@@ -51,16 +51,16 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: false
+          push: true
           platforms: linux/amd64,linux/arm64
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
-          tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
+          tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
 
       # Pull and extract file from current Docker image
       - name: Pull and Extract Software List from the Docker Image
         run: |
-          IMAGE=${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
+          IMAGE=${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
           echo "Pulling Docker image: $IMAGE"
           docker pull $IMAGE
           # Create a container from the image but don't start it
@@ -73,11 +73,15 @@ jobs:
           SOFTWARE_LIST_HASH=$(sha256sum ./software-list.txt | awk '{ print $1 }')
           echo "Current hash of the software list file: $SOFTWARE_LIST_HASH"
           echo "SOFTWARE_LIST_HASH=$SOFTWARE_LIST_HASH" >> $GITHUB_ENV
+          if [ "$PREV_SOFTWARE_LIST_HASH" == "$SOFTWARE_LIST_HASH" ]; then
+            echo "Software list is the same => Stopping"
+            echo "CONTINUE_BUILD=false" >> $GITHUB_ENV
+          fi
 
       - name: Push docker image
         run: |
-          echo "Pushing docker image"
-          docker push ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
+          docker buildx imagetools create -t ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
+          docker buildx imagetools create -t ${{ vars.DOCKER_IMAGE }}:latest ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
 
       # Create a GitHub release
       - name: Create GitHub Release
