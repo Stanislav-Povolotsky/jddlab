@@ -8,7 +8,7 @@ pkg_alt1=APKEditor
 #target_install_path=$PWD/installed
 pkg_path=$target_install_path/usr/local/$pkg
 bin_path=$target_install_path/usr/local/bin
-pkg_info=$pkg_path/$pkg.txt
+pkg_info=$pkg_path/$pkg.software_version.txt
 
 mkdir -p $pkg_path $bin_path
 python3 helpers/get-release-info.py https://github.com/REAndroid/APKEditor -fan '^APKEditor-[\d.]+.jar$' -o $pkg_info

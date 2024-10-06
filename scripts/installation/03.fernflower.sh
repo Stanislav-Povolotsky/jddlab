@@ -11,7 +11,7 @@ PKG=FERNFLOWER
 #target_install_path=$PWD/installed
 pkg_path=$target_install_path/usr/local/$pkg
 bin_path=$target_install_path/usr/local/bin
-pkg_info=$pkg_path/$pkg.txt
+pkg_info=$pkg_path/$pkg.software_version.txt
 
 mkdir -p $pkg_path $bin_path
 python3 helpers/get-release-info.py https://www.jetbrains.com/:com.jetbrains.intellij.java/java-decompiler-engine.jar -o $pkg_info

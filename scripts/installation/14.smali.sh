@@ -9,8 +9,8 @@ cmd_baksmali=baksmali
 #target_install_path=$PWD/installed
 pkg_path=$target_install_path/usr/local/$pkg
 bin_path=$target_install_path/usr/local/bin
-pkg_info_smali=$pkg_path/$cmd_smali.txt
-pkg_info_baksmali=$pkg_path/$cmd_baksmali.txt
+pkg_info_smali=$pkg_path/$cmd_smali.software_version.txt
+pkg_info_baksmali=$pkg_path/$cmd_baksmali.software_version.txt
 
 ls -al $bin_path
 

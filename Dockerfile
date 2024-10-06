@@ -4,7 +4,8 @@ COPY scripts/installation/prepare.sh /root/scripts/installation/
 RUN /root/scripts/installation/prepare.sh
 
 COPY scripts/installation /root/scripts/installation/
-RUN /root/scripts/installation/install.all.sh
+ARG DOCKER_IMAGE_BUILD_VERSION=local
+RUN DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_BUILD_VERSION /root/scripts/installation/install.all.sh
 
 FROM ubuntu:22.04
 

@@ -9,13 +9,13 @@ cmd_alt1=krakatau2
 #target_install_path=$PWD/installed
 pkg_path=$target_install_path/usr/local/$pkg
 bin_path=$target_install_path/usr/local/bin
-pkg_info=$pkg_path/$pkg.txt
+pkg_info=$pkg_path/$pkg.software_version.txt
 
 mkdir -p $pkg_path $bin_path /build
 pushd /build
 git clone -b v2 --single-branch https://github.com/Storyyeller/Krakatau
 cd Krakatau
-last_commit=$(git log -1 --pretty=format:"%h %ad" --date=short)
+last_commit="commit $(git log -1 --pretty=format:"%h at %ad" --date=short) on $(git branch --show-current) branch"
 commit_hash=$(git log -1 --pretty=format:"%h")
 remote_path=$(git remote get-url origin)
 github_url=$(echo "$remote_path" | sed -e 's/git@github.com:/https:\/\/github.com\//' -e 's/.git$//')

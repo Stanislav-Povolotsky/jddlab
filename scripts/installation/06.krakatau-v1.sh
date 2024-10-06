@@ -9,12 +9,12 @@ cmd_assemble=krakatau-assemble
 #target_install_path=$PWD/installed
 pkg_path=$target_install_path/usr/local/$pkg
 bin_path=$target_install_path/usr/local/bin
-pkg_info=$pkg_path/$pkg.txt
+pkg_info=$pkg_path/$pkg.software_version.txt
 
 mkdir -p $pkg_path $bin_path
 pushd $pkg_path
-git clone -b master --single-branch https://github.com/Storyyeller/Krakatau/ .
-last_commit=$(git log -1 --pretty=format:"%h %ad" --date=short)
+git clone -b master --single-branch https://github.com/Storyyeller/Krakatau .
+last_commit="commit $(git log -1 --pretty=format:"%h at %ad" --date=short) on $(git branch --show-current) branch"
 commit_hash=$(git log -1 --pretty=format:"%h")
 remote_path=$(git remote get-url origin)
 github_url=$(echo "$remote_path" | sed -e 's/git@github.com:/https:\/\/github.com\//' -e 's/.git$//')
