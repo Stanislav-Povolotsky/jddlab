@@ -1,6 +1,6 @@
 # jddlab - Java decompilation & deobfuscation lab
 
-Docker image with all requied tools to decompile and deobfuscate JAVA and Android APK.  
+Docker image with all required tools to decompile and deobfuscate JAVA and Android APK.  
 
 To run it just install docker and run the latest version with the command:
 ```
