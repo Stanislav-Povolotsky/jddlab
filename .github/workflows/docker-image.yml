@@ -25,14 +25,51 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build and push the Docker image
+      # Get the current version from the version file
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(cat VERSION || echo "0.0.1")  # Default to 0.0.1 if VERSION file doesn't exist
+          echo "Current version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # Increment the patch version
+          IFS='.' read -r major minor patch <<< "$VERSION"
+          patch=$((patch + 1))
+          NEW_VERSION="$major.$minor.$patch"
+          echo "New version: $NEW_VERSION"
+          echo "$NEW_VERSION" > VERSION
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      # Build and push the Docker image for both amd64 and arm64 platforms
       - name: Build and Push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ secrets.DOCKER_USERNAME }}/jddlab:latest
+          tags: ${{ secrets.DOCKER_IMAGE }}:latest
+
+      # Create a GitHub release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.NEW_VERSION }}
+          release_name: Release ${{ env.NEW_VERSION }}
+          body: |
+            This release includes the Docker image version ${{ env.NEW_VERSION }}.
+            You can pull it from Docker Hub: `docker pull ${{ secrets.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub
+
+      # Tag the image as 'latest'
+      - name: Tag Docker image as latest
+        run: |
+          echo "Tagging image as latest"
+          docker tag ${{ secrets.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} ${{ secrets.DOCKER_IMAGE }}:latest
+          docker push ${{ secrets.DOCKER_IMAGE }}:latest
 
       # Log out of Docker Hub
       - name: Log out of Docker Hub
