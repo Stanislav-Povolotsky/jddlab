@@ -6,7 +6,7 @@ To run it just install docker and run the latest version with the command:
 
 - On Linux/MacOS:
 ```
-docker run -it --rm -v "$pwd:/work" stanislavpovolotsky/jddlab:latest
+docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest
 ```
 - On Windows:
 ```
@@ -15,7 +15,7 @@ docker run -it --rm -v "%CD%:/work" stanislavpovolotsky/jddlab:latest
 
 To run a specific command, just specify it at the end of the command line:
 ```
-docker run -it --rm -v "$pwd:/work" stanislavpovolotsky/jddlab:latest apktool -h
+docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool -h
 ```
 
 ## Apktool - a tool for reverse engineering Android apk files
