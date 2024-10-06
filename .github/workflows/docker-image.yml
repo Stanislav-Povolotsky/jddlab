@@ -47,6 +47,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
 
       # Create a GitHub release
@@ -57,8 +59,9 @@ jobs:
           tag_name: ${{ env.NEW_VERSION }}
           release_name: Release ${{ env.NEW_VERSION }}
           body: |
-            This release includes the Docker image version ${{ env.NEW_VERSION }}.
-            You can pull it from Docker Hub: `docker pull ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`
+            This release includes (**jddlab** docker image version ${{ env.NEW_VERSION }})[https://hub.docker.com/repository/docker/${{ vars.DOCKER_IMAGE }}/tags?name=${{ env.NEW_VERSION }}].  
+            You can be runned it with: `docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:${{ env.NEW_VERSION }} apktool -h` command.  
+            You can pull it from Docker Hub: `docker pull ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`.
           draft: false
           prerelease: false
         env:
