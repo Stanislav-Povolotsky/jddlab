@@ -88,9 +88,8 @@ jobs:
         uses: actions/create-release@v1.1.0
         with:
           tag_name: ${{ env.NEW_VERSION }}
-          release_name: Release ${{ env.NEW_VERSION }}
+          release_name: jddlab ${{ env.NEW_VERSION }}
           body: |
-            ## jddlab v${{ env.NEW_VERSION }}
             This release includes [**jddlab** docker image version ${{ env.NEW_VERSION }}](https://hub.docker.com/repository/docker/${{ vars.DOCKER_IMAGE }}/tags?name=${{ env.NEW_VERSION }}).  
             You can run it with: `docker run -it --rm -v "$PWD:/work" ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} apktool -h` command.
             You can pull it from Docker Hub: `docker pull ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`.
