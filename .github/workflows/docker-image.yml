@@ -47,7 +47,7 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: ${{ secrets.DOCKER_IMAGE }}:latest
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
 
       # Create a GitHub release
       - name: Create GitHub Release
@@ -58,7 +58,7 @@ jobs:
           release_name: Release ${{ env.NEW_VERSION }}
           body: |
             This release includes the Docker image version ${{ env.NEW_VERSION }}.
-            You can pull it from Docker Hub: `docker pull ${{ secrets.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`
+            You can pull it from Docker Hub: `docker pull ${{ env.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`
           draft: false
           prerelease: false
         env:
@@ -68,8 +68,8 @@ jobs:
       - name: Tag Docker image as latest
         run: |
           echo "Tagging image as latest"
-          docker tag ${{ secrets.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} ${{ secrets.DOCKER_IMAGE }}:latest
-          docker push ${{ secrets.DOCKER_IMAGE }}:latest
+          docker tag ${{ env.DOCKER_IMAGE }}:${{ env.NEW_VERSION }} ${{ env.DOCKER_IMAGE }}:latest
+          docker push ${{ env.DOCKER_IMAGE }}:latest
 
       # Log out of Docker Hub
       - name: Log out of Docker Hub
