@@ -102,7 +102,7 @@ jobs:
           asset_path: ./software-list.txt  # Path to the file you want to upload
           asset_name: software-list.txt    # Name of the asset as it will appear on GitHub
           asset_content_type: application/octet-stream  # Content type of the asset
-       env:
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the token to authenticate
 
       # Tag the image as 'latest'
