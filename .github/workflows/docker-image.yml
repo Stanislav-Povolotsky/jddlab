@@ -32,6 +32,10 @@ jobs:
           if [ "$PREVIOUS_VERSION" == "null" ]; then PREVIOUS_VERSION=1.0.0; fi
           echo "Previous version was $PREVIOUS_VERSION"
           echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
+          curl -o prev-software-list.txt https://github.com/${{ github.repository }}/releases/download/$PREVIOUS_VERSION/software-list.txt || touch prev-software-list.txt
+          PREV_SOFTWARE_LIST_HASH=$(sha256sum ./prev-software-list.txt | awk '{ print $1 }')
+          echo "PREV_SOFTWARE_LIST_HASH=$PREV_SOFTWARE_LIST_HASH" >> $GITHUB_ENV
+          echo "Previous hash of the software list file: $PREV_SOFTWARE_LIST_HASH"
 
       - name: Increment version
         id: increment_version
