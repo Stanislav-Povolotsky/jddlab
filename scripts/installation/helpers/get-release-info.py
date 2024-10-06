@@ -41,7 +41,7 @@ def get_release_info_github(url, tag = 'latest'):
         release_info = {'project-url': f"https://github.com/{project_path}"}
         try:
             url = f'https://api.github.com/repos/{project_path}/releases/{tag if (tag.lower() == "latest") else "tags/" + tag}'
-            print(url)
+            #print(url)
             response = requests.get(url).json()
             if("status" in response) and (response['status'] != '200') and ("message" in response):
                 raise Exception(response['message'])
@@ -286,5 +286,5 @@ if __name__ == '__main__':
 
     except Exception as e:
         print(f"Fatal error: {e}", file=sys.stderr)
-        print(traceback.format_exc())
+        print(traceback.format_exc(), file=sys.stderr)
         sys.exit(1)

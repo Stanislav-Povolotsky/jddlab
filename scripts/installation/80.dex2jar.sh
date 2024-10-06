@@ -8,7 +8,7 @@ bin_path=$target_install_path/usr/local/bin
 pkg_info=$pkg_path/$pkg.txt
 
 mkdir -p $pkg_path $bin_path
-python3 get-release-info.py https://github.com/pxb1988/dex2jar -fan '^dex-tools-v[\d.]+.zip$' -o $pkg_info
+python3 helpers/get-release-info.py https://github.com/pxb1988/dex2jar -fan '^dex-tools-v[\d.]+.zip$' -o $pkg_info
 fname=`head -n 3 $pkg_info | tail -n 1`
 url=`head -n 4 $pkg_info | tail -n 1`
 echo "File: $fname; Url: $url"
