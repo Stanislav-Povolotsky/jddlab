@@ -25,19 +25,20 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Get the current version from the version file
-      - name: Get version
+      - name: Get latest release version
         id: get_version
         run: |
-          VERSION=$(cat VERSION || echo "0.0.1")  # Default to 0.0.1 if VERSION file doesn't exist
-          echo "Current version: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          # Increment the patch version
-          IFS='.' read -r major minor patch <<< "$VERSION"
-          patch=$((patch + 1))
+          PREVIOUS_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name) || PREVIOUS_VERSION=0.0.0
+          echo "Previous version is $PREVIOUS_VERSION"
+          echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
+
+      - name: Increment version
+        id: increment_version
+        run: |
+          IFS='.' read -r major minor patch <<< "${{ env.PREVIOUS_VERSION }}"
+          patch=$((patch + 1))  # Increment patch version
           NEW_VERSION="$major.$minor.$patch"
-          echo "New version: $NEW_VERSION"
-          echo "$NEW_VERSION" > VERSION
+          echo "New version will be $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       # Build and push the Docker image for both amd64 and arm64 platforms
@@ -50,6 +51,23 @@ jobs:
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
+
+      # Pull and extract file from current Docker image
+      - name: Pull and Extract Software List from the Docker Image
+        run: |
+          IMAGE=${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}
+          echo "Pulling Docker image: $IMAGE"
+          docker pull $IMAGE
+          # Create a container from the image but don't start it
+          CONTAINER_ID=$(docker create $IMAGE)
+          # Copy the file from the container to the host system
+          docker cp $CONTAINER_ID:/usr/local/jddlab/software-list.txt ./software-list.txt
+          # Remove the temporary container
+          docker rm $CONTAINER_ID
+          # Calculate the hash of the extracted file
+          SOFTWARE_LIST_HASH=$(sha256sum ./software-list.txt | awk '{ print $1 }')
+          echo "Current hash of the software list file: $SOFTWARE_LIST_HASH"
+          echo "SOFTWARE_LIST_HASH=$SOFTWARE_LIST_HASH" >> $GITHUB_ENV
 
       # Create a GitHub release
       - name: Create GitHub Release
@@ -66,6 +84,14 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}  # Upload URL from create_release step
+          asset_path: ./software-list.txt  # Path to the file you want to upload
+          asset_name: software-list.txt    # Name of the asset as it will appear on GitHub
+          asset_content_type: application/octet-stream  # Content type of the asset
 
       # Tag the image as 'latest'
       - name: Tag Docker image as latest
