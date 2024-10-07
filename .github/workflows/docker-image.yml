@@ -21,6 +21,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Set up Python environment
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'  # 3.x or specific version like '3.9'
+
       # Set up Docker Buildx (for multi-platform builds)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -85,6 +91,23 @@ jobs:
             echo "Software list is the same => Stopping"
             echo "CONTINUE_BUILD=false" >> $GITHUB_ENV
           fi
+          # Preparing software changelog
+          python scripts/workflow/create-software-list-diff.py ./prev-software-list.txt ./software-list.txt >software.changelog.txt
+          cat software.changelog.txt
+
+      # Load template and dynamically populate it
+      - name: Prepare Release Body
+        if: env.CONTINUE_BUILD != 'false'
+        id: prepare_release_body
+        run: |
+          body=$(cat scripts/workflow/templates/release.template.md)
+          software_changelog=$(cat software.changelog.txt)
+          body="$body$software_changelog"
+          body=$(echo "$body" | sed "s/\${{ env.NEW_VERSION }}/${{ env.NEW_VERSION }}/g")
+          body=$(echo "$body" | sed "s/\${{ vars.DOCKER_IMAGE }}/${{ vars.DOCKER_IMAGE }}/g")
+          echo "release_body<<EOF" >> $GITHUB_ENV
+          echo "$body" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
       # Create a GitHub release
       - name: Create GitHub Release
@@ -94,10 +117,7 @@ jobs:
         with:
           tag_name: ${{ env.NEW_VERSION }}
           release_name: jddlab ${{ env.NEW_VERSION }}
-          body: |
-            This release includes [**jddlab** docker image version ${{ env.NEW_VERSION }}](https://hub.docker.com/r/${{ vars.DOCKER_IMAGE }}/tags?name=${{ env.NEW_VERSION }}).  
-            You can run it with: `docker run -it --rm -v "$PWD:/work" ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}` command.
-            You can pull it from [Docker Hub](https://hub.docker.com/r/${{ vars.DOCKER_IMAGE }}): `docker pull ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}`.
+          body: ${{ env.release_body }}
           draft: false
           prerelease: false
         env:
