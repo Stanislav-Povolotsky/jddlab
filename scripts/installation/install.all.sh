@@ -44,3 +44,9 @@ for dir in *; do
 done
 popd
 
+# Preparing welcome screen and prompt
+echo '[ ! -z "$TERM" -a -r /etc/motd -a ! -f ~/.motd.shown ] && cat /etc/motd && echo 1 >~/.motd.shown' >> ~/.bashrc
+echo "PS1='\[\u@jddlab:\w\$ '" >>~/.bashrc
+chmod +x ~/.bashrc
+echo -e "Welcome to `cat /usr/local/jddlab/version.txt`\n"  >/etc/motd
+echo -e "List of available commands: `ls /usr/local/bin/ | tr '\n' ' '`\n" >>/etc/motd
