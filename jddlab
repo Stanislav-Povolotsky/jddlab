@@ -2,6 +2,14 @@
 folder_to_serve="$PWD"
 jddlab_docker_image="stanislavpovolotsky/jddlab:latest"
 
+if [ "$#" -eq 1 ]; then
+  if [ "%~1"=="update" ]; then
+    echo "Updating jddlab..."
+    docker pull "%jddlab_docker_image%"
+    exit $?
+  fi
+fi
+
 # Escape application args
 save () {
     for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
@@ -11,3 +19,4 @@ APP_ARGS=`save "$@"`
 
 eval set -- run -it --rm -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
 exec "docker" "$@"
+exit $?
