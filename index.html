@@ -1,0 +1,190 @@
+<h1>jddlab - Java <strong>D</strong>ecompilation &amp; <strong>D</strong>eobfuscation <strong>Lab</strong></h1>
+
+<ul>
+<li>jddlab is a <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">Docker image</a> that includes all the necessary tools to decompile and deobfuscate Java and Android APKs.</li>
+<li><code>jddlab</code> is a command-line tool that runs the <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">jddlab Docker image</a> and provides a quick and convenient way to use all the decompilation and deobfuscation tools.</li>
+</ul>
+
+<p>Why running <code>jddlab</code> is better than using separate tools on the host:</p>
+
+<ul>
+<li>Safety: Docker isolates jddlab tools from the host system, minimizing risks and vulnerabilities.</li>
+<li>Easy Installation: Install all the tools and dependencies with a single docker pull command.</li>
+<li>Quick Updates: Simply pull the latest container version to get new tools, features, and patches.</li>
+</ul>
+
+<h2>Installation</h2>
+
+<h3>Prerequisites</h3>
+
+<p>First you need to have Docker installed. So you need:</p>
+
+<ul>
+<li><a href="https://www.docker.com/blog/top-questions-for-getting-started-with-docker/">Docker-compatible</a> operating system (Windows, Linux, or macOS).</li>
+<li>Administrative privileges to install software.</li>
+<li>For Windows: you should also install and enable <a href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL2 (Windows Subsystem for Linux)</a> support to run Linux images.</li>
+</ul>
+
+<p>Supported platforms:</p>
+
+<ul>
+<li><code>amd64</code> (x86_64 Intel or AMD CPUs)</li>
+<li><code>arm64</code> (ARM64 chips like Apple M1, M2, M3)</li>
+</ul>
+
+<h3>Installation as a command-line tool (recommended)</h3>
+
+<p><code>jddlab</code> command-line tool is an alias for <code>docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest</code> command.<br />
+It runs <code>jddlab</code> docker instance and maps current folder as a <code>/work</code> folder (rw) to make all files in the current folder and subfolders accessable for jddlab commands.<br />
+For example if you have <code>test.apk</code> in the current folder, it will be accessible as <code>./test.apk</code> or <code>/work/test.apk</code> inside the jddlab instance.  </p>
+
+<p>To install <code>jddlab</code> command-line tool</p>
+
+<ul>
+<li>on Linux or macOS:<br />
+Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab">jddlab script</a> to some folder in $PATH and make it executable.
+<ul>
+<li>Current-user-only installation (recommended):
+<code>
+mkdir -p $HOME/bin &amp;&amp; curl -L -f -o $HOME/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; chmod +x $HOME/bin/jddlab &amp;&amp; RC='export PATH=$PATH:$HOME/bin' &amp;&amp; (command -v jddlab || (echo "$RC" &gt;&gt;~/.bashrc &amp;&amp; echo "$RC" &gt;&gt;~/.zshrc )) &amp;&amp; eval "$RC"
+</code></li>
+<li>System installation (for all users):
+<code>
+sudo curl -L -f -o /usr/local/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; sudo chmod +x /usr/local/bin/jddlab
+</code></li>
+</ul></li>
+<li>on Windows:<br />
+Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd">jddlab.cmd script</a> to some folder in %PATH%.
+<ul>
+<li>Current-user-only installation (recommended):
+<code>
+curl -L -f -o "%LOCALAPPDATA%\Microsoft\WindowsApps\jddlab.cmd" https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd
+</code></li>
+<li>System installation (for all users):
+<code>
+powershell -ExecutionPolicy ByPass -c "Start-Process PowerShell -Verb RunAs 'cmd /c curl -L -o %SYSTEMROOT%\jddlab.cmd https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd'"
+</code></li>
+</ul></li>
+</ul>
+
+<p>To enter shell mode, type:
+<code>
+jddlab
+</code></p>
+
+<p>To run a specific command, type <code>jddlab &lt;your command&gt;</code>:
+<code>
+jddlab apktool --version
+</code></p>
+
+<p>To update jddlab to the latest version run:
+<code>
+jddlab update
+</code></p>
+
+<h3>Installation as a docker image</h3>
+
+<p>You can run a latest version with the command:</p>
+
+<ul>
+<li>On Linux or macOS:
+<code>
+docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest
+</code></li>
+<li>On Windows:
+<code>
+docker run -it --rm -v "%CD%:/work" stanislavpovolotsky/jddlab:latest
+</code></li>
+</ul>
+
+<p>To enter shell mode, type:
+<code>
+docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest
+</code></p>
+
+<p>To run a specific command, just specify it at the end of the command line:
+<code>
+docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --version
+</code></p>
+
+<p>To update it to the latest version:
+<code>
+docker pull stanislavpovolotsky/jddlab:latest
+</code></p>
+
+<h2>Tools</h2>
+
+<h3>Apktool - a tool for reverse engineering Android apk files</h3>
+
+<p>URL: https://github.com/iBotPeaches/Apktool<br />
+Apktool is a tool for reverse engineering third-party, closed, binary, Android apps.
+It can decode resources to nearly original form and rebuild them after making some modifications; it makes it possible to debug smali code step-by-step.
+It also makes working with apps easier thanks to project-like file structure and automation of some repetitive tasks such as building apk, etc.</p>
+
+<p>Example 1. Unpacking APK:
+<code>
+jddlab apktool d -o ./unpacked/ sample.apk
+</code></p>
+
+<h3>jadx - Dex to Java decompiler</h3>
+
+<p>URL: https://github.com/skylot/jadx<br />
+Tools for producing Java source code from Android Dex and Apk files.</p>
+
+<p>Example 1. Decompiling APK with some deobfuscation:
+<code>
+jddlab jadx sample.apk --deobf --output-dir ./jadx/
+</code></p>
+
+<h3>FernFlower Java decompiler</h3>
+
+<p>URL: https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine<br />
+URL: https://mvnrepository.com/artifact/com.jetbrains.intellij.java/java-decompiler-engine  </p>
+
+<p>Fernflower is the first actually working analytical decompiler for Java and probably for a high-level programming language in general.</p>
+
+<h3>Procyon - is a suite of Java metaprogramming tools including Java Decompiler</h3>
+
+<p>URL: https://github.com/mstrobel/procyon<br />
+Procyon is a suite of Java metaprogramming tools, including a rich reflection API, a LINQ-inspired expression tree API for runtime code generation, and a Java decompiler.</p>
+
+<h3>Krakatau (v1 and v2) - Java decompiler, assembler, and disassembler</h3>
+
+<p>URL: https://github.com/Storyyeller/Krakatau<br />
+Krakatau provides an assembler and disassembler for Java bytecode, which allows you to convert binary classfiles to a human readable text format, make changes, and convert it back to a classfile, even for obfuscated code.</p>
+
+<h3>APKEditor - Powerful android apk editor</h3>
+
+<p>URL: https://github.com/REAndroid/APKEditor  </p>
+
+<p>Powerful android apk resources editor. 
+It can: Decompile, Build, Merge, Refactor, Protect, Show Info.</p>
+
+<h3>APKscan - tool to scan for secrets, endpoints, and other sensitive data after decompiling and deobfuscating Android files.</h3>
+
+<p>URL: https://github.com/LucasFaudman/apkscan<br />
+Scan for secrets, endpoints, and other sensitive data after decompiling and deobfuscating Android files.<br />
+(.apk, .xapk, .dex, .jar, .class, .smali, .zip, .aar, .arsc, .aab, .jadx.kts).</p>
+
+<h3>Enjarify - a tool for translating Dalvik bytecode to equivalent Java bytecode.</h3>
+
+<p>URL: https://github.com/LucasFaudman/enjarify-adapter<br />
+Translates Dalvik bytecode (.dex or .apk) to Java bytecode (.jar).</p>
+
+<h3>Simplify - Android virtual machine and deobfuscator</h3>
+
+<p>URL: https://github.com/CalebFenton/simplify<br />
+Simplify virtually executes an app to understand its behavior and then tries to optimize the code so that it behaves 
+identically but is easier for a human to understand. Each optimization type is simple and generic, so it doesn't 
+matter what the specific type of obfuscation is used.</p>
+
+<h3>Java Deobfuscator - can help to deobfuscate commercially-available obfuscators for Java.</h3>
+
+<p>URL: https://github.com/java-deobfuscator/deobfuscator<br />
+This project aims to deobfuscate most commercially-available obfuscators for Java.</p>
+
+<h3>dex2jar - tools to work with android .dex and java .class files</h3>
+
+<p>URL: https://github.com/pxb1988/dex2jar<br />
+dex2jar - tool to convert Android .dex files (Dalvik Executable) to .jar format (to analyze Java bytecode).</p>
+
