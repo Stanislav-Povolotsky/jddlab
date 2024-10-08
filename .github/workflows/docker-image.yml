@@ -31,6 +31,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
+      # Install gettext to use envsubst
+      - name: Install gettext for envsubst
+        run: sudo apt-get install gettext
+
       # Log in to Docker Hub using the secrets
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -100,11 +104,15 @@ jobs:
         if: env.CONTINUE_BUILD != 'false'
         id: prepare_release_body
         run: |
-          body=$(cat scripts/workflow/templates/release.template.md)
+          NEW_VERSION="${{ env.NEW_VERSION }}"
+          DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}"
+          # Substituting variables in template
+          export NEW_VERSION DOCKER_IMAGE
+          envsubst <scripts/workflow/templates/release.template.md >release_body.md
+          # Adding software changelog
+          body=$(cat release_body.md)
           software_changelog=$(cat software.changelog.txt)
           body="$body$software_changelog"
-          body=$(echo "$body" | sed "s/\${{ env.NEW_VERSION }}/${{ env.NEW_VERSION }}/g")
-          body=$(echo "$body" | sed "s/\${{ vars.DOCKER_IMAGE }}/${{ vars.DOCKER_IMAGE }}/g")
           echo "release_body<<EOF" >> $GITHUB_ENV
           echo "$body" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
