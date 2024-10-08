@@ -1,0 +1,9 @@
+image: pandoc/latex:latest
+
+pages:
+  script:
+    - mkdir public
+    - pandoc README.md -o public/index.html
+  artifacts:
+    paths:
+      - public
