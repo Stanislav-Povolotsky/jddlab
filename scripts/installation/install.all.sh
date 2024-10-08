@@ -45,9 +45,9 @@ done
 popd
 
 # Preparing welcome screen and prompt
-mkdir -p ${target_install_path}${HOME} ${target_install_path}/etc
-echo target_bashrc=${target_install_path}${HOME}/.bashrc
-echo target_motd=${target_install_path}/etc/motd
+mkdir -p "${target_install_path}${HOME}" "${target_install_path}/etc"
+target_bashrc="${target_install_path}${HOME}/.bashrc"
+target_motd="${target_install_path}/etc/motd"
 echo '[ ! -z "$TERM" -a -r /etc/motd -a ! -f ~/.motd.shown ] && cat /etc/motd && echo 1 >~/.motd.shown' >> $target_bashrc
 echo "PS1='\[\u@jddlab:\w\$ '" >>$target_bashrc
 chmod +x $target_bashrc
