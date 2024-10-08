@@ -45,8 +45,11 @@ done
 popd
 
 # Preparing welcome screen and prompt
-echo '[ ! -z "$TERM" -a -r /etc/motd -a ! -f ~/.motd.shown ] && cat /etc/motd && echo 1 >~/.motd.shown' >> $target_install_path/$HOME/.bashrc
-echo "PS1='\[\u@jddlab:\w\$ '" >>$target_install_path/$HOME/.bashrc
-chmod +x $target_install_path/$HOME/.bashrc
-echo -e "Welcome to `cat $build_info`\n"  >$target_install_path/etc/motd
-echo -e "List of available commands: `ls $target_install_path/usr/local/bin/ | tr '\n' ' '`\n" >>$target_install_path/etc/motd
+mkdir -p ${target_install_path}${HOME} ${target_install_path}/etc
+echo target_bashrc=${target_install_path}${HOME}/.bashrc
+echo target_motd=${target_install_path}/etc/motd
+echo '[ ! -z "$TERM" -a -r /etc/motd -a ! -f ~/.motd.shown ] && cat /etc/motd && echo 1 >~/.motd.shown' >> $target_bashrc
+echo "PS1='\[\u@jddlab:\w\$ '" >>$target_bashrc
+chmod +x $target_bashrc
+echo -e "Welcome to `cat $build_info`\n"  >$target_motd
+echo -e "List of available commands: `ls $target_install_path/usr/local/bin/ | tr '\n' ' '`\n" >>$target_motd
