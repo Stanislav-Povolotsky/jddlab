@@ -5,7 +5,7 @@ jddlab_docker_image="stanislavpovolotsky/jddlab:latest"
 if [ "$#" -eq 1 ]; then
   if [ "%~1"=="update" ]; then
     echo "Updating jddlab..."
-    docker pull "%jddlab_docker_image%"
+    docker pull "$jddlab_docker_image"
     exit $?
   fi
 fi
