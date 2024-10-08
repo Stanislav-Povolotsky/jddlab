@@ -6,9 +6,6 @@ on:
       - main
   workflow_dispatch:          # This enables manual triggering
 
-only:
-  - master
-
 concurrency:
   group: pages-build          # Name for the group of workflows to control concurrency
   cancel-in-progress: true    # Cancel any currently running workflow if a new one starts

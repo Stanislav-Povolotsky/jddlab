@@ -1,12 +1,12 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches:
-      - main
+  #push:
+  #  branches:
+  #    - main                 # Run on push to the branch
   schedule:
-    - cron: "20 4 * * *"  # Run every night 4:20
-  workflow_dispatch:      # This enables manual triggering
+    - cron: "20 4 * * *"      # Run every night 4:20
+  workflow_dispatch:          # This enables manual triggering
 
 concurrency:
   group: main-build           # Name for the group of workflows to control concurrency
