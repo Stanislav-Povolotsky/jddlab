@@ -1,4 +1,4 @@
-image: pandoc/latex:latest
+name: Github Pages
 
 on:
   push:
@@ -10,10 +10,30 @@ concurrency:
   group: pages-build          # Name for the group of workflows to control concurrency
   cancel-in-progress: true    # Cancel any currently running workflow if a new one starts
 
-pages:
-  script:
-    - mkdir public
-    - pandoc -f markdown -t html README.md -o public/index.html
-  artifacts:
-    paths:
-      - public
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.x
+
+    - name: Install dependencies
+      run: |
+        pip install markdown2
+
+    - name: Build site
+      run: |
+        mkdir public
+        python -c "import markdown2; print(markdown2.markdown_path('README.md'))" > public/index.html
+
+    - name: Deploy to Github Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
