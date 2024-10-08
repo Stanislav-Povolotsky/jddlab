@@ -110,12 +110,10 @@ jobs:
           export NEW_VERSION DOCKER_IMAGE
           envsubst <scripts/workflow/templates/release.template.md >release_body.md
           # Adding software changelog
-          body=$(cat release_body.md)
-          software_changelog=$(cat software.changelog.txt)
-          body="$body$software_changelog"
+          cat software.changelog.txt >>release_body.md
           echo "release_body<<EOF" >> $GITHUB_ENV
-          echo "$body" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          cat release_body.md      >> $GITHUB_ENV
+          echo "EOF"               >> $GITHUB_ENV
 
       # Create a GitHub release
       - name: Create GitHub Release

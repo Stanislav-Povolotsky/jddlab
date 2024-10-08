@@ -99,13 +99,19 @@ diff = get_software_diff(prev_software, new_software)
 if(diff):
     print("Tools changelog:\n")
     #op_map = {"add": "+", "del": "-", "mod": "*"}
-    op_map_w = {"add": "added version", "del": "removed", "mod": "updated to version"}
+    order_map = {"add": 1, "mod": 2, "del": 3}
+    diff = sorted(diff, key=lambda d: f"{order_map[d[0]]} {d[1]}")
+    op_map_w = {"add": "added **{tool}** version {ver}", "del": "**{tool}** removed", "mod": "**{tool}** updated to version {ver}"}
     for op, group, tool, info, group_item in diff:
         res = op_map_w[op]
         if(op != "del"):
             ver = info['Version']
             if('Url' in info): 
                 ver = f"[{ver}]({info['Url']})"
-            res += f" {ver}"
-
-        print(f"- {group if ((group == tool) and (len(group_item) < 2)) else (group + ' (' + tool + ')')} {res}")
+            res = res.replace("{ver}", ver)
+        items_in_group = len(
+            set(prev_software[group].keys() if (group in prev_software) else []) |
+            set(new_software[group] if (group in new_software) else []))
+        tool = group if ((group == tool) and (items_in_group < 2)) else (group + ' (' + tool + ')')
+        res = res.replace("{tool}", tool)
+        print(f"- {res}")
