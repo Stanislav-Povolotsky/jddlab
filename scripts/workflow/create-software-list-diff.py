@@ -97,7 +97,7 @@ new_software = read_software_file(new_software_file)
 diff = get_software_diff(prev_software, new_software)
 #print('DBG2', diff)
 if(diff):
-    print("Changelog:  ")
+    print("Tools changelog:\n")
     #op_map = {"add": "+", "del": "-", "mod": "*"}
     op_map_w = {"add": "added version", "del": "removed", "mod": "updated to version"}
     for op, group, tool, info, group_item in diff:
