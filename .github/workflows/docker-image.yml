@@ -45,14 +45,21 @@ jobs:
       - name: Get latest release version
         id: get_version
         run: |
-          PREVIOUS_VERSION=$(curl --silent "https://api.github.com/repos/${{ github.repository }}/releases/latest" | jq -r .tag_name) || PREVIOUS_VERSION=null
+          HTTP_CODE=$(curl -s -w "%{http_code}" -o /tmp/last_release_info "https://api.github.com/repos/${{ github.repository }}/releases/latest")
+          if [[ "$HTTP_CODE" -ne 200 && "$HTTP_CODE" -ne 404 ]]; then
+              echo "Error requesting latest version: $HTTP_CODE"
+              exit 1
+          fi
+          PREVIOUS_VERSION=$(cat /tmp/last_release_info" | jq -r .tag_name) || PREVIOUS_VERSION=null
           VERSION_INCREMENT_REQUIRED=1
           BASE_VERSION=$(cat VERSION)
           NEW_VERSION=$PREVIOUS_VERSION
+          HAVE_PREVIOUS_RELEASE=1
           if [ "$PREVIOUS_VERSION" == "null" ]; then 
              PREVIOUS_VERSION=0.0.0
              NEW_VERSION=$PREVIOUS_VERSION
              VERSION_INCREMENT_REQUIRED=0
+             HAVE_PREVIOUS_RELEASE=0
           fi
           if [[ "$PREVIOUS_VERSION" != "$BASE_VERSION."* ]]; then
              NEW_VERSION="${BASE_VERSION}.0"
@@ -62,8 +69,18 @@ jobs:
           echo "PREVIOUS_VERSION=$PREVIOUS_VERSION" >> $GITHUB_ENV
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "VERSION_INCREMENT_REQUIRED=$VERSION_INCREMENT_REQUIRED" >> $GITHUB_ENV
-          curl -o prev-software-list.txt -f -L "https://github.com/${{ github.repository }}/releases/download/$PREVIOUS_VERSION/software-list.txt" || touch prev-software-list.txt
-          PREV_SOFTWARE_LIST_HASH=$(sha256sum ./prev-software-list.txt | awk '{ print $1 }')
+
+          if [[ "$HAVE_PREVIOUS_RELEASE" == "1" ]]; then
+              HTTP_CODE=$(curl -L -s -w "%{http_code}" -o prev-software-list.txt "https://github.com/${{ github.repository }}/releases/download/$PREVIOUS_VERSION/software-list.txt")
+              if [[ "$HTTP_CODE" -ne 200 ]]; then
+                  echo "Error requesting previous software versions: $HTTP_CODE"
+                  exit 1
+              fi
+              PREV_SOFTWARE_LIST_HASH=$(sha256sum ./prev-software-list.txt | awk '{ print $1 }')
+          else
+              touch prev-software-list.txt
+              PREV_SOFTWARE_LIST_HASH="none"
+          fi
           echo "PREV_SOFTWARE_LIST_HASH=$PREV_SOFTWARE_LIST_HASH" >> $GITHUB_ENV
           echo "Previous hash of the software list file: $PREV_SOFTWARE_LIST_HASH"
 
