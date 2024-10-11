@@ -50,7 +50,7 @@ jobs:
               echo "Error requesting latest version: $HTTP_CODE"
               exit 1
           fi
-          PREVIOUS_VERSION=$(cat /tmp/last_release_info" | jq -r .tag_name) || PREVIOUS_VERSION=null
+          PREVIOUS_VERSION=$(cat /tmp/last_release_info | jq -r .tag_name) || PREVIOUS_VERSION=null
           VERSION_INCREMENT_REQUIRED=1
           BASE_VERSION=$(cat VERSION)
           NEW_VERSION=$PREVIOUS_VERSION
