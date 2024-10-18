@@ -1,4 +1,0 @@
-2.5.2
-https://github.com/JesusFreke/smali/releases/tag/v2.5.2
-smali-2.5.2.jar
-https://bitbucket.org/JesusFreke/smali/downloads/smali-2.5.2.jar
