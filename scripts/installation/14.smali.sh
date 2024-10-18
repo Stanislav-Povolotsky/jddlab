@@ -15,9 +15,9 @@ pkg_info_baksmali=$pkg_path/$cmd_baksmali.software_version.txt
 ls -al $bin_path
 
 mkdir -p $pkg_path $bin_path
-package_info_prefix=data/smali
 
-cp $package_info_prefix.smali.txt    $pkg_info_smali
+git=https://github.com/baksmali/smali
+python3 helpers/get-release-info.py $git -fan '^smali-[\d.]+-fat-release.jar$' -o $pkg_info_smali
 fname=`head -n 3 $pkg_info_smali | tail -n 1`
 url=`head -n 4 $pkg_info_smali | tail -n 1`
 echo "File: $fname; Url: $url"
@@ -36,7 +36,7 @@ ln -s ../$pkg/$cmd_smali $bin_path/$cmd_smali
 # Checking it can be runned
 $bin_path/$cmd_smali
 
-cp $package_info_prefix.baksmali.txt $pkg_info_baksmali
+python3 helpers/get-release-info.py $git -fan '^baksmali-[\d.]+-fat-release.jar$' -o $pkg_info_baksmali
 fname=`head -n 3 $pkg_info_baksmali | tail -n 1`
 url=`head -n 4 $pkg_info_baksmali | tail -n 1`
 echo "File: $fname; Url: $url"
