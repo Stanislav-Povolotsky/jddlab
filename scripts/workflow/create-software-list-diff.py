@@ -97,7 +97,7 @@ new_software = read_software_file(new_software_file)
 diff = get_software_diff(prev_software, new_software)
 #print('DBG2', diff)
 if(diff):
-    print("Tools changelog:\n")
+    print("## Changelog:\n")
     #op_map = {"add": "+", "del": "-", "mod": "*"}
     order_map = {"add": 1, "mod": 2, "del": 3}
     diff = sorted(diff, key=lambda d: f"{order_map[d[0]]} {d[1]}")
@@ -115,3 +115,18 @@ if(diff):
         tool = group if ((group == tool) and (items_in_group < 2)) else (group + ' (' + tool + ')')
         res = res.replace("{tool}", tool)
         print(f"- {res}")
+
+if(prev_software and new_software):
+    print("\n## List of tools:\n")
+    template = "**{tool}** version {ver}"
+    for group_name, group in new_software.items():
+        items_in_group = len(group)
+        for tool_name, info in group.items():
+            res = template[:]
+            ver = info['Version']
+            if('Url' in info): 
+                ver = f"[{ver}]({info['Url']})"
+            res = res.replace("{ver}", ver)
+            tool = group_name if ((group_name == tool_name) and (items_in_group < 2)) else (group_name + ' (' + tool_name + ')')
+            res = res.replace("{tool}", tool)
+            print(f"- {res}")
