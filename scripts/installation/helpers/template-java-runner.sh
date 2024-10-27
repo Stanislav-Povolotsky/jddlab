@@ -45,7 +45,7 @@ APP_BASE_NAME=`basename "$0"`
 #TEMPLATE_OPTS=
 
 # Add default JVM options here. You can also use JAVA_OPTS and TEMPLATE_OPTS to pass JVM options to this script.
-DEFAULT_JVM_OPTS='"-Xms256M" "-XX:MaxRAMPercentage=70.0" "-Djdk.util.zip.disableZip64ExtraFieldValidation=true"'
+DEFAULT_JVM_OPTS='"-Xms512M" "-XX:MaxRAMPercentage=70.0" "-Djdk.util.zip.disableZip64ExtraFieldValidation=true"'
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
