@@ -15,10 +15,10 @@ import json
 import traceback
 import xml.etree.ElementTree as ET
 
-def get_release_info(url, tag = 'latest'):
+def get_release_info(url, tag = 'latest', opts = None):
     release_info = None
     if url.startswith("https://github.com/"):
-        release_info = get_release_info_github(url, tag = tag)
+        release_info = get_release_info_github(url, tag = tag, opts = opts)
     #elif url.startswith("https://mvnrepository.com/"):
     #    release_info = get_release_info_mvnrepository(url, tag = tag)
     elif url.startswith("https://maven.google.com/"):
@@ -29,7 +29,8 @@ def get_release_info(url, tag = 'latest'):
         raise Exception("Unsupported project url")
     return release_info
 
-def get_release_info_github(url, tag = 'latest'):
+def get_release_info_github(url, tag = 'latest', opts = None):
+    include_sources = ('include_src' in opts) and opts['include_src'],
     m = re.match(R'^https://github.com/([^/]+/[^/]+)', url)
     release_info = None
     if m:
@@ -52,6 +53,12 @@ def get_release_info_github(url, tag = 'latest'):
         release_info['version'] = response["name"]
         assets = response["assets"] if ("assets" in response) else []
         release_info['assets'] = [{'name': a['name'], 'url': a["browser_download_url"]} for a in assets]
+        if(include_sources):
+            if('tarball_url' in response):
+                release_info['assets'].append({'name': 'src.tar', 'url': response['tarball_url']})
+            if('zipball_url' in response):
+                release_info['assets'].append({'name': 'src.zip', 'url': response['zipball_url']})
+
     else:
         raise Exception(f"Unsupported url format: {url}")
     return release_info
@@ -260,6 +267,7 @@ if __name__ == '__main__':
         parser.add_argument('url', help='Project URL')
         parser.add_argument('-t', '--tag', default='latest', help='The tag to use (default: latest)')
         parser.add_argument('-fan', '--filter-asset-name', default=None, help='Regex to filter by asset file name')
+        parser.add_argument('-src', '--include-src', default=False, action='store_true', help='Include sources assets (default: False)')
         parser.add_argument('-of', '--output-format', default='txt4lines', choices=['json', 'txt4lines'], help='Output format')
         parser.add_argument('-o', '--output-file', default=None, help='Output file path')
         args = parser.parse_args()
@@ -268,8 +276,9 @@ if __name__ == '__main__':
         tag = args.tag
         filter_asset_name_re = args.filter_asset_name
         fmt = args.output_format
+        opts = {'include_src': args.include_src}
         output_file = args.output_file
-        res = get_release_info(url, tag = tag)
+        res = get_release_info(url, tag = tag, opts = opts)
         res['assets'] = filter_assets(res['assets'], filter_asset_name_re = filter_asset_name_re)
 
         def open_output():
