@@ -33,4 +33,4 @@ done
 popd
 
 # Checking it can be runned
-$bin_path/$pkg --help
+$bin_path/$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt

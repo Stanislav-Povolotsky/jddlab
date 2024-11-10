@@ -32,4 +32,4 @@ sed -i "s/TEMPLATE/$PKG/g" $exec_script
 chmod 0755 $exec_script
 ln -s ../$pkg/$pkg $bin_path/$pkg
 # Checking it can be runned
-$bin_path/$pkg
+$pkg 2>&1 | tee -a $pkg_path/$pkg.command_help.txt

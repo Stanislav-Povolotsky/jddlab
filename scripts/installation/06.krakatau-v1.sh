@@ -43,4 +43,5 @@ chmod 0755 $exec_script
 ln -s ../$pkg/$cmd_assemble $bin_path/$cmd_assemble
 
 # Checking it can be runned
-$bin_path/$cmd_disassemble --help
+$bin_path/$cmd_disassemble --help 2>&1 | tee -a $pkg_path/$cmd_disassemble.command_help.txt
+$bin_path/$cmd_assemble --help 2>&1 | tee -a $pkg_path/$cmd_assemble.command_help.txt

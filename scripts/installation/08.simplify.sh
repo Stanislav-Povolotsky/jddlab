@@ -29,4 +29,4 @@ chmod 0755 $exec_script
 ln -s ../$pkg/$pkg $bin_path/$pkg
 # Checking it can be runned
 # Command returns errorcode 255 on help/version commands
-$bin_path/$pkg -h || if [ $? -ne 255 ]; then exit 1; fi
+($bin_path/$pkg -h 2>&1 | tee -a $pkg_path/$pkg.command_help.txt) || if [ $? -ne 255 ]; then exit 1; fi

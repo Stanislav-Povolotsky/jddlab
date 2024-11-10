@@ -53,4 +53,5 @@ sed -i "s/TEMPLATE/BAKSMALI/g" $exec_script
 chmod 0755 $exec_script
 ln -s ../$pkg/$cmd_baksmali $bin_path/$cmd_baksmali
 # Checking it can be runned
-$bin_path/$cmd_baksmali
+$bin_path/$cmd_smali 2>&1 | tee -a $pkg_path/$cmd_smali.command_help.txt
+$bin_path/$cmd_baksmali 2>&1 | tee -a $pkg_path/$cmd_baksmali.command_help.txt

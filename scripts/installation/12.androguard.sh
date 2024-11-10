@@ -21,5 +21,7 @@ echo "$home_page"         >>$pkg_info
 echo "$pip_pkg==$version" >>$pkg_info
 echo "https://pypi.org/project/$pip_pkg/$version" >>$pkg_info
 
+ln -s $venv/bin/$pkg $bin_path/$pkg
+
 # Checking it can be runned
-$pkg --help
+$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt

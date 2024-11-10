@@ -51,5 +51,5 @@ target_motd="${target_install_path}/etc/motd"
 echo '[ ! -z "$TERM" -a -r /etc/motd -a ! -f ~/.motd.shown ] && cat /etc/motd && echo 1 >~/.motd.shown' >> $target_bashrc
 echo "PS1='\[\u@jddlab:\w\$ '" >>$target_bashrc
 chmod +x $target_bashrc
-echo -e "Welcome to `cat $build_info`\n"  >$target_motd
+echo -e "Welcome to `cat $build_info`\n" >$target_motd
 echo -e "List of available commands: `ls $target_install_path/usr/local/bin/ | tr '\n' ' '`\n" >>$target_motd
