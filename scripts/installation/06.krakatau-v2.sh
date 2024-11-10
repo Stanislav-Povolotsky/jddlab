@@ -32,4 +32,4 @@ ln -s ../$pkg/$cmd $bin_path/$cmd
 ln -s ../$pkg/$cmd $bin_path/$cmd_alt1
 
 # Checking it can be runned
-$cmd help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+$bin_path/$cmd help 2>&1 | tee -a $pkg_path/$cmd.command_help.txt

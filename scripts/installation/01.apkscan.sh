@@ -24,4 +24,4 @@ echo "https://pypi.org/project/$pip_pkg/$version" >>$pkg_info
 ln -s $venv/bin/$pkg $bin_path/$pkg
 
 # Checking it can be runned
-$pkg -h 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+$bin_path/$pkg -h 2>&1 | tee -a $pkg_path/$pkg.command_help.txt

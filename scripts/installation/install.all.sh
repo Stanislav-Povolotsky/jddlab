@@ -42,6 +42,7 @@ for dir in *; do
   fi
   popd
 done
+find . -path '*.command_help.txt' -exec mv {} $target_install_path_jddlab/ \;
 popd
 
 # Preparing welcome screen and prompt

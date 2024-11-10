@@ -29,4 +29,4 @@ chmod 0755 $exec_script
 ln -s ../$pkg/$pkg $bin_path/$pkg
 ln -s ../$pkg/$pkg $bin_path/$pkg_alt1
 # Checking it can be runned
-$pkg 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+$bin_path/$pkg 2>&1 | tee -a $pkg_path/$pkg.command_help.txt

@@ -20,4 +20,4 @@ rm $fname
 popd
 ln -s ../$pkg/bin/$pkg $bin_path/$pkg
 # Checking it can be runned
-$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+$bin_path/$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt

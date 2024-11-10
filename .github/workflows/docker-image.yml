@@ -147,9 +147,12 @@ jobs:
           DOCKER_IMAGE="${{ vars.DOCKER_IMAGE }}"
           # Substituting variables in template
           export NEW_VERSION DOCKER_IMAGE
-          envsubst <scripts/workflow/templates/release.template.md | sed -e 's/§/$/g' >release_body.md
+          # Adding header to release_body.md
+          envsubst <scripts/workflow/templates/release.template.header.md | sed -e 's/§/$/g' >release_body.md
           # Adding software changelog
           cat software.changelog.txt >>release_body.md
+          # Adding footer to release_body.md
+          envsubst <scripts/workflow/templates/release.template.footer.md | sed -e 's/§/$/g' >>release_body.md
           echo "release_body<<EOF" >> $GITHUB_ENV
           cat release_body.md      >> $GITHUB_ENV
           echo "EOF"               >> $GITHUB_ENV
