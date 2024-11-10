@@ -2,6 +2,12 @@
 folder_to_serve="$PWD"
 jddlab_docker_image="jddlab"
 
+docker_args=""
+# Allow to access host network. It's usefull to forward adb to instance.
+# Just run "adb start-server" on host machine and adb inside the instance 
+# will be able to connect to your device.
+# docker_args+=" --network=host"
+
 # Escape application args
 save () {
     for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
@@ -9,5 +15,5 @@ save () {
 }
 APP_ARGS=`save "$@"`
 
-eval set -- run -it --rm -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
+eval set -- run -it --rm $docker_args -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
 exec "docker" "$@"

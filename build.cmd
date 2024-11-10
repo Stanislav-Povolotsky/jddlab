@@ -1,1 +1,1 @@
-@docker build . -f %~dp0Dockerfile -t jddlab
+@docker build . -f %~dp0Dockerfile --progress=plain -t jddlab
