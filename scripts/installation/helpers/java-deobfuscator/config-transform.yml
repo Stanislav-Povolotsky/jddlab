@@ -1,0 +1,7 @@
+path:
+  - /usr/local/android-sdk-linux/platforms/android-35/android.jar
+transformers:
+  - normalizer.MethodNormalizer:
+      mapping-file: normalizer.txt
+  - stringer.StringEncryptionTransformer
+  - normalizer.ClassNormalizer: {}

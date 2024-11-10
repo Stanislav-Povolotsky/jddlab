@@ -7,6 +7,8 @@ PKG=JAVA-DEOBFUSCATOR
 pkg_path=$target_install_path/usr/local/$pkg
 bin_path=$target_install_path/usr/local/bin
 pkg_info=$pkg_path/$pkg.software_version.txt
+cmd_detect=java-deobfuscator-detect
+cmd_transform=java-deobfuscator-transform
 
 mkdir -p $pkg_path $bin_path
 python3 helpers/get-release-info.py https://github.com/java-deobfuscator/deobfuscator -fan '^deobfuscator.jar$' -o $pkg_info
@@ -17,6 +19,11 @@ echo "File: $fname; Url: $url"
 pushd $pkg_path
 curl -L -o $fname $url
 popd
+
+cp helpers/java-deobfuscator/* $pkg_path/
+chmod 0755 helpers/java-deobfuscator/*.sh
+ln -s ../$pkg/$cmd_detect.sh $bin_path/$cmd_detect
+#ln -s ../$pkg/$cmd_transform.sh $bin_path/$cmd_transform
 
 exec_script=$pkg_path/$pkg
 cp helpers/template-java-runner.sh $exec_script
