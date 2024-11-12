@@ -912,3 +912,67 @@ Commands:
 ````
 </details>
 
+### ghidra - Software Reverse Engineering Framework
+
+URL: https://github.com/NationalSecurityAgency/ghidra  
+
+Ghidra is useful while analyzing JNI native libraries. Ghidra framework includes a suite of full-featured, high-end software analysis tools that enable users to analyze compiled code on a variety of platforms including Windows, macOS, and Linux. Capabilities include disassembly, assembly, decompilation, graphing, and scripting, along with hundreds of other features. Ghidra supports a wide variety of processor instruction sets and executable formats and can be run in both user-interactive and automated modes. 
+
+Example 1. Decompiling protected.so dynamic library:
+```
+jddlab ghidra-decompile protected.so
+Result:
+INFO  CustomDecompileScript.java> Decompilation completed. Output written to: protected.so.c (GhidraScript)
+```
+
+<details>
+   <summary>ghidra command-line arguments</summary>
+
+````
+shell> jddlab ghidra
+Headless Analyzer Usage: analyzeHeadless
+           <project_location> <project_name>[/<folder_path>]
+             | ghidra://<server>[:<port>]/<repository_name>[/<folder_path>]
+           [[-import [<directory>|<file>]+] | [-process [<project_file>]]]
+           [-prescript <ScriptName>]
+           [-postscript <ScriptName>]
+           [-scriptPath "<path1>[;<path2>...]"]
+           [-propertiesPath "<path1>[;<path2>...]"]
+           [-scriptlog <path to script log file>]
+           [-log <path to log file>]
+           [-overwrite]
+           [-recursive]
+           [-readOnly]
+           [-deleteproject]
+           [-noanalysis]
+           [-processor <languageID>]
+           [-cspec <compilerSpecID>]
+           [-analysisTimeoutPerFile <timeout in seconds>]
+           [-keystore <KeystorePath>]
+           [-connect [<userID>]]
+           [-p]
+           [-commit ["<comment>"]]]
+           [-okToDelete]
+           [-max-cpu <max cpu cores to use>]
+           [-librarySearchPaths <path1>[;<path2>...]]
+           [-loader <desired loader name>]
+           [-loader-<loader argument name> <loader argument value>]
+
+     - All uses of $GHIDRA_HOME or $USER_HOME in script path must be preceded by '\'
+
+Please refer to 'analyzeHeadless README.html' for detailed usage examples and notes.
+````
+</details>
+
+<details>
+   <summary>ghidra-decompile command-line arguments</summary>
+
+````
+shell> jddlab ghidra-decompile
+Command-line tool to decompile binary file with ghidra
+Format: ghidra-decompile <input-binary-file> [<output-file-for-c-code>]
+Example: ghidra-decompile test.so test.code.c
+````
+</details>
+
+
