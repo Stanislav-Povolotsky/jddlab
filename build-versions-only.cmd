@@ -1,0 +1,1 @@
+@docker build . -f %~dp0Dockerfile --build-arg DOCKER_IMAGE_BUILD_MODE=versions --progress=plain -t jddlab

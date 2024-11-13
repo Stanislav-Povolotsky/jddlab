@@ -102,8 +102,40 @@ jobs:
           echo "New version will be $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
+      # Build Docker image with software versions only (light image without software installation)
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          load: true
+          build-args: |
+            DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
+            DOCKER_IMAGE_BUILD_MODE=versions
+          tags: temp-versions
+
+      # Pull and extract file from Docker image
+      - name: Extract Software List from the Docker Image
+        run: |
+          IMAGE=temp-versions
+          # Create a container from the image but don't start it
+          CONTAINER_ID=$(docker create $IMAGE)
+          # Copy the file from the container to the host system
+          docker cp $CONTAINER_ID:/usr/local/jddlab/software-list.txt ./software-list.txt
+          # Remove the temporary container
+          docker rm $CONTAINER_ID
+          # Calculate the hash of the extracted file
+          SOFTWARE_LIST_HASH=$(sha256sum ./software-list.txt | awk '{ print $1 }')
+          echo "Current hash of the software list file: $SOFTWARE_LIST_HASH"
+          echo "SOFTWARE_LIST_HASH=$SOFTWARE_LIST_HASH" >> $GITHUB_ENV
+          if [ "$PREV_SOFTWARE_LIST_HASH" == "$SOFTWARE_LIST_HASH" ]; then
+            echo "Software list is the same => Stopping"
+            echo "CONTINUE_BUILD=false" >> $GITHUB_ENV
+          fi
+
       # Build and push the Docker image for both amd64 and arm64 platforms
       - name: Build and Push Docker image
+        if: env.CONTINUE_BUILD != 'false'
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -115,6 +147,7 @@ jobs:
 
       # Pull and extract file from current Docker image
       - name: Pull and Extract Software List from the Docker Image
+        if: env.CONTINUE_BUILD != 'false'
         run: |
           echo "TEMP_DOCKER_IMAGE_PREPARED=true" >> $GITHUB_ENV
           IMAGE=${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp

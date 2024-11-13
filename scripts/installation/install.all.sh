@@ -9,6 +9,11 @@ export venv=/usr/local/python-venv
 export PATH="/root/.cargo/bin:$PATH"
 mkdir -p $target_install_path/usr/local $target_install_path_jddlab
 
+export versions_collect_mode=0
+if [[ "$DOCKER_IMAGE_BUILD_MODE" == "versions" ]]; then
+    export versions_collect_mode=1
+fi
+
 pushd $SCRIPT_DIR
 for filename in ??.*.sh; do
   source $filename

@@ -9,8 +9,11 @@ COPY --from=android-sdk /opt/android-sdk-linux/platform-tools                 	/
 #COPY --from=android-sdk /opt/android-sdk-linux/platforms/android-35/android.jar /root/scripts/installation/installed/usr/local/android-sdk-linux/platforms/android-35/android.jar
 
 COPY scripts/installation /root/scripts/installation/
+# Version in '1.2.3' format or 'local' for local build
 ARG DOCKER_IMAGE_BUILD_VERSION=local
-RUN DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_BUILD_VERSION /root/scripts/installation/install.all.sh
+# Build mode: 'full' or 'versions' (to collect only versions without installation)
+ARG DOCKER_IMAGE_BUILD_MODE=full
+RUN DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_BUILD_VERSION DOCKER_IMAGE_BUILD_MODE=$DOCKER_IMAGE_BUILD_MODE /root/scripts/installation/install.all.sh
 
 FROM ubuntu:22.04
 

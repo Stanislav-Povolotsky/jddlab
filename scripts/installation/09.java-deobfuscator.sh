@@ -10,28 +10,34 @@ pkg_info=$pkg_path/$pkg.software_version.txt
 cmd_detect=java-deobfuscator-detect
 cmd_transform=java-deobfuscator-transform
 
-mkdir -p $pkg_path $bin_path
+mkdir -p $pkg_path $bin_path /tmp/$pkg
 python3 helpers/get-release-info.py https://github.com/java-deobfuscator/deobfuscator -fan '^deobfuscator.jar$' -o $pkg_info
 fname=`head -n 3 $pkg_info | tail -n 1`
 url=`head -n 4 $pkg_info | tail -n 1`
 echo "File: $fname; Url: $url"
 
-pushd $pkg_path
-curl -L -o $fname $url
-popd
+if [[ "$versions_collect_mode" == "0" ]]; then
+    # Installation mode
+    pushd $pkg_path
+    curl -L -o $fname $url
+    popd
 
-cp helpers/java-deobfuscator/* $pkg_path/
-chmod 0755 helpers/java-deobfuscator/*.sh
-ln -s ../$pkg/$cmd_detect.sh $bin_path/$cmd_detect
-#ln -s ../$pkg/$cmd_transform.sh $bin_path/$cmd_transform
+    cp helpers/java-deobfuscator/* $pkg_path/
+    chmod 0755 helpers/java-deobfuscator/*.sh
+    ln -s ../$pkg/$cmd_detect.sh $bin_path/$cmd_detect
+    #ln -s ../$pkg/$cmd_transform.sh $bin_path/$cmd_transform
 
-exec_script=$pkg_path/$pkg
-cp helpers/template-java-runner.sh $exec_script
-sed -i "s/\/template/\/$fname/" $exec_script
-sed -i "s/template/$pkg/g" $exec_script
-sed -i "s/TEMPLATE/$PKG/g" $exec_script
-chmod 0755 $exec_script
-ln -s ../$pkg/$pkg $bin_path/$pkg
-# Checking it can be runned
-# Command has not help and returns errorcode 0 with message "A config file must be specified" 
-($bin_path/$pkg 2>&1 | grep -q "config file") || exit 1
+    exec_script=$pkg_path/$pkg
+    cp helpers/template-java-runner.sh $exec_script
+    sed -i "s/\/template/\/$fname/" $exec_script
+    sed -i "s/template/$pkg/g" $exec_script
+    sed -i "s/TEMPLATE/$PKG/g" $exec_script
+    chmod 0755 $exec_script
+    ln -s ../$pkg/$pkg $bin_path/$pkg
+    # Checking it can be runned
+    # Command has not help and returns errorcode 0 with message "A config file must be specified" 
+    ($bin_path/$pkg 2>&1 | grep -q "config file") || exit 1
+fi
+
+# Cleaning temp folder
+rm -rf /tmp/$pkg

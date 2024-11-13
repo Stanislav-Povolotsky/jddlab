@@ -13,11 +13,15 @@ fname=`head -n 3 $pkg_info | tail -n 1`
 url=`head -n 4 $pkg_info | tail -n 1`
 echo "File: $fname; Url: $url"
 
-pushd /tmp
-curl -L -o $fname $url
-unzip $fname -d $pkg_path
-rm $fname
-popd
-ln -s ../$pkg/bin/$pkg $bin_path/$pkg
-# Checking it can be runned
-$bin_path/$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+if [[ "$versions_collect_mode" == "0" ]]; then
+    # Installation mode
+    pushd /tmp
+    curl -L -o $fname $url
+    unzip $fname -d $pkg_path
+    rm $fname
+    popd
+    ln -s ../$pkg/bin/$pkg $bin_path/$pkg
+
+    # Checking it can be runned
+    $bin_path/$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+fi
