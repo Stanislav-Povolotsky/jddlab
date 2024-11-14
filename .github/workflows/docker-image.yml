@@ -31,10 +31,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Install gettext to use envsubst
-      - name: Install gettext for envsubst
-        run: sudo apt-get install gettext
-
       # Log in to Docker Hub using the secrets
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -121,6 +117,7 @@ jobs:
           NEW_VERSION="$major.$minor.$patch"
           echo "New version will be $NEW_VERSION"
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "VERSION_CHECK_ONLY_BUILD_VERSION=$NEW_VERSION-$(date +%s)" >> $GITHUB_ENV
 
       # Build Docker image with software versions only (light image without software installation)
       - name: Build docker image to get current versions of software
@@ -132,7 +129,7 @@ jobs:
           cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache
           cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache,mode=max
           build-args: |
-            DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
+            DOCKER_IMAGE_BUILD_VERSION=${{ env.VERSION_CHECK_ONLY_BUILD_VERSION }}
             DOCKER_IMAGE_BUILD_MODE=versions
           tags: temp-versions
 
@@ -194,6 +191,11 @@ jobs:
           # Preparing software changelog
           python scripts/workflow/create-software-list-diff.py ./prev-software-list.txt ./software-list.txt >software.changelog.txt
           cat software.changelog.txt
+
+      # Install gettext to use envsubst
+      - name: Install gettext for envsubst
+        if: env.CONTINUE_BUILD != 'false'
+        run: sudo apt-get install gettext
 
       # Load template and dynamically populate it
       - name: Prepare Release Body
