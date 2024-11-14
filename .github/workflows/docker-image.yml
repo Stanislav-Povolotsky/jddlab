@@ -49,6 +49,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Automatically provided by GitHub
 
+      - name: "Cache prepare"
+        run: |
+          current_time=$(date +%s)
+          # one week cache
+          max_cache_duration_seconds=$((7 * 24 * 60 * 60))
+          cache_id_time_part=$((current_time / max_cache_duration_seconds))
+          CACHE_ID=${{ github.repository }}-${{ runner.os }}-${cache_id_time_part}
+          echo "CACHE_ID=$CACHE_ID" >> $GITHUB_ENV
+          echo "Cache id: CACHE_ID"
+
+      - name: "Cache download"
+        id: cache-docker-layers
+        uses: actions/cache@v3
+        with:
+          path: /builder-cache
+          key: ${{ CACHE_ID }}
+
       - name: Get latest release version
         id: get_version
         run: |
@@ -103,12 +120,14 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
       # Build Docker image with software versions only (light image without software installation)
-      - name: Build and Push Docker image
+      - name: Build docker image to get current versions of software
         uses: docker/build-push-action@v4
         with:
           context: .
           push: false
           load: true
+          cache-from: type=local,src=/builder-cache/.buildx-cache
+          cache-to: type=local,dest=/builder-cache/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
             DOCKER_IMAGE_BUILD_MODE=versions
@@ -141,6 +160,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
+          cache-from: type=local,src=/builder-cache/.buildx-cache
+          cache-to: type=local,dest=/builder-cache/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
