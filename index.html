@@ -38,34 +38,34 @@
 It runs <code>jddlab</code> docker instance and maps current folder as a <code>/work</code> folder (rw) to make all files in the current folder and subfolders accessable for jddlab commands.<br />
 For example if you have <code>test.apk</code> in the current folder, it will be accessible as <code>./test.apk</code> or <code>/work/test.apk</code> inside the jddlab instance.  </p>
 
-<p>To install <code>jddlab</code> command-line tool</p>
+<p>To install <code>jddlab</code> command-line tool:</p>
 
-<ul>
-<li>on Linux or macOS:<br />
-Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab">jddlab script</a> to some folder in $PATH and make it executable.
-<ul>
-<li>Current-user-only installation (recommended):
-<code>
-mkdir -p $HOME/bin &amp;&amp; curl -L -f -o $HOME/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; chmod +x $HOME/bin/jddlab &amp;&amp; RC='export PATH=$PATH:$HOME/bin' &amp;&amp; (command -v jddlab || (echo "$RC" &gt;&gt;~/.bashrc &amp;&amp; echo "$RC" &gt;&gt;~/.zshrc )) &amp;&amp; eval "$RC"
-</code></li>
-<li>System installation (for all users):
-<code>
-sudo curl -L -f -o /usr/local/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; sudo chmod +x /usr/local/bin/jddlab
-</code></li>
-</ul></li>
-<li>on Windows:<br />
-Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd">jddlab.cmd script</a> to some folder in %PATH%.
-<ul>
-<li>Current-user-only installation (recommended):
-<code>
-curl -L -f -o "%LOCALAPPDATA%\Microsoft\WindowsApps\jddlab.cmd" https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd
-</code></li>
-<li>System installation (for all users):
-<code>
-powershell -ExecutionPolicy ByPass -c "Start-Process PowerShell -Verb RunAs 'cmd /c curl -L -o %SYSTEMROOT%\jddlab.cmd https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd'"
-</code></li>
-</ul></li>
-</ul>
+<p><details>
+   <summary>on Linux or macOS (click to view)</summary></p>
+
+<p>Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab">jddlab script</a> to some folder in $PATH and make it executable.
+  - Current-user-only installation (recommended):
+    <code>
+    mkdir -p $HOME/bin &amp;&amp; curl -L -f -o $HOME/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; chmod +x $HOME/bin/jddlab &amp;&amp; RC='export PATH=$PATH:$HOME/bin' &amp;&amp; (command -v jddlab || (echo "$RC" &gt;&gt;~/.bashrc &amp;&amp; echo "$RC" &gt;&gt;~/.zshrc )) &amp;&amp; eval "$RC"
+</code>
+  - System installation (for all users):
+    <code>
+    sudo curl -L -f -o /usr/local/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; sudo chmod +x /usr/local/bin/jddlab
+</code>
+</details>
+<details>
+   <summary>on Windows (click to view)</summary></p>
+
+<p>Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd">jddlab.cmd script</a> to some folder in %PATH%.
+  - Current-user-only installation (recommended):
+    <code>
+    curl -L -f -o "%LOCALAPPDATA%\Microsoft\WindowsApps\jddlab.cmd" https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd
+</code>
+  - System installation (for all users):
+    <code>
+    powershell -ExecutionPolicy ByPass -c "Start-Process PowerShell -Verb RunAs 'cmd /c curl -L -o %SYSTEMROOT%\jddlab.cmd https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd'"
+</code>
+</details></p>
 
 <p>To enter shell mode, type:
 <code>
@@ -128,8 +128,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="m&#97;&#105;&#x6c;&#x74;&#x6f;&#58;&#98;&#114;&#117;&#x74;.&#x61;&#x6c;&#x6c;&#108;&#64;&#103;&#109;&#97;i&#108;&#46;&#99;&#x6f;&#109;">&#98;&#114;&#117;&#x74;.&#x61;&#x6c;&#x6c;&#108;&#64;&#103;&#109;&#97;i&#108;&#46;&#99;&#x6f;&#109;</a>
-Copyright 2010 Connor Tumbleson <a href="&#109;&#97;&#105;l&#116;&#x6f;&#x3a;&#99;o&#x6e;&#110;&#x6f;&#114;&#46;&#116;u&#109;&#98;l&#101;&#x73;&#x6f;n&#x40;&#x67;&#109;&#97;&#105;l.&#99;o&#109;">&#99;o&#x6e;&#110;&#x6f;&#114;&#46;&#116;u&#109;&#98;l&#101;&#x73;&#x6f;n&#x40;&#x67;&#109;&#97;&#105;l.&#99;o&#109;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#x6d;a&#x69;&#108;&#x74;&#x6f;&#58;&#98;r&#117;&#x74;.&#97;&#108;l&#x6c;&#64;&#x67;m&#97;&#x69;&#x6c;&#46;c&#111;m">&#98;r&#117;&#x74;.&#97;&#108;l&#x6c;&#64;&#x67;m&#97;&#x69;&#x6c;&#46;c&#111;m</a>
+Copyright 2010 Connor Tumbleson <a href="&#x6d;&#97;&#105;&#x6c;&#x74;&#111;&#58;&#99;&#x6f;&#x6e;&#110;o&#114;&#46;&#x74;u&#109;&#98;&#x6c;&#101;s&#111;&#110;&#x40;&#x67;&#x6d;&#97;&#105;&#x6c;&#x2e;&#x63;om">&#99;&#x6f;&#x6e;&#110;o&#114;&#46;&#x74;u&#109;&#98;&#x6c;&#101;s&#111;&#110;&#x40;&#x67;&#x6d;&#97;&#105;&#x6c;&#x2e;&#x63;om</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
