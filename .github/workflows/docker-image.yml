@@ -57,6 +57,7 @@ jobs:
           cache_id_time_part=$((current_time / max_cache_duration_seconds))
           CACHE_ID=${{ github.repository }}-${{ runner.os }}-${cache_id_time_part}
           BUILD_CACHE_FOLDER=/tmp/build-cache
+          mkdir -p $BUILD_CACHE_FOLDER
           echo "CACHE_ID=$CACHE_ID" >> $GITHUB_ENV
           echo "BUILD_CACHE_FOLDER=$BUILD_CACHE_FOLDER" >> $GITHUB_ENV
           echo "Cache id: $CACHE_ID; Cache folder: $BUILD_CACHE_FOLDER"
@@ -65,8 +66,8 @@ jobs:
         id: cache-docker-layers
         uses: actions/cache@v3
         with:
-          path: ${BUILD_CACHE_FOLDER}
-          key: ${CACHE_ID}
+          path: ${{ env.BUILD_CACHE_FOLDER }}
+          key: ${{ env.CACHE_ID }}
 
       - name: Get latest release version
         id: get_version
