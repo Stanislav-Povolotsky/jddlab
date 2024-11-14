@@ -64,7 +64,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /builder-cache
-          key: ${{ CACHE_ID }}
+          key: ${CACHE_ID}
 
       - name: Get latest release version
         id: get_version
