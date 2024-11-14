@@ -30,10 +30,12 @@ Supported platforms:
 It runs `jddlab` docker instance and maps current folder as a `/work` folder (rw) to make all files in the current folder and subfolders accessable for jddlab commands.  
 For example if you have `test.apk` in the current folder, it will be accessible as `./test.apk` or `/work/test.apk` inside the jddlab instance.  
    
-To install `jddlab` command-line tool
+To install `jddlab` command-line tool:
 
-- on Linux or macOS:  
-  Download [jddlab script](https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab) to some folder in $PATH and make it executable.
+<details>
+   <summary>on Linux or macOS (click to view)</summary>
+   
+Download [jddlab script](https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab) to some folder in $PATH and make it executable.
   - Current-user-only installation (recommended):
     ```
     mkdir -p $HOME/bin && curl -L -f -o $HOME/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab && chmod +x $HOME/bin/jddlab && RC='export PATH=$PATH:$HOME/bin' && (command -v jddlab || (echo "$RC" >>~/.bashrc && echo "$RC" >>~/.zshrc )) && eval "$RC"
@@ -42,8 +44,11 @@ To install `jddlab` command-line tool
     ```
     sudo curl -L -f -o /usr/local/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab && sudo chmod +x /usr/local/bin/jddlab
     ```
-- on Windows:  
-  Download [jddlab.cmd script](https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd) to some folder in %PATH%.
+</details>
+<details>
+   <summary>on Windows (click to view)</summary>
+
+Download [jddlab.cmd script](https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd) to some folder in %PATH%.
   - Current-user-only installation (recommended):
     ```
     curl -L -f -o "%LOCALAPPDATA%\Microsoft\WindowsApps\jddlab.cmd" https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd
@@ -52,6 +57,7 @@ To install `jddlab` command-line tool
     ```
     powershell -ExecutionPolicy ByPass -c "Start-Process PowerShell -Verb RunAs 'cmd /c curl -L -o %SYSTEMROOT%\jddlab.cmd https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd'"
     ```
+</details>
 
 To enter shell mode, type:
 ```
