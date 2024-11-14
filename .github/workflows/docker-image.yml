@@ -129,8 +129,8 @@ jobs:
           context: .
           push: false
           load: true
-          cache-from: type=local,src=${BUILD_CACHE_FOLDER}/.buildx-cache
-          cache-to: type=local,dest=${BUILD_CACHE_FOLDER}/.buildx-cache,mode=max
+          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache
+          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
             DOCKER_IMAGE_BUILD_MODE=versions
@@ -163,8 +163,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          cache-from: type=local,src=${BUILD_CACHE_FOLDER}/.buildx-cache
-          cache-to: type=local,dest=${BUILD_CACHE_FOLDER}/.buildx-cache,mode=max
+          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache
+          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
@@ -251,14 +251,12 @@ jobs:
 
       # Remove image which is not required anymore
       - name: Removing temp image
-        if: always()  # Ensures this step always runs
+        if: env.TEMP_DOCKER_IMAGE_PREPARED == 'true'
         continue-on-error: true  # This ensures the workflow continues even if this step fails
         run: |
-          if [ "$TEMP_DOCKER_IMAGE_PREPARED" == "true" ]; then
-              echo Removing temp image
-              curl -f -X DELETE -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
-                  "https://hub.docker.com/v2/repositories/${{ vars.DOCKER_IMAGE }}/tags/${{ env.NEW_VERSION }}-temp"
-          fi
+          echo Removing temp image
+          curl -f -X DELETE -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
+              "https://hub.docker.com/v2/repositories/${{ vars.DOCKER_IMAGE }}/tags/${{ env.NEW_VERSION }}-temp"
 
       # Log out of Docker Hub
       - name: Log out of Docker Hub
