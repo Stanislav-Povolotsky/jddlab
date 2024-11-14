@@ -48,19 +48,22 @@ jobs:
       - name: "Cache prepare"
         run: |
           current_time=$(date +%s)
+          # increment this uniq id to reset all caches
+          uniq_id_to_reset_cache=100
           # one week cache
           versions_max_cache_duration_seconds=$((7 * 24 * 60 * 60))
           versions_cache_id_time_part=$((current_time / versions_max_cache_duration_seconds))
-          CACHE_ID_VERSIONS=${{ github.repository }}--${{ github.sha }}--${{ runner.os }}-versions-${versions_cache_id_time_part}
+          CACHE_ID_VERSIONS=${{ github.repository }}--${uniq_id_to_reset_cache}--${{ runner.os }}-versions-${versions_cache_id_time_part}
           BUILD_CACHE_FOLDER_VERSIONS=/tmp/build-cache/versions
           mkdir -p $BUILD_CACHE_FOLDER_VERSIONS
           echo "CACHE_ID_VERSIONS=$CACHE_ID_VERSIONS" >> $GITHUB_ENV
           echo "BUILD_CACHE_FOLDER_VERSIONS=$BUILD_CACHE_FOLDER_VERSIONS" >> $GITHUB_ENV
           echo "'versions' cache id: $CACHE_ID_VERSIONS; Cache folder: $BUILD_CACHE_FOLDER_VERSIONS"
 
-          full_max_cache_duration_seconds=$((30 * 24 * 60 * 60))
+          # one month cache
+          full_max_cache_duration_seconds=$((31 * 24 * 60 * 60))
           full_cache_id_time_part=$((current_time / full_max_cache_duration_seconds))
-          CACHE_ID_FULL=${{ github.repository }}--${{ github.sha }}--${{ runner.os }}-full-${cache_id_time_part}
+          CACHE_ID_FULL=${{ github.repository }}--${uniq_id_to_reset_cache}--${{ runner.os }}-full-${cache_id_time_part}
           BUILD_CACHE_FOLDER_FULL=/tmp/build-cache/full
           mkdir -p $BUILD_CACHE_FOLDER_FULL
           echo "CACHE_ID_FULL=$CACHE_ID_FULL" >> $GITHUB_ENV
