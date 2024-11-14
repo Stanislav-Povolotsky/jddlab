@@ -49,21 +49,30 @@ jobs:
         run: |
           current_time=$(date +%s)
           # one week cache
-          max_cache_duration_seconds=$((7 * 24 * 60 * 60))
-          cache_id_time_part=$((current_time / max_cache_duration_seconds))
-          CACHE_ID=${{ github.repository }}--${{ github.sha }}--${{ runner.os }}-${cache_id_time_part}
-          BUILD_CACHE_FOLDER=/tmp/build-cache
-          mkdir -p $BUILD_CACHE_FOLDER
-          echo "CACHE_ID=$CACHE_ID" >> $GITHUB_ENV
-          echo "BUILD_CACHE_FOLDER=$BUILD_CACHE_FOLDER" >> $GITHUB_ENV
-          echo "Cache id: $CACHE_ID; Cache folder: $BUILD_CACHE_FOLDER"
+          versions_max_cache_duration_seconds=$((7 * 24 * 60 * 60))
+          versions_cache_id_time_part=$((current_time / versions_max_cache_duration_seconds))
+          CACHE_ID_VERSIONS=${{ github.repository }}--${{ github.sha }}--${{ runner.os }}-versions-${versions_cache_id_time_part}
+          BUILD_CACHE_FOLDER_VERSIONS=/tmp/build-cache/versions
+          mkdir -p $BUILD_CACHE_FOLDER_VERSIONS
+          echo "CACHE_ID_VERSIONS=$CACHE_ID_VERSIONS" >> $GITHUB_ENV
+          echo "BUILD_CACHE_FOLDER_VERSIONS=$BUILD_CACHE_FOLDER_VERSIONS" >> $GITHUB_ENV
+          echo "'versions' cache id: $CACHE_ID_VERSIONS; Cache folder: $BUILD_CACHE_FOLDER_VERSIONS"
 
-      - name: "Cache download"
+          full_max_cache_duration_seconds=$((30 * 24 * 60 * 60))
+          full_cache_id_time_part=$((current_time / full_max_cache_duration_seconds))
+          CACHE_ID_FULL=${{ github.repository }}--${{ github.sha }}--${{ runner.os }}-full-${cache_id_time_part}
+          BUILD_CACHE_FOLDER_FULL=/tmp/build-cache/full
+          mkdir -p $BUILD_CACHE_FOLDER_FULL
+          echo "CACHE_ID_FULL=$CACHE_ID_FULL" >> $GITHUB_ENV
+          echo "BUILD_CACHE_FOLDER_FULL=$BUILD_CACHE_FOLDER_FULL" >> $GITHUB_ENV
+          echo "'full' cache id: $CACHE_ID_FULL; Cache folder: $BUILD_CACHE_FOLDER_FULL"
+
+      - name: "Cache download (versions)"
         id: cache-docker-layers
         uses: actions/cache@v3
         with:
-          path: ${{ env.BUILD_CACHE_FOLDER }}
-          key: ${{ env.CACHE_ID }}
+          path: ${{ env.BUILD_CACHE_FOLDER_VERSIONS }}
+          key: ${{ env.CACHE_ID_VERSIONS }}
 
       - name: Get latest release version
         id: get_version
@@ -126,8 +135,8 @@ jobs:
           context: .
           push: false
           load: true
-          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache
-          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache,mode=max
+          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER_VERSIONS }}/.buildx-cache
+          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER_VERSIONS }}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.VERSION_CHECK_ONLY_BUILD_VERSION }}
             DOCKER_IMAGE_BUILD_MODE=versions
@@ -152,6 +161,13 @@ jobs:
             echo "CONTINUE_BUILD=false" >> $GITHUB_ENV
           fi
 
+      - name: "Cache download (full)"
+        if: env.CONTINUE_BUILD != 'false'
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.BUILD_CACHE_FOLDER_FULL }}
+          key: ${{ env.CACHE_ID_FULL }}
+
       # Build and push the Docker image for both amd64 and arm64 platforms
       - name: Build and Push Docker image
         if: env.CONTINUE_BUILD != 'false'
@@ -160,8 +176,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache
-          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER }}/.buildx-cache,mode=max
+          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER_FULL }}/.buildx-cache
+          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER_FULL }}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
