@@ -56,14 +56,16 @@ jobs:
           max_cache_duration_seconds=$((7 * 24 * 60 * 60))
           cache_id_time_part=$((current_time / max_cache_duration_seconds))
           CACHE_ID=${{ github.repository }}-${{ runner.os }}-${cache_id_time_part}
+          BUILD_CACHE_FOLDER=/tmp/build-cache
           echo "CACHE_ID=$CACHE_ID" >> $GITHUB_ENV
-          echo "Cache id: CACHE_ID"
+          echo "BUILD_CACHE_FOLDER=$BUILD_CACHE_FOLDER" >> $GITHUB_ENV
+          echo "Cache id: $CACHE_ID; Cache folder: $BUILD_CACHE_FOLDER"
 
       - name: "Cache download"
         id: cache-docker-layers
         uses: actions/cache@v3
         with:
-          path: /builder-cache
+          path: ${BUILD_CACHE_FOLDER}
           key: ${CACHE_ID}
 
       - name: Get latest release version
@@ -126,8 +128,8 @@ jobs:
           context: .
           push: false
           load: true
-          cache-from: type=local,src=/builder-cache/.buildx-cache
-          cache-to: type=local,dest=/builder-cache/.buildx-cache,mode=max
+          cache-from: type=local,src=${BUILD_CACHE_FOLDER}/.buildx-cache
+          cache-to: type=local,dest=${BUILD_CACHE_FOLDER}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
             DOCKER_IMAGE_BUILD_MODE=versions
@@ -160,8 +162,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          cache-from: type=local,src=/builder-cache/.buildx-cache
-          cache-to: type=local,dest=/builder-cache/.buildx-cache,mode=max
+          cache-from: type=local,src=${BUILD_CACHE_FOLDER}/.buildx-cache
+          cache-to: type=local,dest=${BUILD_CACHE_FOLDER}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
