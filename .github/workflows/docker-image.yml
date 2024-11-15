@@ -164,12 +164,12 @@ jobs:
             echo "CONTINUE_BUILD=false" >> $GITHUB_ENV
           fi
 
-      - name: "Cache download (full)"
-        if: env.CONTINUE_BUILD != 'false'
-        uses: actions/cache@v3
-        with:
-          path: ${{ env.BUILD_CACHE_FOLDER_FULL }}
-          key: ${{ env.CACHE_ID_FULL }}
+      #- name: "Cache download (full)"
+      #  if: env.CONTINUE_BUILD != 'false'
+      #  uses: actions/cache@v3
+      #  with:
+      #    path: ${{ env.BUILD_CACHE_FOLDER_FULL }}
+      #    key: ${{ env.CACHE_ID_FULL }}
 
       # Build and push the Docker image for both amd64 and arm64 platforms
       - name: Build and Push Docker image
@@ -179,8 +179,9 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER_FULL }}/.buildx-cache
-          cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER_FULL }}/.buildx-cache,mode=max
+          cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER_VERSIONS }}/.buildx-cache
+          #cache-from: type=local,src=${{ env.BUILD_CACHE_FOLDER_FULL }}/.buildx-cache
+          #cache-to: type=local,dest=${{ env.BUILD_CACHE_FOLDER_FULL }}/.buildx-cache,mode=max
           build-args: |
             DOCKER_IMAGE_BUILD_VERSION=${{ env.NEW_VERSION }}
           tags: ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
