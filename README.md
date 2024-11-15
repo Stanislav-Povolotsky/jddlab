@@ -1,5 +1,9 @@
 # jddlab - Java **D**ecompilation & **D**eobfuscation **Lab**
 
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Stanislav-Povolotsky/jddlab/docker-image.yml)](https://github.com/Stanislav-Povolotsky/jddlab/)
+[![Docker Image Size](https://img.shields.io/docker/image-size/stanislavpovolotsky/jddlab?sort=date&arch=amd64)](https://hub.docker.com/r/stanislavpovolotsky/jddlab)
+[![Docker Pulls](https://img.shields.io/docker/pulls/stanislavpovolotsky/jddlab)](https://hub.docker.com/r/stanislavpovolotsky/jddlab)
+
 - jddlab is a [Docker image](https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest) that includes all the necessary tools to decompile and deobfuscate Java and Android APKs.
 - `jddlab` is a command-line tool that runs the [jddlab Docker image](https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest) and provides a quick and convenient way to use all the decompilation and deobfuscation tools.
 

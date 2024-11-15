@@ -48,8 +48,8 @@ jobs:
       - name: "Cache prepare"
         run: |
           current_time=$(date +%s)
-          # increment this uniq id to reset all caches
-          uniq_id_to_reset_cache=100
+          # change this uniq id to reset all caches
+          uniq_id_to_reset_cache=${{ github.sha }}
           # one week cache
           versions_max_cache_duration_seconds=$((7 * 24 * 60 * 60))
           versions_cache_id_time_part=$((current_time / versions_max_cache_duration_seconds))
