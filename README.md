@@ -1,6 +1,8 @@
 # jddlab - Java **D**ecompilation & **D**eobfuscation **Lab**
 
+
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Stanislav-Povolotsky/jddlab/docker-image.yml)](https://github.com/Stanislav-Povolotsky/jddlab/)
+[![Docker Image Version](https://img.shields.io/docker/v/stanislavpovolotsky/jddlab/latest?arch=amd64&amp;sort=semver)](https://github.com/Stanislav-Povolotsky/jddlab/)
 [![Docker Image Size](https://img.shields.io/docker/image-size/stanislavpovolotsky/jddlab?sort=date&arch=amd64)](https://hub.docker.com/r/stanislavpovolotsky/jddlab)
 [![Docker Pulls](https://img.shields.io/docker/pulls/stanislavpovolotsky/jddlab)](https://hub.docker.com/r/stanislavpovolotsky/jddlab)
 
