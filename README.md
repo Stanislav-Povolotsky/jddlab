@@ -15,6 +15,10 @@ Why running `jddlab` is better than using separate tools on the host:
 - Easy Installation: Install all the tools and dependencies with a single docker pull command.
 - Quick Updates: Simply pull the latest container version to get new tools, features, and patches.
 
+## Demo
+
+![Demo: how to use jddlab](https://github.com/user-attachments/assets/4c0c8e5d-28e8-4697-a167-7723298ef751)
+
 ## Installation
 
 ### Prerequisites
