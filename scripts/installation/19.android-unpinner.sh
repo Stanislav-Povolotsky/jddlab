@@ -20,7 +20,8 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     pushd /build
     git clone -b $BRANCH --single-branch "https://github.com/$REPO" .
     $SCRIPT_DIR/helpers/get-git-branch-info.sh local $BRANCH >/tmp/$pkg/info.txt
-    python3 -m pip install -e .
+    rm -rf *.apk .git
+    python3 -m pip install .
     popd
 else
     $SCRIPT_DIR/helpers/get-git-branch-info.sh remote $BRANCH $REPO >/tmp/$pkg/info.txt
