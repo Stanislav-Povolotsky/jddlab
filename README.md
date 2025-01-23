@@ -992,3 +992,43 @@ Example: ghidra-decompile test.so test.code.c
 </details>
 
 
+### android-unpinner - remove certificate pinning from APKs
+
+URL: https://github.com/mitmproxy/android-unpinner
+
+android-unpinner removes certificate pinning from APKs. Does not require root.
+
+Example 1. Removing certificate pinning from test.apk:
+```
+jddlab android-unpinner patch-apks test.apk 
+Result:
+[23:27:04] Patching test.apk...
+[23:27:04] Make APK debuggable...
+[23:27:13] Zipalign & re-sign APK...
+[23:27:24] Created patched APK: test.unpinned.apk
+[23:27:24] All done! 🎉
+```
+
+<details>
+   <summary>android-unpinner command-line arguments</summary>
+
+````
+shell> jddlab android-unpinner --help
+
+ Usage: android-unpinner [OPTIONS] COMMAND [ARGS]...                            
+                                                                                
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --help      Show this message and exit.                                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ all               Patch a local APK, then install and start it.              │
+│ get-apks          Get all APKs for a specific package from the device.       │
+│ install           Install a package on the device.                           │
+│ list-packages     List all packages installed on the device.                 │
+│ package-name      Get the package name for a local APK file.                 │
+│ patch-apks        Patch an APK file to be debuggable.                        │
+│ push-resources    Copy Frida gadget and scripts to device.                   │
+│ start-app         Start app on device and inject Frida gadget.               │
+╰──────────────────────────────────────────────────────────────────────────────╯
+````
+</details>
