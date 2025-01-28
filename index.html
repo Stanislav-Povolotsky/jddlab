@@ -137,8 +137,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="&#109;&#x61;&#x69;&#108;&#116;&#x6f;&#x3a;&#98;&#x72;&#117;&#x74;&#x2e;&#97;&#108;&#x6c;&#x6c;&#64;gm&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#x6d;">&#98;&#x72;&#117;&#x74;&#x2e;&#97;&#108;&#x6c;&#x6c;&#64;gm&#x61;&#x69;&#x6c;&#46;&#x63;&#x6f;&#x6d;</a>
-Copyright 2010 Connor Tumbleson <a href="&#109;&#97;&#x69;&#x6c;&#116;o&#58;&#x63;&#111;&#110;&#110;&#x6f;&#x72;.&#116;&#x75;&#109;&#98;&#x6c;&#x65;&#115;&#111;&#110;&#x40;&#x67;m&#97;i&#108;&#46;&#x63;&#x6f;&#x6d;">&#x63;&#111;&#110;&#110;&#x6f;&#x72;.&#116;&#x75;&#109;&#98;&#x6c;&#x65;&#115;&#111;&#110;&#x40;&#x67;m&#97;i&#108;&#46;&#x63;&#x6f;&#x6d;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#109;&#x61;&#105;&#108;&#116;&#111;&#x3a;&#x62;&#114;u&#116;&#x2e;&#x61;&#108;l&#108;&#x40;&#x67;&#x6d;&#97;&#x69;&#x6c;&#46;&#x63;&#111;&#x6d;">&#x62;&#114;u&#116;&#x2e;&#x61;&#108;l&#108;&#x40;&#x67;&#x6d;&#97;&#x69;&#x6c;&#46;&#x63;&#111;&#x6d;</a>
+Copyright 2010 Connor Tumbleson <a href="m&#x61;&#x69;&#108;&#116;&#111;&#58;&#99;&#111;&#x6e;&#110;&#111;&#114;.&#x74;u&#109;b&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#109;&#x61;&#105;&#108;&#46;&#x63;&#x6f;&#109;">&#99;&#111;&#x6e;&#110;&#111;&#114;.&#x74;u&#109;b&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#109;&#x61;&#105;&#108;&#46;&#x63;&#x6f;&#109;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
@@ -1008,17 +1008,6 @@ Example: ghidra-decompile test.so test.code.c
 
 <p>android-unpinner removes certificate pinning from APKs. Does not require root.</p>
 
-<p>Example 1. Removing certificate pinning from test.apk:
-<code>
-jddlab android-unpinner patch-apks test.apk 
-Result:
-[23:27:04] Patching test.apk...
-[23:27:04] Make APK debuggable...
-[23:27:13] Zipalign &amp; re-sign APK...
-[23:27:24] Created patched APK: test.unpinned.apk
-[23:27:24] All done! 🎉
-</code></p>
-
 <p><details>
    <summary>android-unpinner command-line arguments</summary></p>
 
@@ -1041,5 +1030,79 @@ shell> jddlab android-unpinner --help</p>
 │ start-app         Start app on device and inject Frida gadget.               │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ````
+</details></p>
+
+<p>Example 1. Removing certificate pinning from test.apk:
+<code>
+jddlab android-unpinner patch-apks test.apk 
+Result:
+[23:27:04] Patching test.apk...
+[23:27:04] Make APK debuggable...
+[23:27:13] Zipalign &amp; re-sign APK...
+[23:27:24] Created patched APK: test.unpinned.apk
+[23:27:24] All done! 🎉
+</code></p>
+
+<h3>apk-patcher - the easiest way to integrate Frida into APK</h3>
+
+<p>URL: https://github.com/Foo-Manroot/apk-patcher  </p>
+
+<p>"When trying to modify an android application, Frida comes really handy. However, on non-rooted devices it can sometimes be difficult to inject the gadget into the apk. This is in my experience less and less true, since I encounter every time more APKs that, one way or another, break something along the process. Since apktool decodes all resources, just a missing reference makes the whole process fail. On the other hand, split APKs (those that come with not only a base.apk, but also other files like *_config.xxhdpi.apk et al.) are harder to recompile, because there are certain dependencies between those different files, and fixing all the resource IDs (which has to be done before apktool lets you merge all into a fat APK) is a pain that not always fully works. This script aims to help with the injection task, by modifying the least amount of files possible so there are no issues later with the resources."</p>
+
+<p><details>
+   <summary>apk-patcher command-line arguments</summary></p>
+
+<p>````
+shell> jddlab apk-unpatcher</p>
+
+<p>usage: APK patcher
+       [-h]
+       [-f]
+       [-c GADGET<em>CONFIG]
+       [-v]
+       [-l frida</em>script]
+       [-a {armeabi-v7a,arm64-v8a,x86,x86<em>64}]
+       [-d DIR</em>LIB]
+       base_path
+````
+</details></p>
+
+<p>Example. Integrating Frida into APK (test.apk)
+```</p>
+
+<h1>Attention: use your APK filename without extension + dot at the end "test.apk" =&gt; "test."</h1>
+
+<h1>For split APKs it's expected you have "%base%config.%lang%.apk", "%base%config.%arch%.apk", "%base%config.%dpi%.apk"</h1>
+
+<h1>For example: test.apk, test.config.en.apk, test.config.arm64_v8a.apk, test.config.xxhdpi.apk</h1>
+
+<p>jddlab apk-patcher ./test.
+```
+<details>
+   <summary>Result</summary></p>
+
+<p><code>
+2025-01-28 21:05:15.291 | INFO     | Using /work/test.patched as working directory.
+2025-01-28 21:05:15.294 | INFO     | Found parts: ['test.apk']
+2025-01-28 21:05:15.323 | INFO     | Found entry point(s): ['com.mytest.MainActivity']
+2025-01-28 21:05:15.406 | INFO     | Parsing classes.dex...
+2025-01-28 21:05:21.184 | INFO     | Found init method: Lcom/mytest/MainActivity;-&gt;&lt;init&gt;()V [access_flags=public constructor] @ 0x29a8c8
+[INFO][JAVA] Parsing DEX file Lcom/mytest/MainActivity;-&gt;&lt;init&gt;
+[DEBUG][JAVA] Size of the original DEX: 9197940 Bytes
+[DEBUG][JAVA] Size of the new generated DEX: 9572036 Bytes
+2025-01-28 21:05:31.381 | INFO     | Requesting https://api.github.com/repos/frida/frida/releases/latest
+2025-01-28 21:05:31.832 | INFO     | Using Frida version 16.6.6 (latest)
+2025-01-28 21:05:35.262 | INFO     | Processing architecture arm
+2025-01-28 21:05:35.263 | INFO     | Located frida-gadget-16.6.6-android-arm.so.xz @ https://github.com/frida/frida/releases/download/16.6.6/frida-gadget-16.6.6-android-arm.so.xz
+2025-01-28 21:05:36.882 | INFO     | Processing architecture arm64
+2025-01-28 21:05:36.882 | INFO     | Located frida-gadget-16.6.6-android-arm64.so.xz @ https://github.com/frida/frida/releases/download/16.6.6/frida-gadget-16.6.6-android-arm64.so.xz
+2025-01-28 21:05:38.654 | INFO     | Processing architecture x86
+2025-01-28 21:05:38.654 | INFO     | Located frida-gadget-16.6.6-android-x86.so.xz @ https://github.com/frida/frida/releases/download/16.6.6/frida-gadget-16.6.6-android-x86.so.xz
+2025-01-28 21:05:40.493 | INFO     | Processing architecture x86_64
+2025-01-28 21:05:40.493 | INFO     | Located frida-gadget-16.6.6-android-x86_64.so.xz @ https://github.com/frida/frida/releases/download/16.6.6/frida-gadget-16.6.6-android-x86_64.so.xz
+[DEBUG][JAVA] Original Zip file: 131258290 Bytes // Aligned Zip file: 131348436 Bytes.
+[DEBUG][JAVA] Apk signed.
+2025-01-28 21:05:56.323 | SUCCESS  | [+] All done! The output APK can be found under /work/test.patched
+</code>
 </details></p>
 
