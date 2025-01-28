@@ -1,13 +1,21 @@
 import ghidra.app.decompiler.*;
 import ghidra.app.script.GhidraScript;
+import ghidra.app.util.headless.HeadlessAnalyzer;
 import ghidra.program.model.listing.*;
 import ghidra.program.model.symbol.*;
 import ghidra.program.model.data.*;
 import ghidra.program.model.address.*;
-import ghidra.program.model.mem.MemoryAccessException;
+import ghidra.program.model.mem.*;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import ghidra.program.model.address.*;
+import ghidra.program.model.mem.MemoryAccessException;
+import ghidra.program.model.lang.OperandType;
 
 public class CustomDecompileScript extends GhidraScript {
     @Override
@@ -20,6 +28,37 @@ public class CustomDecompileScript extends GhidraScript {
         String outputFilePath = getScriptArgs()[0];
         DecompInterface decomp = new DecompInterface();
         decomp.openProgram(currentProgram);
+
+        try {
+            SymbolTable symbolTable = currentProgram.getSymbolTable();
+            Listing listing = currentProgram.getListing();
+            Memory memory = currentProgram.getMemory();
+            for (Instruction instr : listing.getInstructions(true)) {
+                //println("Processing instruction: " + instr.toString());
+                int opCount = instr.getNumOperands();
+                for (int i = 0; i < opCount; i++) {
+                    if ((instr.getOperandType(i) & OperandType.ADDRESS) != 0) {
+                        Address addr = instr.getAddress(i);
+                        if (addr != null && memory.contains(addr)) {   
+                            var primarySymbol = symbolTable.getPrimarySymbol(addr);
+                            //println("Processing address: " + addr.toString() + " primary symbol " + (primarySymbol != null ? primarySymbol.toString() : "null"));
+                            if (primarySymbol == null) {
+                                symbolTable.createLabel(addr, "DAT_" + addr.toString(), currentProgram.getGlobalNamespace(), SourceType.ANALYSIS);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            println("Warning while analyzing data: " + e.getMessage());
+        }
+ 
+        try {
+            // Update JNI_OnLoad function signature
+            updateJNISignature();
+        } catch (Exception e) {
+            println("Warning while updating JNI Signatures: " + e.getMessage());
+        }
         
         try (PrintWriter writer = new PrintWriter(new FileWriter(outputFilePath))) {
             writer.println(String.format("// jddlab decompiled binary '%s' with ghidra", currentProgram));
@@ -27,12 +66,19 @@ public class CustomDecompileScript extends GhidraScript {
             // Global Variables
             SymbolTable symTable = currentProgram.getSymbolTable();
             writer.println("\n// Global Variables");
-            for (Symbol symbol : symTable.getAllSymbols(false)) {
+            for (Symbol symbol : symTable.getAllSymbols(true)) {
+                var dumped = false;
                 if ((symbol.getSymbolType() == SymbolType.GLOBAL || symbol.getSymbolType() == SymbolType.LABEL) && symbol.getAddress().isMemoryAddress()) {
                     Data data = getDataAt(symbol.getAddress());
                     if (data != null) {
                         writer.println(formatData(symbol.getName(), data));
+                        dumped = true;
                     }
+                }
+                if (!dumped && false) {
+                    println("Symbol: " + symbol.getName());
+                    println("Symbol type: " + symbol.getSymbolType().toString());
+                    println("Is memory: " + (symbol.getAddress().isMemoryAddress() ? "YES" : "NO"));
                 }
             }
             
@@ -64,7 +110,7 @@ public class CustomDecompileScript extends GhidraScript {
         DataType dataType = data.getDataType();
         String type = mapDataType(dataType);
         String value = data.getDefaultValueRepresentation();
-        //print(name + " have class " + dataType.getClass().getName());
+        //print(name + " have class " + dataType.getClass().getName() + " (" + dataType.getDisplayName() + ") and default value '" + value + "'");
 
         try {
             // See classes at https://ghidra.re/ghidra_docs/api/ghidra/program/model/data/DataType.html
@@ -84,7 +130,7 @@ public class CustomDecompileScript extends GhidraScript {
                 byte byteValue = (byte)data.getByte(0);
                 type = "int8_t"; 
                 value = formatLongValue((long)byteValue & 0xFFL, false);
-            } else if (dataType instanceof UnsignedLongDataType || dataType instanceof DWordDataType || dataType instanceof Undefined8DataType) {
+            } else if (dataType instanceof UnsignedLongDataType || dataType instanceof QWordDataType || dataType instanceof Undefined8DataType) {
                 long longValue = (long)data.getLong(0);
                 type = "uint64_t"; 
                 value = formatLongValue(longValue, true);
@@ -115,8 +161,23 @@ public class CustomDecompileScript extends GhidraScript {
                 type = "char";
                 name = removeArrayWithLengthSuffix(name) + "[]";
             } else if (dataType instanceof PointerDataType || dataType instanceof Pointer) {
-                //long pointerValue = (long) data.getValue();
-                // Nothing to do
+                long pointerValue = data.getLong(0);
+                Address pointerAddress = currentProgram.getAddressFactory().getDefaultAddressSpace().getAddress(pointerValue);
+                // Looking symbol by address
+                Symbol symbol = currentProgram.getSymbolTable().getPrimarySymbol(pointerAddress);
+                if (symbol != null) {
+                    // Using its name instrad of address
+                    value = "&" + symbol.getName();
+                } else {
+                    value = "0x" + Long.toHexString(pointerValue);
+                }
+              
+                DataType baseType = ((Pointer) dataType).getDataType();
+                if (baseType != null) {
+                    type = mapDataType(baseType) + "*";
+                } else {
+                    type = "void*";
+                }
             }/* else if (dataType instanceof EnumDataType) {
                 // ToDO
                 int enumValue = (int) data.getValue();
@@ -124,6 +185,8 @@ public class CustomDecompileScript extends GhidraScript {
             }*/ else if (dataType instanceof ArrayDataType || dataType instanceof ArrayStringable || dataType instanceof Array) {
                 type = "char";
                 value = convertToCharArray(data);
+                int length = (int) data.getLength();
+                name = removeArrayWithLengthSuffix(name) + "[" + length + "]";
             } else {
                 println("Unsupported type for '" + name + "': " + dataType.getClass().getName());
                 value = formatHexValue(data);
@@ -133,7 +196,7 @@ public class CustomDecompileScript extends GhidraScript {
             println("Error accessing data value: " + e.getMessage());
         }
                 
-        return String.format("%s %s = %s;", type, name, value);
+        return String.format("%s %s = %s;", type, normalizeVariableName(name), value);
     }
 
     private static String removeArrayWithLengthSuffix(String input) {
@@ -194,5 +257,39 @@ public class CustomDecompileScript extends GhidraScript {
         }
         sb.append("}");
         return sb.toString();
+    }
+
+    public static String normalizeVariableName(String name) {
+        return name.replaceAll("[^a-zA-Z0-9_]", "_");
+    }
+
+    private void importJNIHeader(String headerFilePath) throws Exception {
+        println("Importing header file: " + headerFilePath);
+        //runCommand("Parse C Source", "-parseFile " + headerFilePath);
+        //HeadlessParser headlessParser = new HeadlessParser();
+        //headlessParser.parse(headerFilePath, currentProgram, monitor);
+        println("Imported header file: " + headerFilePath);
+    }
+    
+    private void updateJNISignature() {
+        /*FunctionManager fm = currentProgram.getFunctionManager();
+        Function jniOnLoad = fm.getFunction("JNI_OnLoad");
+        if (jniOnLoad != null) {
+            DataTypeManager dtm = currentProgram.getDataTypeManager();
+            DataType jintType = dtm.getDataType("int");
+            DataType voidPtrType = new PointerDataType(VoidDataType.dataType);
+            DataType javaVmPtrType = new PointerDataType(dtm.getDataType("JavaVM"));
+
+            ParameterDefinition[] params = new ParameterDefinition[] {
+                new ParameterDefinitionImpl("vm", javaVmPtrType, "JavaVM pointer"),
+                new ParameterDefinitionImpl("reserved", voidPtrType, "Reserved")
+            };
+
+            FunctionDefinition jniSignature = new FunctionDefinitionDataType("JNI_OnLoad", jintType, params);
+            jniOnLoad.setSignature(jniSignature);
+            println("Updated JNI_OnLoad signature.");
+        } else {
+            println("JNI_OnLoad function not found.");
+        }*/
     }
 }
