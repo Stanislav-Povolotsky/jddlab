@@ -137,8 +137,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="&#109;&#x61;&#105;&#108;&#116;&#111;&#x3a;&#x62;&#114;u&#116;&#x2e;&#x61;&#108;l&#108;&#x40;&#x67;&#x6d;&#97;&#x69;&#x6c;&#46;&#x63;&#111;&#x6d;">&#x62;&#114;u&#116;&#x2e;&#x61;&#108;l&#108;&#x40;&#x67;&#x6d;&#97;&#x69;&#x6c;&#46;&#x63;&#111;&#x6d;</a>
-Copyright 2010 Connor Tumbleson <a href="m&#x61;&#x69;&#108;&#116;&#111;&#58;&#99;&#111;&#x6e;&#110;&#111;&#114;.&#x74;u&#109;b&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#109;&#x61;&#105;&#108;&#46;&#x63;&#x6f;&#109;">&#99;&#111;&#x6e;&#110;&#111;&#114;.&#x74;u&#109;b&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#109;&#x61;&#105;&#108;&#46;&#x63;&#x6f;&#109;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#109;&#97;&#x69;&#x6c;&#x74;&#x6f;&#58;&#x62;&#x72;&#117;&#x74;&#x2e;&#97;&#108;&#108;&#x6c;&#x40;&#103;&#109;&#x61;&#105;&#x6c;&#x2e;&#x63;&#x6f;&#109;">&#x62;&#x72;&#117;&#x74;&#x2e;&#97;&#108;&#108;&#x6c;&#x40;&#103;&#109;&#x61;&#105;&#x6c;&#x2e;&#x63;&#x6f;&#109;</a>
+Copyright 2010 Connor Tumbleson <a href="&#109;&#x61;&#105;&#108;&#x74;&#111;&#x3a;&#x63;&#x6f;&#x6e;&#110;&#x6f;&#x72;.&#x74;&#117;&#x6d;&#x62;&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#46;&#x63;&#111;&#x6d;">&#x63;&#x6f;&#x6e;&#110;&#x6f;&#x72;.&#x74;&#117;&#x6d;&#x62;&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#46;&#x63;&#111;&#x6d;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
@@ -1053,7 +1053,7 @@ Result:
    <summary>apk-patcher command-line arguments</summary></p>
 
 <p>````
-shell> jddlab apk-unpatcher</p>
+shell> jddlab apk-patcher -h</p>
 
 <p>usage: APK patcher
        [-h]
@@ -1063,7 +1063,39 @@ shell> jddlab apk-unpatcher</p>
        [-l frida</em>script]
        [-a {armeabi-v7a,arm64-v8a,x86,x86<em>64}]
        [-d DIR</em>LIB]
-       base_path
+       base_path</p>
+
+<p>Script to automate the decompilation, patch and rebuild of any Android split applications (those apps that have base.apk, plus .config.<something>.apk) to inject the provided Frida script.</p>
+
+<p>positional arguments:
+  base<em>path
+    Common prefix for all the split apk files.
+    For example, if we have:
+      - com.example.1234.apk
+      - com.example.1234.config.armeabi</em>v7a.apk
+      - com.example.1234.config.en.apk
+      - com.example.1234.config.xxhdpi.apk</p>
+
+<pre><code>'base-name' must be "com.example.1234." (note the dot at the end)
+</code></pre>
+
+<p>options:
+  -h, --help
+    show this help message and exit
+  -f, --fix<em>manifest
+    If set, the script will attempt to modify AndroidManifest.xml to set extractNativeLibs=true.
+    ATTENTION: it may cause problems like 'INSTALL</em>PARSE<em>FAILED</em>UNEXPECTED<em>EXCEPTION' on installation.
+  -c GADGET</em>CONFIG, --config GADGET<em>CONFIG
+    Path to a custom Gadget config ( https://frida.re/docs/gadget/ )
+  -v, --verbose
+    Increase the verbosity. Can be specified up to 3 times.
+  -l frida</em>script, --load frida<em>script
+    The JS file to patch into the apk.
+  -a {armeabi-v7a,arm64-v8a,x86,x86</em>64}, --arch {armeabi-v7a,arm64-v8a,x86,x86<em>64}
+    Bypass the ABI detection and force the usage of a specific architecture for the injected Frida gadget.
+  -d DIR</em>LIB, --dir-lib DIR_LIB
+    Force the Frida gadget to be injected into a specific directory within the APK. For example: <code>-d 'lib/arm/' -a x86_64</code>.
+    Requires --arch
 ````
 </details></p>
 
