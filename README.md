@@ -1043,9 +1043,9 @@ URL: https://github.com/Foo-Manroot/apk-patcher
    <summary>apk-patcher command-line arguments</summary>
 
 ````
-shell> jddlab apk-unpatcher
+shell> jddlab apk-patcher -h
 
- usage: APK patcher
+usage: APK patcher
        [-h]
        [-f]
        [-c GADGET_CONFIG]
@@ -1054,6 +1054,37 @@ shell> jddlab apk-unpatcher
        [-a {armeabi-v7a,arm64-v8a,x86,x86_64}]
        [-d DIR_LIB]
        base_path
+
+Script to automate the decompilation, patch and rebuild of any Android split applications (those apps that have base.apk, plus .config.<something>.apk) to inject the provided Frida script.
+
+positional arguments:
+  base_path
+    Common prefix for all the split apk files.
+    For example, if we have:
+      - com.example.1234.apk
+      - com.example.1234.config.armeabi_v7a.apk
+      - com.example.1234.config.en.apk
+      - com.example.1234.config.xxhdpi.apk
+    
+    'base-name' must be "com.example.1234." (note the dot at the end)
+
+options:
+  -h, --help
+    show this help message and exit
+  -f, --fix_manifest
+    If set, the script will attempt to modify AndroidManifest.xml to set extractNativeLibs=true.
+    ATTENTION: it may cause problems like 'INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION' on installation.
+  -c GADGET_CONFIG, --config GADGET_CONFIG
+    Path to a custom Gadget config ( https://frida.re/docs/gadget/ )
+  -v, --verbose
+    Increase the verbosity. Can be specified up to 3 times.
+  -l frida_script, --load frida_script
+    The JS file to patch into the apk.
+  -a {armeabi-v7a,arm64-v8a,x86,x86_64}, --arch {armeabi-v7a,arm64-v8a,x86,x86_64}
+    Bypass the ABI detection and force the usage of a specific architecture for the injected Frida gadget.
+  -d DIR_LIB, --dir-lib DIR_LIB
+    Force the Frida gadget to be injected into a specific directory within the APK. For example: `-d 'lib/arm/' -a x86_64`.
+    Requires --arch
 ````
 </details>
 
