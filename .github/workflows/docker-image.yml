@@ -5,7 +5,7 @@ on:
   #  branches:
   #    - main                 # Run on push to the branch
   schedule:
-    - cron: "20 4 * * 1"      # Run every monday night 4:20
+    - cron: "20 4 1,15 * *"   # Run twice a month at 4:20 AM
   workflow_dispatch:          # This enables manual triggering
 
 concurrency:
