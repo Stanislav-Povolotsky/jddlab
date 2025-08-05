@@ -276,8 +276,11 @@ jobs:
         if: env.TEMP_DOCKER_IMAGE_PREPARED == 'true'
         continue-on-error: true  # This ensures the workflow continues even if this step fails
         run: |
-          echo Removing temp image
-          curl -f -X DELETE -H "Authorization: Bearer ${{ secrets.DOCKER_PASSWORD }}" \
+          echo Removing temp image (${{ env.NEW_VERSION }}-temp)
+          TOKEN=$(curl -s -H "Content-Type: application/json" \
+              -X POST -d '{"username": "${{ secrets.DOCKER_USERNAME }}", "password": "${{ secrets.DOCKER_PASSWORD }}"}' \
+              https://hub.docker.com/v2/users/login/ | jq -r .token)
+          curl -v -f -X DELETE -H "Authorization: Bearer $TOKEN" \
               "https://hub.docker.com/v2/repositories/${{ vars.DOCKER_IMAGE }}/tags/${{ env.NEW_VERSION }}-temp"
 
       # Log out of Docker Hub
