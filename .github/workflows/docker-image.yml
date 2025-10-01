@@ -21,6 +21,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Free disk space (github runner only guarantees 14 GB of free space, so it will be more)
+      - name: "Free disk space"
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf /opt/hostedtoolcache
+          df -h
+
       # Set up Python environment
       - name: Set up Python 3.x
         uses: actions/setup-python@v4
