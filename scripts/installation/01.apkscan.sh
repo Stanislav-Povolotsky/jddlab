@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 pkg=apkscan
 pip_pkg=$pkg

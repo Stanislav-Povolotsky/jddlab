@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 pkg=ghidra
 #target_install_path=$PWD/installed

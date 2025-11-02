@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 #mvn dependency:get \
 #  -DrepoUrl=https://www.jetbrains.com/intellij-repository/releases/ \

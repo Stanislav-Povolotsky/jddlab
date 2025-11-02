@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 pkg=enjarify
 pip_pkg=enjarify-adapter

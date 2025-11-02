@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 mkdir -p $venv
 python3 -m venv $venv

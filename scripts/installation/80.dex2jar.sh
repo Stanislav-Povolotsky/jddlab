@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 pkg=dex2jar
 #target_install_path=$PWD/installed

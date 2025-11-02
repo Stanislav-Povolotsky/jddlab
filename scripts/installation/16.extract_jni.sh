@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 pkg=extract_jni
 PKG=EXTRACT_JNI

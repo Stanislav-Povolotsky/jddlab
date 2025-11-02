@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 find $venv/bin/ -type f -executable -exec basename {} \; | sort >$venv/list-commands-end.txt
 comm -3 $venv/list-commands-start.txt $venv/list-commands-end.txt | awk '{$1=$1; print}' >$venv/list-commands.txt

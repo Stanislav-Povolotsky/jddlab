@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -ex
 
 SCRIPT_FILE="$(readlink --canonicalize-existing "$0")"
 SCRIPT_DIR="$(dirname "$SCRIPT_FILE")"
