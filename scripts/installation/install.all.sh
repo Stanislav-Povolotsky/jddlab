@@ -6,6 +6,9 @@ SCRIPT_DIR="$(dirname "$SCRIPT_FILE")"
 export target_install_path=$SCRIPT_DIR/installed
 export target_install_path_jddlab=$target_install_path/usr/local/jddlab
 export venv=/usr/local/python-venv
+export PIPX_BASE="/usr/local/python-venvs"
+export PIPX_HOME="$PIPX_BASE/venvs"
+export PIPX_BIN_DIR="$PIPX_BASE/bin"
 export PATH="/root/.cargo/bin:$PATH"
 mkdir -p $target_install_path/usr/local $target_install_path_jddlab
 

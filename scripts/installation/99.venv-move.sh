@@ -11,3 +11,16 @@ if [ -d "$venv" ]; then
     popd
     mv $venv $target_install_path$venv
 fi
+
+if [ -d "$PIPX_BASE" ]; then 
+    if [ -d "$PIPX_BASE/venvs/logs" ]; then 
+        rm -rf $PIPX_BASE/venvs/logs
+    fi
+    if [ -d "$PIPX_BASE/venvs/.cache" ]; then 
+        rm -rf $PIPX_BASE/venvs/.cache
+    fi
+    pushd $PIPX_BASE/..
+    mkdir -p $target_install_path$PWD
+    popd
+    mv $PIPX_BASE $target_install_path$PIPX_BASE
+fi

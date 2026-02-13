@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-apt-get update && apt-get install -y curl ca-certificates python3-pip python3-venv zip openjdk-21-jdk-headless git jq xmlstarlet python3-distutils
+apt-get update && apt-get install -y curl ca-certificates python3-pip python3-venv pipx zip openjdk-21-jdk-headless git jq xmlstarlet python3-setuptools
 
 echo Installing mvn
 pushd /tmp

@@ -1,15 +1,15 @@
 FROM saschpe/android-sdk:35-jdk21.0.4_7 as android-sdk
-ARG ANDROID_BUILD_TOOLS_VERSION=35.0.0
+ARG ANDROID_BUILD_TOOLS_VERSION=36.1.0
 RUN ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION sdkmanager --install "build-tools;$ANDROID_BUILD_TOOLS_VERSION"
 RUN ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION && \
     SRCDIR=/opt/android-sdk-linux && \
     DSTDIR=/selected-parts/android-sdk-linux && \
-    mkdir -p $DSTDIR/build-tools/current/lib64 && \
+    mkdir -p $DSTDIR/build-tools && \
     cp -r $SRCDIR/platform-tools $DSTDIR/ && \
-    cp    $SRCDIR/build-tools/$ANDROID_BUILD_TOOLS_VERSION/zipalign        $DSTDIR/build-tools/current/ && \
-    cp    $SRCDIR/build-tools/$ANDROID_BUILD_TOOLS_VERSION/lib64/libc++.*  $DSTDIR/build-tools/current/lib64/
+    cp -r  $SRCDIR/build-tools/$ANDROID_BUILD_TOOLS_VERSION $DSTDIR/build-tools/ && \
+    ln -s $ANDROID_BUILD_TOOLS_VERSION $DSTDIR/build-tools/current
 
-FROM ubuntu:22.04 as builder
+FROM ubuntu:24.04 as builder
 
 COPY scripts/installation/prepare.sh /root/scripts/installation/
 RUN /root/scripts/installation/prepare.sh
@@ -24,11 +24,12 @@ ARG DOCKER_IMAGE_BUILD_VERSION=local
 ARG DOCKER_IMAGE_BUILD_MODE=full
 RUN DOCKER_IMAGE_BUILD_VERSION=$DOCKER_IMAGE_BUILD_VERSION DOCKER_IMAGE_BUILD_MODE=$DOCKER_IMAGE_BUILD_MODE /root/scripts/installation/install.all.sh
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
-ENV PATH="/usr/local/python-venv/bin:$PATH:/usr/local/android-sdk-linux/platform-tools:/usr/local/android-sdk-linux/build-tools/current"
+ENV PATH="/usr/local/python-venvs/bin:/usr/local/python-venv/bin:$PATH:/usr/local/android-sdk-linux/platform-tools:/usr/local/android-sdk-linux/build-tools/current"
+
 WORKDIR /work
-COPY scripts/run/prepare.sh /root/scripts/run/
+COPY scripts/run/ /
 RUN /root/scripts/run/prepare.sh && rm -rf /root/scripts
 
 COPY --from=builder /root/scripts/installation/installed /
