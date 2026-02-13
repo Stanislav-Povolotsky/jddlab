@@ -121,6 +121,39 @@ docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --
 docker pull stanislavpovolotsky/jddlab:latest
 </code></p>
 
+<h2>How to</h2>
+
+<h3>How to use ADB with jddlab</h3>
+
+<h4>Wireless debug</h4>
+
+<p>The easiest way to enable wireless debugging with ADB:</p>
+
+<ol>
+<li>Open <strong>Developer options</strong> on your Android device.</li>
+<li>Enable <strong>Wireless debugging</strong>.</li>
+<li>Pair your device using <strong>Pair device with pairing code</strong> in the Wireless debugging section.<br />
+You will see an <strong>IP address &amp; Port</strong> and a <strong>Wi-Fi pairing code</strong>. Use these values in the <code>adb pair</code> command:
+<code>
+jddlab
+# Pair your device for wireless debugging
+adb pair 192.168.1.45:37630
+Enter pairing code: 723456
+Successfully paired to 192.168.1.45:37630 [guid=adb-HT7AR1A03153-NEMbib] 
+# Connect to your device via TCP/IP (use the IP address &amp; port shown in Wireless debugging settings)
+adb connect 192.168.1.45:38191
+connected to 192.168.1.45:38191
+</code></li>
+</ol>
+
+<p>After pairing and connecting, you can use ADB commands wirelessly.  </p>
+
+<p><strong>Security warning:</strong> jddlab comes with preinstalled ADB keys, which greatly simplifies usage. However, this also means that anyone with network access to your device can connect to it via the debugger.<br />
+<strong>Recommendation:</strong> Mount your local <code>~/.android</code> directory to <code>/root/.android</code> inside the container to use your own ADB keys and prevent unauthorized access.
+<code>
+docker run -it --rm -v "$HOME/.android:/root/.android" -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --version
+</code></p>
+
 <h2>Tools</h2>
 
 <h3>Apktool - a tool for reverse engineering Android apk files</h3>
@@ -137,8 +170,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="&#109;&#x61;&#105;&#x6c;t&#111;&#58;&#x62;&#114;&#x75;&#x74;&#x2e;&#97;&#x6c;&#x6c;&#108;&#64;&#103;&#x6d;&#x61;&#105;&#x6c;.&#99;&#x6f;&#109;">&#x62;&#114;&#x75;&#x74;&#x2e;&#97;&#x6c;&#x6c;&#108;&#64;&#103;&#x6d;&#x61;&#105;&#x6c;.&#99;&#x6f;&#109;</a>
-Copyright 2010 Connor Tumbleson <a href="&#109;a&#x69;&#108;&#116;&#x6f;&#58;&#x63;&#111;&#110;&#x6e;&#111;&#x72;&#x2e;&#x74;&#117;&#x6d;&#98;&#108;&#x65;&#115;&#111;&#110;&#64;&#x67;m&#97;&#x69;&#108;&#x2e;&#99;&#111;&#109;">&#x63;&#111;&#110;&#x6e;&#111;&#x72;&#x2e;&#x74;&#117;&#x6d;&#98;&#108;&#x65;&#115;&#111;&#110;&#64;&#x67;m&#97;&#x69;&#108;&#x2e;&#99;&#111;&#109;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#109;&#97;&#105;&#x6c;&#116;&#x6f;&#58;&#98;&#114;&#117;&#x74;&#x2e;&#97;&#x6c;&#108;&#x6c;&#x40;&#x67;&#x6d;a&#105;&#x6c;&#46;&#x63;&#111;&#x6d;">&#98;&#114;&#117;&#x74;&#x2e;&#97;&#x6c;&#108;&#x6c;&#x40;&#x67;&#x6d;a&#105;&#x6c;&#46;&#x63;&#111;&#x6d;</a>
+Copyright 2010 Connor Tumbleson <a href="&#109;&#x61;&#x69;&#x6c;&#116;&#111;&#x3a;&#x63;&#111;&#x6e;&#x6e;&#111;&#x72;&#x2e;&#x74;&#x75;&#x6d;&#x62;&#x6c;&#x65;s&#x6f;&#x6e;&#x40;g&#x6d;&#x61;&#x69;&#x6c;&#46;&#99;&#111;&#x6d;">&#x63;&#111;&#x6e;&#x6e;&#111;&#x72;&#x2e;&#x74;&#x75;&#x6d;&#x62;&#x6c;&#x65;s&#x6f;&#x6e;&#x40;g&#x6d;&#x61;&#x69;&#x6c;&#46;&#99;&#111;&#x6d;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
@@ -935,6 +968,125 @@ Usage: androguard [OPTIONS] COMMAND [ARGS]...</p>
   dump         Start and dump dynamically an installed APK on the phone
   sign         Return the fingerprint(s) of all certificates inside an APK.
   trace        Push an APK on the phone and start to trace all...
+````
+</details></p>
+
+<h3>objection - runtime mobile exploration toolkit</h3>
+
+<p>URL: https://github.com/sensepost/objection  </p>
+
+<p>Objection is a Frida-powered toolkit for runtime analysis of mobile apps, which can:</p>
+
+<ul>
+<li>Bypass SSL pinning.</li>
+<li>Inspect and interact with container file systems.</li>
+<li>Dump keychains.</li>
+<li>Perform memory related tasks, such as dumping &amp; patching.</li>
+<li>Explore and manipulate objects on the heap.</li>
+</ul>
+
+<p><details>
+   <summary>objection command-line arguments</summary></p>
+
+<p>````
+shell> jddlab objection --help
+Usage: objection [OPTIONS] COMMAND [ARGS]...</p>
+
+<p>Options:
+  -N, --network            Connect using a network connection instead of USB.
+  -h, --host TEXT          [default: 127.0.0.1]
+  -P, --port INTEGER       [default: 27042]
+  -ah, --api-host TEXT     [default: 127.0.0.1]
+  -ap, --api-port INTEGER  [default: 8888]
+  -n, --name TEXT          Name or bundle identifier to attach to.
+  -S, --serial TEXT        A device serial to connect to.
+  -d, --debug              Enable debug mode with verbose output.
+  -s, --spawn              Spawn the target.
+  -p, --no-pause           Resume the target immediately.
+  -f, --foremost           Use the current foremost application.
+  --debugger               Enable the Chrome debug port.
+  --uid TEXT               Specify the uid to run as (Android only).
+  --help                   Show this message and exit.</p>
+
+<p>Commands:
+  api       Start the objection API server in headless mode.
+  patchapk  Patch an APK with the frida-gadget.so.
+  patchipa  Patch an IPA with the FridaGadget dylib.
+  run       Run a single objection command.
+  signapk   Zipalign and sign an APK with the objection key.
+  start     Start a new session
+  version   Prints the current version and exits.
+````
+</details></p>
+
+<p><details>
+   <summary>Example 1. Disable SSL pinning for 'com.app.name':</summary></p>
+
+<p>````
+jddlab</p>
+
+<h1>Connect to a device via TCP/IP (you should pair device before using wireless debug)</h1>
+
+<p>adb connect 192.168.1.45:38191
+connected to 192.168.1.45:38191</p>
+
+<h1>Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)</h1>
+
+<p>objection patchapk --source app.apk --gadget-version 16.1.3
+No architecture specified. Determining it using <code>adb</code>...
+Detected target device architecture as: arm64-v8a
+Using manually specified version: 16.1.3
+Patcher will be using Gadget version: 16.1.3
+Writing patched smali back to: /tmp/tmptlo0epk4.apktemp/smali_classes3/com/app/test/certpinning/MainActivity.smali
+Built new APK with injected loadLibrary and frida-gadget
+Signed the new APK</p>
+
+<h1>Installing patched apk</h1>
+
+<p>adb install -r app.objection.apk
+Performing Streamed Install
+Success</p>
+
+<h1>Running application</h1>
+
+<p>adb shell monkey -p com.app.name 1
+Events injected: 1</p>
+
+<h1>Using objection to disable SSL pinning</h1>
+
+<p>objection -g "Gadget" explore -s "android sslpinning disable"
+````
+</details></p>
+
+<p><details>
+   <summary>Example 2. Disable SSL pinning for 'com.app.name' for Android 10 (using Frida 16 gadget and objection@16)</summary></p>
+
+<p>````
+jddlab</p>
+
+<h1>Connect to a device via TCP/IP (you should pair device before using wireless debug)</h1>
+
+<p>adb connect 192.168.1.45:38191</p>
+
+<h1>Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)</h1>
+
+<p>objection@16 patchapk --source app.apk --gadget-version 16.1.3
+Signed the new APK</p>
+
+<h1>Installing patched apk</h1>
+
+<p>adb install -r app.objection.apk
+Performing Streamed Install
+Success</p>
+
+<h1>Running application</h1>
+
+<p>adb shell monkey -p com.app.name 1
+Events injected: 1</p>
+
+<h1>Using objection to disable SSL pinning</h1>
+
+<p>objection@16 -g "Gadget" explore -s "android sslpinning disable"
 ````
 </details></p>
 
