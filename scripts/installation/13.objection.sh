@@ -28,6 +28,9 @@ else
     popd
 fi
 
+# Manual fill
+home_page=${home_page:-"https://github.com/sensepost/objection"}
+
 echo "$version"           >$pkg_info
 echo "$home_page"         >>$pkg_info
 echo "$pip_pkg==$version" >>$pkg_info

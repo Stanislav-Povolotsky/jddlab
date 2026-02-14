@@ -1014,12 +1014,10 @@ jddlab
 adb connect 192.168.1.45:38191
 connected to 192.168.1.45:38191
 
-# Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)
-objection patchapk --source app.apk --gadget-version 16.1.3
+# Add Frida gadget to APK
+objection patchapk --source app.apk
 No architecture specified. Determining it using `adb`...
 Detected target device architecture as: arm64-v8a
-Using manually specified version: 16.1.3
-Patcher will be using Gadget version: 16.1.3
 Writing patched smali back to: /tmp/tmptlo0epk4.apktemp/smali_classes3/com/app/test/certpinning/MainActivity.smali
 Built new APK with injected loadLibrary and frida-gadget
 Signed the new APK
@@ -1048,6 +1046,7 @@ adb connect 192.168.1.45:38191
 
 # Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)
 objection@16 patchapk --source app.apk --gadget-version 16.1.3
+Patcher will be using Gadget version: 16.1.3
 Signed the new APK
 
 # Installing patched apk
@@ -1059,7 +1058,7 @@ Success
 adb shell monkey -p com.app.name 1
 Events injected: 1
 
-# Using objection to disable SSL pinning
+# Using objection to disable SSL pinning (we are using Frida v16.x.x compatible objection to control application)
 objection@16 -g "Gadget" explore -s "android sslpinning disable"
 ````
 </details>
