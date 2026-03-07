@@ -31,7 +31,13 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     ln -s ../$pkg/$pkg $bin_path/$pkg
     # Checking it can be runned
     # Command returns errorcode 255 on help/version commands
-    ($bin_path/$pkg -h 2>&1 | tee -a $pkg_path/$pkg.command_help.txt) || if [ $? -ne 255 ]; then exit 1; fi
+    $bin_path/$pkg -h 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 255 ]]; then
+        echo "ERROR: $pkg --help failed with code $rc"
+        cat $pkg_path/$pkg.command_help.txt
+        exit $rc
+    fi
 fi
 
 # Cleaning temp folder

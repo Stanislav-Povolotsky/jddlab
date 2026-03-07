@@ -53,6 +53,12 @@ if [[ "$versions_collect_mode" == "0" ]]; then
 
     # Checking it can be runned
     $bin_path/$pkg --help 2>&1 | tee -a $pkg_path/$pkg.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 1 ]]; then
+        echo "ERROR: $pkg --help failed with code $rc"
+        cat $pkg_path/$pkg.command_help.txt
+        exit $rc
+    fi
 fi
 
 # Cleaning temp folder

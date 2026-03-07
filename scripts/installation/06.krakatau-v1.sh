@@ -54,7 +54,19 @@ if [[ "$versions_collect_mode" == "0" ]]; then
 
     # Checking it can be runned
     $bin_path/$cmd_disassemble --help 2>&1 | tee -a $pkg_path/$cmd_disassemble.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 1 ]]; then
+        echo "ERROR: $cmd_disassemble --help failed with code $rc"
+        cat $pkg_path/$cmd_disassemble.command_help.txt
+        exit $rc
+    fi
     $bin_path/$cmd_assemble --help 2>&1 | tee -a $pkg_path/$cmd_assemble.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 1 ]]; then
+        echo "ERROR: $cmd_assemble --help failed with code $rc"
+        cat $pkg_path/$cmd_assemble.command_help.txt
+        exit $rc
+    fi
 fi
 
 # Cleaning temp folder

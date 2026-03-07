@@ -34,5 +34,17 @@ if [[ "$versions_collect_mode" == "0" ]]; then
 
     # Checking it can be runned
     $bin_path/$cmd_ghidra_analyze_headless 2>&1 | tee -a $pkg_path/$cmd_ghidra_analyze_headless.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 1 ]]; then
+        echo "ERROR: $cmd_ghidra_analyze_headless --help failed with code $rc"
+        cat $pkg_path/$cmd_ghidra_analyze_headless.command_help.txt
+        exit $rc
+    fi
     $bin_path/$cmd_decompile 2>&1 | tee -a $pkg_path/$cmd_decompile.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 1 ]]; then
+        echo "ERROR: $cmd_decompile --help failed with code $rc"
+        cat $pkg_path/$cmd_ghidra_analyze_headless.command_help.txt
+        exit $rc
+    fi
 fi

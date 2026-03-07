@@ -35,9 +35,16 @@ echo "$commit_url" >> $pkg_info
 if [[ "$versions_collect_mode" == "0" ]]; then
     # Installation mode
     ln -s ../python-venv/bin/$cmd $bin_path/$cmd
+    chmod +x $venv/bin/$cmd
 
     # Checking it can be runned
-    $bin_path/$cmd --help 2>&1 | tee -a $pkg_path/$cmd.command_help.txt
+    $venv/bin/$cmd --help 2>&1 | tee -a $pkg_path/$cmd.command_help.txt
+    rc=${PIPESTATUS[0]}
+    if [[ $rc -ne 0 && $rc -ne 1 ]]; then
+        echo "ERROR: $cmd --help failed with code $rc"
+        cat $pkg_path/$cmd.command_help.txt
+        exit $rc
+    fi
 fi
 
 # Cleaning temp folder
