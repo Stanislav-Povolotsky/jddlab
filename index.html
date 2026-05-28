@@ -121,6 +121,178 @@ docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --
 docker pull stanislavpovolotsky/jddlab:latest
 </code></p>
 
+<h2>MCP server</h2>
+
+<p>This repository includes an MCP server that exposes jddlab tools to MCP clients such as Claude Desktop, Claude CLI, Codex, VS Code, and other stdio-compatible clients.</p>
+
+<p>The server lives in <code>mcp/server.py</code> and runs jddlab commands through Docker:</p>
+
+<p><code>text
+docker run --rm -v "&lt;host-mount-root&gt;:/work" stanislavpovolotsky/jddlab:latest &lt;command&gt; &lt;args&gt;
+</code></p>
+
+<p>The server exposes:</p>
+
+<ul>
+<li><code>jddlab_run</code>: a generic wrapper for any supported jddlab command.</li>
+<li>One MCP tool per command, for example <code>jddlab_apktool</code>, <code>jddlab_jadx</code>, <code>jddlab_ghidra_decompile</code>, <code>jddlab_android_unpinner</code>, and <code>jddlab_dex2jar</code>.</li>
+</ul>
+
+<p>Each MCP tool accepts:</p>
+
+<ul>
+<li><code>args</code>: native command arguments as an array of strings.</li>
+<li><code>workdir</code>: optional host directory to mount as <code>/work</code>.</li>
+<li><code>input_paths</code>: host input files/directories used to infer the Docker mount root and rewrite paths to <code>/work</code>.</li>
+<li><code>output_paths</code>: host output files/directories used to infer the Docker mount root and rewrite paths to <code>/work</code>.</li>
+<li><code>extra_mounts</code>: additional Docker mounts, for example Android ADB keys.</li>
+<li><code>timeout_seconds</code>: command timeout.</li>
+<li><code>docker_image</code>: optional Docker image override.</li>
+<li><code>interactive</code>: add Docker <code>-it</code>; keep this false for most MCP clients.</li>
+</ul>
+
+<p>Tool-specific usage notes are in the <code>tools/</code> directory. Connector examples are in <code>mcp/connectors/</code>.</p>
+
+<h3>MCP prerequisites</h3>
+
+<ul>
+<li>Python 3.10 or newer.</li>
+<li>Docker installed and running.</li>
+<li>The jddlab Docker image:</li>
+</ul>
+
+<p><code>shell
+docker pull stanislavpovolotsky/jddlab:latest
+</code></p>
+
+<h3>Start the MCP server</h3>
+
+<p>From the repository root:</p>
+
+<p><code>shell
+python mcp/server.py
+</code></p>
+
+<p>For a quick process-level smoke test:</p>
+
+<p><code>shell
+python mcp/server.py --list-commands
+</code></p>
+
+<h3>Install MCP connectors with jddlab</h3>
+
+<p>The standalone <code>jddlab</code> and <code>jddlab.cmd</code> launchers include an <code>mcp</code> subcommand. The launcher does not need a local repository checkout. On first use it downloads the latest <code>jddlab-mcp-&lt;version&gt;.zip</code> asset from the GitHub release, verifies the <code>.sha256</code> file when present, extracts it into <code>~/.jddlab/mcp/current</code>, and then runs the bundled installer.</p>
+
+<p>Examples:</p>
+
+<p><code>shell
+jddlab mcp add claude-cli
+jddlab mcp add claude-desktop
+jddlab mcp add codex
+jddlab mcp add vscode
+jddlab mcp add copilot
+jddlab mcp doctor
+jddlab mcp status
+jddlab mcp update
+</code></p>
+
+<p>On Windows the same commands work with <code>jddlab.cmd</code>:</p>
+
+<p><code>cmd
+jddlab mcp add codex
+</code></p>
+
+<p>The MCP bundle is installed under:</p>
+
+<ul>
+<li>Linux/macOS: <code>~/.jddlab/mcp/current</code></li>
+<li>Windows: <code>%USERPROFILE%\.jddlab\mcp\current</code></li>
+</ul>
+
+<p>Advanced environment variables:</p>
+
+<ul>
+<li><code>JDDLAB_MCP_HOME</code>: override the MCP install directory.</li>
+<li><code>JDDLAB_MCP_BUNDLE</code>: install from a local <code>jddlab-mcp-*.zip</code> file instead of GitHub.</li>
+<li><code>JDDLAB_MCP_BOOTSTRAP_URL</code>: override the bootstrap script URL used by standalone launchers.</li>
+<li><code>JDDLAB_GITHUB_REPOSITORY</code>: override the GitHub repository used for release downloads.</li>
+</ul>
+
+<h3>Connect from Claude Desktop</h3>
+
+<p>Add the following fragment to your Claude Desktop config and replace <code>&lt;REPO_PATH&gt;</code> with the absolute path to this repository.</p>
+
+<p>Typical config locations:</p>
+
+<ul>
+<li>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
+<li>Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
+</ul>
+
+<p><code>json
+{
+  "mcpServers": {
+    "jddlab": {
+      "command": "python",
+      "args": ["&lt;REPO_PATH&gt;/mcp/server.py"]
+    }
+  }
+}
+</code></p>
+
+<p>Restart Claude Desktop after editing the config.</p>
+
+<h3>Connect from Claude CLI</h3>
+
+<p><code>shell
+claude mcp add jddlab -- python &lt;REPO_PATH&gt;/mcp/server.py
+</code></p>
+
+<p>If your CLI version uses a different MCP management syntax, run:</p>
+
+<p><code>shell
+claude mcp --help
+</code></p>
+
+<h3>Connect from Codex</h3>
+
+<p>Add this fragment to <code>~/.codex/config.toml</code>:</p>
+
+<p><code>toml
+[mcp_servers.jddlab]
+command = "python"
+args = ["&lt;REPO_PATH&gt;/mcp/server.py"]
+startup_timeout_sec = 120
+</code></p>
+
+<p>Restart Codex after editing the config.</p>
+
+<h3>Connect from VS Code or other MCP clients</h3>
+
+<p>Use <code>mcp/connectors/vscode-mcp.json</code> or <code>mcp/connectors/generic-mcp.json</code> as a starting point. Any stdio-compatible MCP client should use the same command:</p>
+
+<p><code>json
+{
+  "command": "python",
+  "args": ["&lt;REPO_PATH&gt;/mcp/server.py"]
+}
+</code></p>
+
+<h3>MCP call example</h3>
+
+<p>Call <code>jddlab_apktool</code> with:</p>
+
+<p><code>json
+{
+  "args": ["d", "-o", "decoded", "app.apk"],
+  "input_paths": ["app.apk"],
+  "output_paths": ["decoded"],
+  "timeout_seconds": 600
+}
+</code></p>
+
+<p>The server infers a host mount root, rewrites <code>app.apk</code> and <code>decoded</code> to <code>/work/app.apk</code> and <code>/work/decoded</code>, then runs Docker.</p>
+
 <h2>How to</h2>
 
 <h3>How to use ADB with jddlab</h3>
@@ -170,8 +342,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="m&#x61;&#x69;&#x6c;&#116;&#111;&#x3a;&#x62;&#x72;&#x75;&#116;&#46;&#x61;&#108;&#x6c;&#108;&#64;g&#x6d;a&#x69;l&#x2e;&#99;&#x6f;&#x6d;">&#x62;&#x72;&#x75;&#116;&#46;&#x61;&#108;&#x6c;&#108;&#64;g&#x6d;a&#x69;l&#x2e;&#99;&#x6f;&#x6d;</a>
-Copyright 2010 Connor Tumbleson <a href="&#x6d;&#97;&#x69;&#108;&#116;&#111;&#58;&#99;&#111;&#x6e;&#x6e;&#x6f;&#114;.&#116;&#117;&#x6d;&#x62;&#108;&#101;&#x73;&#111;&#110;&#x40;g&#109;&#x61;il&#x2e;&#99;o&#109;">&#99;&#111;&#x6e;&#x6e;&#x6f;&#114;.&#116;&#117;&#x6d;&#x62;&#108;&#101;&#x73;&#111;&#110;&#x40;g&#109;&#x61;il&#x2e;&#99;o&#109;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#x6d;&#97;&#x69;&#108;t&#111;&#x3a;&#x62;&#114;&#117;&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#x67;&#109;&#97;&#x69;l&#46;&#99;&#111;&#x6d;">&#x62;&#114;&#117;&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#x67;&#109;&#97;&#x69;l&#46;&#99;&#111;&#x6d;</a>
+Copyright 2010 Connor Tumbleson <a href="&#109;a&#x69;&#108;&#x74;&#111;&#58;&#99;&#x6f;&#110;&#110;o&#x72;&#46;&#116;&#117;&#109;&#x62;&#x6c;e&#115;&#x6f;&#x6e;&#x40;&#x67;&#109;&#97;&#105;&#x6c;&#x2e;&#99;&#111;&#x6d;">&#99;&#x6f;&#110;&#110;o&#x72;&#46;&#116;&#117;&#109;&#x62;&#x6c;e&#115;&#x6f;&#x6e;&#x40;&#x67;&#109;&#97;&#105;&#x6c;&#x2e;&#99;&#111;&#x6d;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
