@@ -3,11 +3,35 @@ folder_to_serve="$PWD"
 jddlab_docker_image="stanislavpovolotsky/jddlab:latest"
 
 if [ "$#" -eq 1 ]; then
-  if [ "%~1"=="update" ]; then
+  if [ "$1" = "update" ]; then
     echo "Updating jddlab..."
     docker pull "$jddlab_docker_image"
     exit $?
   fi
+fi
+
+if [ "$#" -ge 1 ] && [ "$1" = "mcp" ]; then
+  shift
+  if command -v python3 >/dev/null 2>&1; then
+    jddlab_python=python3
+  elif command -v python >/dev/null 2>&1; then
+    jddlab_python=python
+  else
+    echo "Python 3.10 or newer is required to install jddlab MCP connectors." >&2
+    exit 1
+  fi
+  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
+  installed_bootstrap="$jddlab_mcp_home/current/mcp/bootstrap.py"
+  if [ -f "$installed_bootstrap" ]; then
+    exec "$jddlab_python" "$installed_bootstrap" "$@"
+  fi
+  script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
+  local_bootstrap="$script_dir/mcp/bootstrap.py"
+  if [ -f "$local_bootstrap" ]; then
+    exec "$jddlab_python" "$local_bootstrap" "$@"
+  fi
+  JDDLAB_MCP_BOOTSTRAP_URL=${JDDLAB_MCP_BOOTSTRAP_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/mcp/bootstrap.py"} \
+    exec "$jddlab_python" -c 'import os, urllib.request; exec(urllib.request.urlopen(os.environ["JDDLAB_MCP_BOOTSTRAP_URL"], timeout=120).read().decode("utf-8"))' "$@"
 fi
 
 docker_args=""

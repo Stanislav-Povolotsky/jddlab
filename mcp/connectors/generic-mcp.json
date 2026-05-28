@@ -1,0 +1,9 @@
+{
+  "name": "jddlab",
+  "transport": "stdio",
+  "command": "python",
+  "args": [
+    "<REPO_PATH>/mcp/server.py"
+  ],
+  "env": {}
+}

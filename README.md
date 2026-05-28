@@ -112,6 +112,166 @@ To update it to the latest version:
 docker pull stanislavpovolotsky/jddlab:latest
 ```
 
+## MCP server
+
+This repository includes an MCP server that exposes jddlab tools to MCP clients such as Claude Desktop, Claude CLI, Codex, VS Code, and other stdio-compatible clients.
+
+The server lives in `mcp/server.py` and runs jddlab commands through Docker:
+
+```text
+docker run --rm -v "<host-mount-root>:/work" stanislavpovolotsky/jddlab:latest <command> <args>
+```
+
+The server exposes:
+
+- `jddlab_run`: a generic wrapper for any supported jddlab command.
+- One MCP tool per command, for example `jddlab_apktool`, `jddlab_jadx`, `jddlab_ghidra_decompile`, `jddlab_android_unpinner`, and `jddlab_dex2jar`.
+
+Each MCP tool accepts:
+
+- `args`: native command arguments as an array of strings.
+- `workdir`: optional host directory to mount as `/work`.
+- `input_paths`: host input files/directories used to infer the Docker mount root and rewrite paths to `/work`.
+- `output_paths`: host output files/directories used to infer the Docker mount root and rewrite paths to `/work`.
+- `extra_mounts`: additional Docker mounts, for example Android ADB keys.
+- `timeout_seconds`: command timeout.
+- `docker_image`: optional Docker image override.
+- `interactive`: add Docker `-it`; keep this false for most MCP clients.
+
+Tool-specific usage notes are in the `tools/` directory. Connector examples are in `mcp/connectors/`.
+
+### MCP prerequisites
+
+- Python 3.10 or newer.
+- Docker installed and running.
+- The jddlab Docker image:
+
+```shell
+docker pull stanislavpovolotsky/jddlab:latest
+```
+
+### Start the MCP server
+
+From the repository root:
+
+```shell
+python mcp/server.py
+```
+
+For a quick process-level smoke test:
+
+```shell
+python mcp/server.py --list-commands
+```
+
+### Install MCP connectors with jddlab
+
+The standalone `jddlab` and `jddlab.cmd` launchers include an `mcp` subcommand. The launcher does not need a local repository checkout. On first use it downloads the latest `jddlab-mcp-<version>.zip` asset from the GitHub release, verifies the `.sha256` file when present, extracts it into `~/.jddlab/mcp/current`, and then runs the bundled installer.
+
+Examples:
+
+```shell
+jddlab mcp add claude-cli
+jddlab mcp add claude-desktop
+jddlab mcp add codex
+jddlab mcp add vscode
+jddlab mcp add copilot
+jddlab mcp doctor
+jddlab mcp status
+jddlab mcp update
+```
+
+On Windows the same commands work with `jddlab.cmd`:
+
+```cmd
+jddlab mcp add codex
+```
+
+The MCP bundle is installed under:
+
+- Linux/macOS: `~/.jddlab/mcp/current`
+- Windows: `%USERPROFILE%\.jddlab\mcp\current`
+
+Advanced environment variables:
+
+- `JDDLAB_MCP_HOME`: override the MCP install directory.
+- `JDDLAB_MCP_BUNDLE`: install from a local `jddlab-mcp-*.zip` file instead of GitHub.
+- `JDDLAB_MCP_BOOTSTRAP_URL`: override the bootstrap script URL used by standalone launchers.
+- `JDDLAB_GITHUB_REPOSITORY`: override the GitHub repository used for release downloads.
+
+### Connect from Claude Desktop
+
+Add the following fragment to your Claude Desktop config and replace `<REPO_PATH>` with the absolute path to this repository.
+
+Typical config locations:
+
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "jddlab": {
+      "command": "python",
+      "args": ["<REPO_PATH>/mcp/server.py"]
+    }
+  }
+}
+```
+
+Restart Claude Desktop after editing the config.
+
+### Connect from Claude CLI
+
+```shell
+claude mcp add jddlab -- python <REPO_PATH>/mcp/server.py
+```
+
+If your CLI version uses a different MCP management syntax, run:
+
+```shell
+claude mcp --help
+```
+
+### Connect from Codex
+
+Add this fragment to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.jddlab]
+command = "python"
+args = ["<REPO_PATH>/mcp/server.py"]
+startup_timeout_sec = 120
+```
+
+Restart Codex after editing the config.
+
+### Connect from VS Code or other MCP clients
+
+Use `mcp/connectors/vscode-mcp.json` or `mcp/connectors/generic-mcp.json` as a starting point. Any stdio-compatible MCP client should use the same command:
+
+```json
+{
+  "command": "python",
+  "args": ["<REPO_PATH>/mcp/server.py"]
+}
+```
+
+### MCP call example
+
+Call `jddlab_apktool` with:
+
+```json
+{
+  "args": ["d", "-o", "decoded", "app.apk"],
+  "input_paths": ["app.apk"],
+  "output_paths": ["decoded"],
+  "timeout_seconds": 600
+}
+```
+
+The server infers a host mount root, rewrites `app.apk` and `decoded` to `/work/app.apk` and `/work/decoded`, then runs Docker.
+
 ## How to
 
 ### How to use ADB with jddlab

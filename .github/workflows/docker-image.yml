@@ -246,6 +246,38 @@ jobs:
           cat release_body.md      >> $GITHUB_ENV
           echo "EOF"               >> $GITHUB_ENV
 
+      - name: Package MCP Server
+        if: env.CONTINUE_BUILD != 'false'
+        run: |
+          set -euo pipefail
+          MCP_ASSET="jddlab-mcp-${{ env.NEW_VERSION }}.zip"
+          MCP_ROOT="jddlab-mcp"
+          rm -rf dist
+          mkdir -p "dist/$MCP_ROOT"
+          cp -r mcp tools VERSION "dist/$MCP_ROOT/"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          version = "${{ env.NEW_VERSION }}"
+          path = Path("dist/jddlab-mcp/mcp/manifest.json")
+          data = json.loads(path.read_text(encoding="utf-8"))
+          data["version"] = version
+          path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+          PY
+          python - <<'PY'
+          import zipfile
+          from pathlib import Path
+          asset = Path("jddlab-mcp-${{ env.NEW_VERSION }}.zip")
+          root = Path("dist/jddlab-mcp")
+          with zipfile.ZipFile(asset, "w", zipfile.ZIP_DEFLATED) as zf:
+              for path in root.parent.rglob("*"):
+                  if path.is_file():
+                      zf.write(path, path.relative_to(root.parent))
+          PY
+          sha256sum "$MCP_ASSET" > "$MCP_ASSET.sha256"
+          echo "MCP_ASSET=$MCP_ASSET" >> $GITHUB_ENV
+          echo "MCP_SHA256_ASSET=$MCP_ASSET.sha256" >> $GITHUB_ENV
+
       # Create a GitHub release
       - name: Create GitHub Release
         if: env.CONTINUE_BUILD != 'false'
@@ -270,6 +302,28 @@ jobs:
           asset_content_type: text/plain   # Content type of the asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Use the token to authenticate
+
+      - name: Upload MCP Release Asset
+        if: env.CONTINUE_BUILD != 'false'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.MCP_ASSET }}
+          asset_name: ${{ env.MCP_ASSET }}
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload MCP Release Asset Checksum
+        if: env.CONTINUE_BUILD != 'false'
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./${{ env.MCP_SHA256_ASSET }}
+          asset_name: ${{ env.MCP_SHA256_ASSET }}
+          asset_content_type: text/plain
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Tag the image as 'latest' and remove temp
       - name: Push docker image

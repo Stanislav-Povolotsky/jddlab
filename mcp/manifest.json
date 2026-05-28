@@ -1,0 +1,8 @@
+{
+  "name": "jddlab-mcp",
+  "version": "0.1.0",
+  "requires_python": ">=3.10",
+  "docker_image": "stanislavpovolotsky/jddlab:latest",
+  "entrypoint": "mcp/server.py",
+  "installer": "mcp/install.py"
+}

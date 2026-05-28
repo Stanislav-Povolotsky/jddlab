@@ -1,0 +1,5 @@
+[mcp_servers.jddlab]
+command = "python"
+args = ["<REPO_PATH>/mcp/server.py"]
+startup_timeout_sec = 120
+

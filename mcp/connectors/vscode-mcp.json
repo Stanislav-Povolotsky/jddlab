@@ -1,0 +1,11 @@
+{
+  "servers": {
+    "jddlab": {
+      "type": "stdio",
+      "command": "python",
+      "args": [
+        "<REPO_PATH>/mcp/server.py"
+      ]
+    }
+  }
+}
