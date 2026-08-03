@@ -79,6 +79,8 @@ COMMANDS = [
     "smali",
     "std-apk",
     "vineflower",
+    "apksigner",
+    "zipalign",
 ]
 
 DESCRIPTIONS = {
@@ -107,6 +109,8 @@ DESCRIPTIONS = {
     "smali": "Assemble smali files into DEX bytecode.",
     "baksmali": "Disassemble DEX bytecode into smali files.",
     "extract_jni": "Extract JNI/native library artifacts from Android packages.",
+    "apksigner": "Sign and verify Android APK files using v1/v2/v3/v4 signing schemes (Android SDK Build Tools).",
+    "zipalign": "Align uncompressed data in an Android APK to 4-byte boundaries (Android SDK Build Tools).",
 }
 
 DEX2JAR_DESCRIPTIONS = {
@@ -298,6 +302,35 @@ def run_jddlab(arguments: dict[str, Any], forced_command: str | None = None) -> 
         }
 
 
+def run_jddlab_update(arguments: dict[str, Any]) -> dict[str, Any]:
+    docker_image = str(arguments.get("docker_image", DEFAULT_IMAGE))
+    timeout = int(arguments.get("timeout_seconds", 600))
+    docker_cmd = ["docker", "pull", docker_image]
+    try:
+        completed = subprocess.run(
+            docker_cmd,
+            text=True,
+            capture_output=True,
+            timeout=timeout,
+            check=False,
+        )
+        return {
+            "command": "docker pull",
+            "docker_image": docker_image,
+            "exit_code": completed.returncode,
+            "stdout": completed.stdout,
+            "stderr": completed.stderr,
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "command": "docker pull",
+            "docker_image": docker_image,
+            "exit_code": 124,
+            "stdout": exc.stdout or "",
+            "stderr": f"Timed out after {timeout} seconds.\n{exc.stderr or ''}",
+        }
+
+
 def tool_schema(command: str | None = None) -> dict[str, Any]:
     properties: dict[str, Any] = {
         "args": {
@@ -370,7 +403,32 @@ def list_tools(docs: dict[str, str]) -> list[dict[str, Any]]:
             "name": "jddlab_run",
             "description": "Run any supported jddlab command through Docker.",
             "inputSchema": tool_schema(None),
-        }
+        },
+        {
+            "name": "jddlab_update",
+            "description": (
+                "Pull the latest jddlab Docker image from Docker Hub "
+                "(`docker pull stanislavpovolotsky/jddlab:latest`). "
+                "Run this to update the local image to the newest version."
+            ),
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "docker_image": {
+                        "type": "string",
+                        "default": DEFAULT_IMAGE,
+                        "description": "Image to pull. Defaults to the standard jddlab image.",
+                    },
+                    "timeout_seconds": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 1800,
+                        "description": "Maximum time to wait for the pull (seconds).",
+                    },
+                },
+                "required": [],
+            },
+        },
     ]
     for command in COMMANDS:
         description = DESCRIPTIONS.get(command, f"Run `{command}` from the jddlab Docker image.")
@@ -457,6 +515,8 @@ class McpServer:
     def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         if name == "jddlab_run":
             result = run_jddlab(arguments)
+        elif name == "jddlab_update":
+            result = run_jddlab_update(arguments)
         else:
             command = next((cmd for cmd in COMMANDS if tool_name_for_command(cmd) == name), None)
             if command is None:

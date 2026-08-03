@@ -272,6 +272,42 @@ Call `jddlab_apktool` with:
 
 The server infers a host mount root, rewrites `app.apk` and `decoded` to `/work/app.apk` and `/work/decoded`, then runs Docker.
 
+## AI Skills
+
+Skills are Markdown knowledge bases (see [`skills/`](skills/README.md)) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in `skills/<name>/SKILL.md` and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.
+
+### Install skills with jddlab
+
+```shell
+# Install into the current project (default)
+jddlab skills add claude-cli
+jddlab skills add vscode
+jddlab skills add opencode
+jddlab skills add all
+
+# Install for all projects (user scope)
+jddlab skills add all --scope user
+
+# Remove
+jddlab skills remove all
+
+# List available skills
+jddlab skills list
+```
+
+On Windows the same commands work with `jddlab.cmd`.
+
+**Installation scope** (where skill content is written):
+
+| Scope | opencode | claude-cli | vscode / copilot | codex |
+|---|---|---|---|---|
+| `project` (default) | `.opencode/skills/` | `.claude/CLAUDE.md` | `.github/copilot-instructions.md` | `.codex/skills/` |
+| `user` | `~/.config/opencode/skills/` | `~/.claude/CLAUDE.md` | `~/.github/copilot-instructions.md` | `~/.codex/skills/` |
+
+### Available skills
+
+See [`skills/README.md`](skills/README.md) for the full list of skills.
+
 ## How to
 
 ### How to use ADB with jddlab

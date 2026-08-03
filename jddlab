@@ -43,6 +43,34 @@ if [ "$#" -ge 1 ] && [ "$1" = "mcp" ]; then
   exit $jddlab_exit
 fi
 
+if [ "$#" -ge 1 ] && [ "$1" = "skills" ]; then
+  shift
+  if command -v python3 >/dev/null 2>&1; then
+    jddlab_python=python3
+  elif command -v python >/dev/null 2>&1; then
+    jddlab_python=python
+  else
+    echo "Python 3.10 or newer is required to install jddlab skills." >&2
+    exit 1
+  fi
+  script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
+  local_installer="$script_dir/skills/install.py"
+  if [ -f "$local_installer" ]; then
+    exec "$jddlab_python" "$local_installer" "$@"
+  fi
+  JDDLAB_SKILLS_INSTALL_URL=${JDDLAB_SKILLS_INSTALL_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/skills/install.py"}
+  jddlab_skills_tmp=$(mktemp /tmp/jddlab_skills_XXXXXX.py)
+  if ! curl -fsSL "$JDDLAB_SKILLS_INSTALL_URL" -o "$jddlab_skills_tmp"; then
+    echo "Failed to download skills/install.py from $JDDLAB_SKILLS_INSTALL_URL" >&2
+    rm -f "$jddlab_skills_tmp"
+    exit 1
+  fi
+  "$jddlab_python" "$jddlab_skills_tmp" "$@"
+  jddlab_exit=$?
+  rm -f "$jddlab_skills_tmp"
+  exit $jddlab_exit
+fi
+
 docker_args=""
 # Allow to access host network. It's usefull to forward adb to instance.
 # Just run "adb start-server" on host machine and adb inside the instance 
