@@ -3,9 +3,10 @@
 
 Supported clients:
   opencode      - copies skills to ~/.config/opencode/skills/
-  claude-cli    - appends skill index to ~/.claude/CLAUDE.md
-  vscode        - appends skill index to .github/copilot-instructions.md in the repo root
-  codex         - copies skills to ~/.codex/skills/  (unofficial convention)
+  claude-cli    - copies skills to ~/.claude/skills/ (or .claude/skills/ for project scope)
+  vscode        - appends skill index to .github/copilot-instructions.md (Copilot has no
+                  native skills feature, so we inject an instructions block)
+  codex         - copies skills to ~/.agents/skills/ (Agent Skills standard location)
 """
 
 from __future__ import annotations
@@ -106,6 +107,14 @@ def claude_md_path(scope: str) -> Path:
     return Path.home() / ".claude" / "CLAUDE.md"
 
 
+def claude_skills_dir(scope: str) -> Path:
+    # Claude Code discovers skills as directories under .claude/skills/ (project scope)
+    # or ~/.claude/skills/ (user scope); each holds a SKILL.md with YAML front-matter.
+    if scope == "project":
+        return Path.cwd() / ".claude" / "skills"
+    return Path.home() / ".claude" / "skills"
+
+
 def vscode_instructions_path(scope: str) -> Path:
     if scope == "project":
         return Path.cwd() / ".github" / "copilot-instructions.md"
@@ -114,9 +123,11 @@ def vscode_instructions_path(scope: str) -> Path:
 
 
 def codex_skills_dir(scope: str) -> Path:
+    # Codex reads skills from the cross-agent "Agent Skills" location: .agents/skills
+    # in the repo (project) or ~/.agents/skills (user) - NOT .codex/skills.
     if scope == "project":
-        return Path.cwd() / ".codex" / "skills"
-    return Path.home() / ".codex" / "skills"
+        return Path.cwd() / ".agents" / "skills"
+    return Path.home() / ".agents" / "skills"
 
 
 # ---------------------------------------------------------------------------
@@ -131,7 +142,7 @@ def install_opencode(args: argparse.Namespace) -> int:
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(sd, dest)
-        print(f"  Copied skill '{sd.name}' → {dest}")
+        print(f"  Copied skill '{sd.name}' -> {dest}")
     print(f"Installed {len(skill_dirs())} skill(s) to opencode skills directory: {target}")
     print("Restart opencode to load the new skills.")
     return 0
@@ -151,19 +162,39 @@ def remove_opencode(args: argparse.Namespace) -> int:
 
 
 def install_claude_cli(args: argparse.Namespace) -> int:
-    path = claude_md_path(args.scope)
-    text = inject_block(read_text(path), skill_index_md())
-    write_text(path, text)
-    print(f"Injected jddlab skill index into Claude CLI config: {path}")
-    print("The skills index is now visible to Claude CLI / Claude Code.")
+    # Claude Code loads skills from directories (not from a CLAUDE.md text block), so
+    # copy each skill into .claude/skills/ (project) or ~/.claude/skills/ (user).
+    target = claude_skills_dir(args.scope)
+    target.mkdir(parents=True, exist_ok=True)
+    for sd in skill_dirs():
+        dest = target / sd.name
+        if dest.exists():
+            shutil.rmtree(dest)
+        shutil.copytree(sd, dest)
+        print(f"  Copied skill '{sd.name}' -> {dest}")
+    # Clean up the legacy CLAUDE.md skill index that older versions used to write.
+    legacy = claude_md_path(args.scope)
+    if legacy.exists() and BLOCK_START in read_text(legacy):
+        write_text(legacy, remove_block(read_text(legacy)))
+        print(f"  Removed legacy skills index from {legacy}")
+    print(f"Installed {len(skill_dirs())} skill(s) into Claude Code skills directory: {target}")
+    print("Run /skills in Claude Code (restart it if already running) to see them.")
     return 0
 
 
 def remove_claude_cli(args: argparse.Namespace) -> int:
-    path = claude_md_path(args.scope)
-    if path.exists():
-        write_text(path, remove_block(read_text(path)))
-        print(f"Removed jddlab skill index from Claude CLI config: {path}")
+    target = claude_skills_dir(args.scope)
+    removed = 0
+    for sd in skill_dirs():
+        dest = target / sd.name
+        if dest.exists():
+            shutil.rmtree(dest)
+            removed += 1
+    # Also strip the legacy CLAUDE.md index block if an older version left one.
+    legacy = claude_md_path(args.scope)
+    if legacy.exists() and BLOCK_START in read_text(legacy):
+        write_text(legacy, remove_block(read_text(legacy)))
+    print(f"Removed {removed} skill(s) from Claude Code skills directory: {target}")
     return 0
 
 
@@ -192,7 +223,7 @@ def install_codex(args: argparse.Namespace) -> int:
         if dest.exists():
             shutil.rmtree(dest)
         shutil.copytree(sd, dest)
-        print(f"  Copied skill '{sd.name}' → {dest}")
+        print(f"  Copied skill '{sd.name}' -> {dest}")
     print(f"Installed {len(skill_dirs())} skill(s) to Codex skills directory: {target}")
     return 0
 

@@ -1,3 +1,8 @@
+---
+name: java-deobfuscation
+description: Detect and reverse Java/Android obfuscation with jddlab - ProGuard/R8 renaming, string encryption, control-flow flattening and commercial protectors, using java-deobfuscator, simplify and dex2jar. Use when decompiled code is obfuscated or strings are encrypted.
+---
+
 # Java & Android Deobfuscation - jddlab Edition
 **Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Advanced
 

@@ -1,3 +1,8 @@
+---
+name: native-jni-analysis
+description: Analyze an app's native (.so) / JNI code with jddlab - map Java native methods to symbols, extract JNI bindings, and decompile ARM/ARM64 with Ghidra headless. Use when security logic (keys, pinning, root/tamper checks) lives in native libraries.
+---
+
 # Native Library & JNI Analysis - jddlab Edition
 **Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Advanced
 

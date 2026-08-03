@@ -2,9 +2,8 @@
 
 Skills are Markdown knowledge bases that teach AI assistants how to perform specific
 reverse-engineering tasks using jddlab tools.  Each skill lives in its own subdirectory
-and follows the `SKILL.md` format used by [opencode](https://opencode.ai) - but the
-installer can also inject skill content into other AI clients (Claude CLI, VS Code
-Copilot, etc.).
+and follows the `SKILL.md` format used by [opencode](https://opencode.ai) and Claude
+Code - the installer can also register them with Codex and VS Code Copilot.
 
 ## Available Skills
 
@@ -91,7 +90,19 @@ skills\install-skills-vscode.cmd
 
 ## File format
 
-Each `SKILL.md` is a plain Markdown document.  Sections are separated by `---`.
-Code blocks use `json` fences for MCP tool call examples so AI clients can copy
-them directly.  The YAML front-matter block at the top (supported by opencode) is
-optional but recommended.
+Each `SKILL.md` is a Markdown document that **must start with a YAML front-matter
+block** giving the skill's `name` (matching the directory) and a `description` of when
+to use it - Claude Code and opencode use these to discover and trigger the skill:
+
+```markdown
+---
+name: my-skill
+description: One or two sentences on what this does and when to use it.
+---
+
+# My Skill
+...
+```
+
+Code blocks use `json` fences for MCP tool call examples so AI clients can copy them
+directly.

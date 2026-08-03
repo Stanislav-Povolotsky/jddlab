@@ -359,8 +359,19 @@ On Windows the same commands work with `jddlab.cmd`.
 
 | Scope | opencode | claude-cli | vscode / copilot | codex |
 |---|---|---|---|---|
-| `project` (default) | `.opencode/skills/` | `.claude/CLAUDE.md` | `.github/copilot-instructions.md` | `.codex/skills/` |
-| `user` | `~/.config/opencode/skills/` | `~/.claude/CLAUDE.md` | `~/.github/copilot-instructions.md` | `~/.codex/skills/` |
+| `project` (default) | `.opencode/skills/` | `.claude/skills/` | `.github/copilot-instructions.md` | `.agents/skills/` |
+| `user` | `~/.config/opencode/skills/` | `~/.claude/skills/` | `~/.github/copilot-instructions.md` | `~/.agents/skills/` |
+
+Notes:
+
+- **Claude Code / opencode / Codex** load real skills (directories with a `SKILL.md`
+  that has `name` + `description` front-matter). For Claude Code, run `/skills`
+  (restart it if already running) to see them.
+- **Codex** uses the cross-agent `.agents/skills/` location. opencode also discovers
+  `.claude/skills/` and `.agents/skills/`, so skills installed for one of these clients
+  are often visible to the others.
+- **VS Code Copilot** has no native skills feature, so the installer injects a skills
+  index into `.github/copilot-instructions.md` instead.
 
 ### Available skills
 

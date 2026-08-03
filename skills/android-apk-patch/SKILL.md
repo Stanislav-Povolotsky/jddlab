@@ -1,3 +1,8 @@
+---
+name: android-apk-patch
+description: Patch, rebuild, re-sign and install Android APKs with jddlab - edit smali/resources/manifest, decompile with apktool/jadx, handle split APKs, align and sign. Use for APK modding, repackaging, or injecting changes into an app.
+---
+
 # Android APK Patching & Repackaging - jddlab Edition
 **Version**: 1.0 | **Last Updated**: 2025-08 | **Difficulty**: Expert
 

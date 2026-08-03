@@ -1,3 +1,8 @@
+---
+name: secret-scanning
+description: Find hardcoded secrets, API keys, tokens and endpoints in Android apps with jddlab - APKscan plus manual jadx/resource review. Use to audit an APK for leaked credentials or other sensitive data.
+---
+
 # Android Secret & Endpoint Scanning - jddlab Edition
 **Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Intermediate
 

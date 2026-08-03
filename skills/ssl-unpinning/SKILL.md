@@ -1,3 +1,8 @@
+---
+name: ssl-unpinning
+description: Bypass Android TLS/certificate pinning with jddlab to intercept HTTPS - android-unpinner, Frida gadget injection (apk-patcher), objection, or manual smali patches. Use when a proxy (Burp/mitmproxy) shows no traffic because of certificate pinning.
+---
+
 # Android SSL/Certificate Pinning Bypass - jddlab Edition
 **Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Advanced
 
