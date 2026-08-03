@@ -115,7 +115,7 @@ jddlab help          # Show launcher usage and sub-commands
 jddlab tools         # List all tools/commands available inside the image
 jddlab version       # Show launcher version and image build version
 jddlab versions      # Show the version of every bundled tool
-jddlab update        # Pull the latest jddlab image
+jddlab update        # Pull the latest image (and refresh the installed MCP/skills bundle)
 </code></p>
 
 <p>The same commands also accept a <code>--</code> prefix (<code>jddlab --tools</code>, <code>jddlab --version</code>, etc.).</p>
@@ -240,7 +240,13 @@ python mcp/server.py --list-commands
 
 <h3>Install MCP connectors with jddlab</h3>
 
-<p>The standalone <code>jddlab</code> and <code>jddlab.cmd</code> launchers include an <code>mcp</code> subcommand. The launcher does not need a local repository checkout. On first use it downloads the latest <code>jddlab-mcp-&lt;version&gt;.zip</code> asset from the GitHub release, verifies the <code>.sha256</code> file when present, extracts it into <code>~/.jddlab/mcp/current</code>, and then runs the bundled installer.</p>
+<p>The standalone <code>jddlab</code> and <code>jddlab.cmd</code> launchers include an <code>mcp</code> subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) <strong>out of the Docker image</strong> — which ships them at <code>/usr/local/jddlab/host</code> — into <code>~/.jddlab/mcp/current</code> using <code>docker cp</code>, and then runs the installer from there. No separate download is involved, so the host files always match the image, and <code>docker cp</code> writes them owned by your user.</p>
+
+<blockquote>
+  <p>The same files back <code>jddlab skills ...</code> (see below). Running <code>jddlab update</code>
+  re-extracts them from the freshly pulled image; <code>jddlab mcp update</code> /
+  <code>jddlab skills update</code> refresh them on demand.</p>
+</blockquote>
 
 <p>Examples:</p>
 
@@ -261,7 +267,7 @@ jddlab mcp update
 jddlab mcp add codex
 </code></p>
 
-<p>The MCP bundle is installed under:</p>
+<p>The extracted files are installed under:</p>
 
 <ul>
 <li>Linux/macOS: <code>~/.jddlab/mcp/current</code></li>
@@ -271,10 +277,7 @@ jddlab mcp add codex
 <p>Advanced environment variables:</p>
 
 <ul>
-<li><code>JDDLAB_MCP_HOME</code>: override the MCP install directory.</li>
-<li><code>JDDLAB_MCP_BUNDLE</code>: install from a local <code>jddlab-mcp-*.zip</code> file instead of GitHub.</li>
-<li><code>JDDLAB_MCP_BOOTSTRAP_URL</code>: override the bootstrap script URL used by standalone launchers.</li>
-<li><code>JDDLAB_GITHUB_REPOSITORY</code>: override the GitHub repository used for release downloads.</li>
+<li><code>JDDLAB_MCP_HOME</code>: override the install directory (default <code>~/.jddlab/mcp</code>).</li>
 </ul>
 
 <h3>Connect from Claude Desktop</h3>
@@ -357,6 +360,12 @@ startup_timeout_sec = 120
 <p>Skills are Markdown knowledge bases (see <a href="skills/README.md"><code>skills/</code></a>) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in <code>skills/&lt;name&gt;/SKILL.md</code> and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.</p>
 
 <h3>Install skills with jddlab</h3>
+
+<p>Like the <code>mcp</code> subcommand, <code>jddlab skills</code> works without a local repository checkout:
+it runs the skills installer copied out of the Docker image (shared with the MCP files
+under <code>~/.jddlab/mcp/current</code>), extracting on first use and reusing it afterwards.
+<code>jddlab update</code> (or <code>jddlab skills update</code>) re-extracts from the image. From a
+repository checkout the local <code>skills/</code> are used directly.</p>
 
 <p>```shell</p>
 
@@ -469,8 +478,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="&#109;&#97;&#105;l&#x74;&#x6f;&#58;&#98;&#x72;u&#x74;&#x2e;&#97;l&#x6c;&#108;&#x40;&#103;&#109;&#97;i&#x6c;&#x2e;&#x63;&#111;&#x6d;">&#98;&#x72;u&#x74;&#x2e;&#97;l&#x6c;&#108;&#x40;&#103;&#109;&#97;i&#x6c;&#x2e;&#x63;&#111;&#x6d;</a>
-Copyright 2010 Connor Tumbleson <a href="&#x6d;&#97;&#x69;&#108;&#116;&#x6f;&#x3a;&#99;&#x6f;&#x6e;&#x6e;&#x6f;&#114;&#x2e;&#116;&#117;&#109;&#98;&#x6c;&#x65;&#115;&#111;n&#64;&#103;&#109;&#97;&#105;&#108;&#x2e;&#x63;&#111;&#x6d;">&#99;&#x6f;&#x6e;&#x6e;&#x6f;&#114;&#x2e;&#116;&#117;&#109;&#98;&#x6c;&#x65;&#115;&#111;n&#64;&#103;&#109;&#97;&#105;&#108;&#x2e;&#x63;&#111;&#x6d;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="m&#97;&#105;&#x6c;t&#x6f;&#x3a;&#x62;&#x72;u&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#103;&#x6d;&#x61;&#105;&#x6c;&#x2e;&#99;&#x6f;&#109;">&#x62;&#x72;u&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#103;&#x6d;&#x61;&#105;&#x6c;&#x2e;&#99;&#x6f;&#109;</a>
+Copyright 2010 Connor Tumbleson <a href="&#x6d;&#x61;&#x69;&#x6c;&#116;&#x6f;&#58;c&#x6f;&#x6e;&#x6e;&#x6f;&#x72;.&#x74;&#117;&#109;&#98;&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#x6f;&#x6d;">c&#x6f;&#x6e;&#x6e;&#x6f;&#x72;.&#x74;&#117;&#109;&#98;&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#x6f;&#x6d;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
