@@ -15,6 +15,19 @@ Why running `jddlab` is better than using separate tools on the host:
 - Easy Installation: Install all the tools and dependencies with a single docker pull command.
 - Quick Updates: Simply pull the latest container version to get new tools, features, and patches.
 
+## Contents
+
+- [Demo](#demo)
+- [Installation](#installation)
+  - [Command-line tool (recommended)](#installation-as-a-command-line-tool-recommended)
+  - [Docker image](#installation-as-a-docker-image)
+- [MCP server](#mcp-server)
+- [AI Skills](#ai-skills)
+- [How to](#how-to)
+- [Tools](#tools) - full list with usage examples
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+
 ## Demo
 
 ![Demo: how to use jddlab](https://github.com/user-attachments/assets/4c0c8e5d-28e8-4697-a167-7723298ef751)
@@ -83,6 +96,44 @@ To update jddlab to the latest version run:
 ```
 jddlab update
 ```
+
+#### Useful launcher commands
+
+```
+jddlab help          # Show launcher usage and sub-commands
+jddlab tools         # List all tools/commands available inside the image
+jddlab version       # Show launcher version and image build version
+jddlab versions      # Show the version of every bundled tool
+jddlab update        # Pull the latest jddlab image
+```
+
+The same commands also accept a `--` prefix (`jddlab --tools`, `jddlab --version`, etc.).
+
+#### File ownership (Linux/macOS)
+
+On Linux and macOS the launcher runs the container as your **current host user**
+(`--user $(id -u):$(id -g)`), so files created under `/work` are owned by you
+instead of `root`. The container still uses a shared, world-writable home at
+`/root` (where the frida/adb configs live), so this is transparent.
+
+If you need the container to run as `root` inside (for example to write to a
+location that requires it), set `JDDLAB_ROOT=1`:
+
+```
+JDDLAB_ROOT=1 jddlab apktool --version
+```
+
+Which launcher you use already matches your environment:
+
+- **Native Windows** (`jddlab.cmd` from cmd/PowerShell): no UID mapping. Docker
+  Desktop's filesystem driver already gives new files normal Windows ownership,
+  and mapping to an arbitrary UID would actually break its mounts.
+- **WSL2 / Linux / macOS** (the `jddlab` shell script): your host user is mapped.
+  When you work inside WSL on the Linux filesystem this is a real bind mount, so
+  UID mapping is exactly what prevents root-owned files.
+
+> Note: UID mapping requires the current image. Run `jddlab update` after
+> upgrading the launcher.
 
 ### Installation as a docker image
 
@@ -340,6 +391,33 @@ docker run -it --rm -v "$HOME/.android:/root/.android" -v "$PWD:/work" stanislav
 ```
 
 ## Tools
+
+The image bundles the tools below. Click a name to jump to its section with
+command-line arguments and usage examples. The exact version of every tool in
+your image is available via `jddlab versions` and in each
+[GitHub release](https://github.com/Stanislav-Povolotsky/jddlab/releases).
+
+| Tool | Purpose |
+|---|---|
+| [Apktool](#apktool---a-tool-for-reverse-engineering-android-apk-files) | Decode/rebuild APK resources and smali |
+| [jadx](#jadx---dex-to-java-decompiler) | Decompile DEX/APK to readable Java |
+| [FernFlower](#fernflower-java-decompiler) | Java bytecode decompiler |
+| [Vineflower](tools/vineflower.md) | Modern FernFlower fork (better output) |
+| [Procyon](#procyon---is-a-suite-of-java-metaprogramming-tools-including-java-decompiler) | Java decompiler + bytecode tooling |
+| [Krakatau (v1/v2)](#krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler) | Java decompiler, assembler, disassembler |
+| [APKEditor](#apkeditor---powerful-android-apk-editor) | Edit/merge/split/protect APKs |
+| [APKscan](#apkscan---tool-to-scan-for-secrets-endpoints-and-other-sensitive-data-after-decompiling-and-deobfuscating-android-files) | Scan for secrets, endpoints, sensitive data |
+| [Enjarify](#enjarify---a-tool-for-translating-dalvik-bytecode-to-equivalent-java-bytecode) | Dalvik bytecode → Java bytecode |
+| [Simplify](#simplify---android-virtual-machine-and-deobfuscator) | Android VM-based deobfuscator |
+| [Java Deobfuscator](#java-deobfuscator---can-help-to-deobfuscate-commercially-available-obfuscators-for-java) | Deobfuscate common Java obfuscators |
+| [dex2jar](#dex2jar---tools-to-work-with-android-dex-and-java-class-files) | Work with `.dex`/`.class`, string decrypt, weaving |
+| [smali / baksmali](#smali-and-baksmali---tools-for-assembling-and-disassembling-android-dex-bytecode) | Assemble/disassemble DEX bytecode |
+| [androguard](#androguard---the-swiss-army-knife-which-combines-lot-of-tools) | APK/DEX analysis swiss-army knife |
+| [objection](#objection---runtime-mobile-exploration-toolkit) | Runtime mobile exploration (Frida) |
+| [ghidra](#ghidra---software-reverse-engineering-framework) | Native code reverse engineering |
+| [android-unpinner](#android-unpinner---remove-certificate-pinning-from-apks) | Remove certificate pinning from APKs |
+| [apk-patcher](#apk-patcher---the-easiest-way-to-integrate-frida-into-apk) | Inject Frida gadget into an APK |
+| Android SDK build-tools | `apksigner`, `zipalign`, `adb` (Android SDK) |
 
 ### Apktool - a tool for reverse engineering Android apk files
 
@@ -1454,3 +1532,76 @@ jddlab apk-patcher ./test.
 2025-01-28 21:05:56.323 | SUCCESS  | [+] All done! The output APK can be found under /work/test.patched
 ```
 </details>
+
+## Troubleshooting
+
+<details>
+   <summary><b>Docker errors: <code>Cannot connect to the Docker daemon</code> / <code>docker: command not found</code></b></summary>
+
+- Make sure Docker is installed and the Docker engine/Desktop is **running**.
+- On Windows, install and enable [WSL2](https://learn.microsoft.com/en-us/windows/wsl/install)
+  and enable WSL integration in Docker Desktop settings.
+- On Linux, either add your user to the `docker` group (`sudo usermod -aG docker $USER`,
+  then re-login) or run the command with `sudo`.
+</details>
+
+<details>
+   <summary><b>Files created by jddlab are owned by <code>root</code> (Linux/macOS)</b></summary>
+
+Recent launcher versions run the container as your host user by default, so new
+files under `/work` are owned by you. If you still see root-owned files:
+
+- Update the launcher (re-download `jddlab`) and run `jddlab update` to get an
+  image that supports UID mapping.
+- Make sure you did not set `JDDLAB_ROOT=1`.
+- To fix already-created files: `sudo chown -R "$(id -u):$(id -g)" .`
+- If you run the raw `docker run` command instead of the launcher, add
+  `--user "$(id -u):$(id -g)" -e HOME=/root` yourself.
+</details>
+
+<details>
+   <summary><b>A tool cannot see my file / <code>No such file or directory</code></b></summary>
+
+Only the **current directory and its subfolders** are mounted into the container
+as `/work`. Files outside it are not visible. `cd` into the folder that contains
+your APK before running jddlab, and reference files by relative path
+(`./app.apk`) or as `/work/app.apk`.
+</details>
+
+<details>
+   <summary><b>ADB cannot find my device</b></summary>
+
+- Use wireless debugging as described in [How to use ADB with jddlab](#how-to-use-adb-with-jddlab).
+- To forward the host ADB server into the container, run `adb start-server` on
+  the host and uncomment the `--network=host` line in the `jddlab` launcher.
+- See the [Security warning](#how-to-use-adb-with-jddlab) about the preinstalled
+  ADB keys and mounting your own `~/.android`.
+</details>
+
+<details>
+   <summary><b><code>OutOfMemoryError</code> / a decompiler is killed on a large APK</b></summary>
+
+Increase the JVM heap for the tool, e.g. `JAVA_OPTS="-Xmx6g"`, and make sure
+Docker has enough memory allotted (Docker Desktop → Settings → Resources).
+</details>
+
+<details>
+   <summary><b><code>jddlab update</code> says the image is up to date but a tool is outdated</b></summary>
+
+`jddlab update` pulls `stanislavpovolotsky/jddlab:latest`. Run `jddlab versions`
+to see the exact bundled tool versions. If a tool is behind upstream, open an
+issue - the image is rebuilt to track upstream releases.
+</details>
+
+## License
+
+The original jddlab code in this repository (launcher scripts, `scripts/`,
+`mcp/`, and `skills/`) is released under the [MIT License](LICENSE).
+
+jddlab is a **pack**: it bundles many independent third-party reverse-engineering
+tools into a Docker image, and **each bundled tool keeps its own license** and
+belongs to its respective authors. The MIT license above does not supersede
+those. The version and upstream URL of every bundled tool are recorded in the
+image at `/usr/local/jddlab/software-list.txt` (`jddlab versions`) and in each
+[release](https://github.com/Stanislav-Povolotsky/jddlab/releases). Review each
+upstream project's license before redistribution or commercial use.

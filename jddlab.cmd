@@ -2,11 +2,24 @@
 setlocal enabledelayedexpansion
 set "folder_to_serve=%CD%"
 set jddlab_docker_image=stanislavpovolotsky/jddlab:latest
+set jddlab_launcher_version=1.0
 
 if "%~1"=="update" (
   echo Updating jddlab...
   docker pull "%jddlab_docker_image%"
   exit /b %ERRORLEVEL%
+)
+
+if "%~2"=="" (
+  if "%~1"=="help" goto help
+  if "%~1"=="--help" goto help
+  if "%~1"=="-h" goto help
+  if "%~1"=="tools" goto tools
+  if "%~1"=="--tools" goto tools
+  if "%~1"=="version" goto version
+  if "%~1"=="--version" goto version
+  if "%~1"=="versions" goto versions
+  if "%~1"=="--versions" goto versions
 )
 
 if "%~1"=="mcp" goto mcp
@@ -101,3 +114,35 @@ if errorlevel 1 (
 set "jddlab_exit=%ERRORLEVEL%"
 del /f /q "%jddlab_bootstrap_tmp%" 2>nul
 exit /b !jddlab_exit!
+
+:help
+echo jddlab - Java Decompilation ^& Deobfuscation Lab (launcher %jddlab_launcher_version%)
+echo.
+echo Usage:
+echo   jddlab                       Enter an interactive shell inside the jddlab container
+echo   jddlab ^<command^> [args...]    Run a bundled tool (e.g. "jddlab apktool --version")
+echo.
+echo Launcher sub-commands:
+echo   jddlab help ^| --help          Show this help
+echo   jddlab tools ^| --tools        List the tools/commands available in the image
+echo   jddlab version ^| --version    Show launcher and image build versions
+echo   jddlab versions ^| --versions  Show versions of every bundled tool
+echo   jddlab update                 Pull the latest jddlab image
+echo   jddlab mcp ^<args...^>          Manage MCP connectors (add/remove/status/doctor/update)
+echo   jddlab skills ^<args...^>       Manage AI skills (add/remove/list)
+exit /b 0
+
+:tools
+echo Tools/commands available in %jddlab_docker_image%:
+docker run --rm "%jddlab_docker_image%" sh -c "ls /usr/local/bin | sort"
+exit /b %ERRORLEVEL%
+
+:version
+echo jddlab launcher: %jddlab_launcher_version%
+docker run --rm "%jddlab_docker_image%" cat /usr/local/jddlab/version.txt
+if errorlevel 1 echo Image not available locally. Run "jddlab update" to pull it.
+exit /b 0
+
+:versions
+docker run --rm "%jddlab_docker_image%" cat /usr/local/jddlab/software-list.txt
+exit /b %ERRORLEVEL%

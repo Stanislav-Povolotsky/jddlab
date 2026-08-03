@@ -22,6 +22,7 @@
     {"command": "apk-patcher", "mcp_tool": "jddlab_apk_patcher", "docs": "tools/apk-patcher.md"},
     {"command": "apk-sign", "mcp_tool": "jddlab_apk_sign", "docs": "tools/apk-sign.md"},
     {"command": "apkeditor", "mcp_tool": "jddlab_apkeditor", "docs": "tools/APKEditor.md"},
+    {"command": "apkscan", "mcp_tool": "jddlab_apkscan", "docs": "tools/apkscan.md"},
     {"command": "apktool", "mcp_tool": "jddlab_apktool", "docs": "tools/apktool.md"},
     {"command": "asm-verify", "mcp_tool": "jddlab_asm_verify", "docs": "tools/asm-verify.md"},
     {"command": "baksmali", "mcp_tool": "jddlab_baksmali", "docs": "tools/baksmali.md"},

@@ -30,6 +30,7 @@ COMMANDS = [
     "apk-patcher",
     "apk-sign",
     "apkeditor",
+    "apkscan",
     "apktool",
     "asm-verify",
     "baksmali",
@@ -86,6 +87,7 @@ COMMANDS = [
 DESCRIPTIONS = {
     "APKEditor": "Edit, decode, build, merge, split, protect, refactor, and inspect Android APK files.",
     "apkeditor": "Lower-case APKEditor alias for Android APK editing workflows.",
+    "apkscan": "Scan decompiled/deobfuscated Android files for secrets, endpoints, and other sensitive data.",
     "apktool": "Decode and rebuild Android APK resources and smali projects.",
     "jadx": "Decompile Android APK, DEX, JAR, class, and related inputs to Java sources.",
     "fernflower": "Java bytecode decompiler.",

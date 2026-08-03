@@ -1,13 +1,65 @@
 #!/usr/bin/env sh
 folder_to_serve="$PWD"
 jddlab_docker_image="stanislavpovolotsky/jddlab:latest"
+jddlab_launcher_version="1.0"
+
+# Run a command inside the jddlab image without mounting /work (used by info sub-commands)
+jddlab_query_image() {
+  docker run --rm "$jddlab_docker_image" "$@"
+}
+
+jddlab_print_help() {
+  cat <<EOF
+jddlab - Java Decompilation & Deobfuscation Lab (launcher $jddlab_launcher_version)
+
+Usage:
+  jddlab                       Enter an interactive shell inside the jddlab container
+  jddlab <command> [args...]   Run a bundled tool (e.g. 'jddlab apktool --version')
+
+Launcher sub-commands:
+  jddlab help | --help         Show this help
+  jddlab tools | --tools       List the tools/commands available in the image
+  jddlab version | --version   Show launcher and image build versions
+  jddlab versions | --versions Show versions of every bundled tool
+  jddlab update                Pull the latest jddlab image
+  jddlab mcp <args...>         Manage MCP connectors (add/remove/status/doctor/update)
+  jddlab skills <args...>      Manage AI skills (add/remove/list)
+
+Environment variables:
+  JDDLAB_ROOT=1                Run the container as root instead of your host user
+                               (Linux/macOS map your UID:GID by default so files
+                               written to /work are owned by you, not root)
+EOF
+}
 
 if [ "$#" -eq 1 ]; then
-  if [ "$1" = "update" ]; then
-    echo "Updating jddlab..."
-    docker pull "$jddlab_docker_image"
-    exit $?
-  fi
+  case "$1" in
+    update)
+      echo "Updating jddlab..."
+      docker pull "$jddlab_docker_image"
+      exit $?
+      ;;
+    help|--help|-h)
+      jddlab_print_help
+      exit 0
+      ;;
+    tools|--tools)
+      echo "Tools/commands available in $jddlab_docker_image:"
+      jddlab_query_image sh -c 'ls /usr/local/bin 2>/dev/null | sort | pr -3 -t -w 80 2>/dev/null || ls /usr/local/bin'
+      exit $?
+      ;;
+    version|--version)
+      echo "jddlab launcher: $jddlab_launcher_version"
+      if ! jddlab_query_image cat /usr/local/jddlab/version.txt 2>/dev/null; then
+        echo "Image not available locally. Run 'jddlab update' to pull it."
+      fi
+      exit 0
+      ;;
+    versions|--versions)
+      jddlab_query_image cat /usr/local/jddlab/software-list.txt
+      exit $?
+      ;;
+  esac
 fi
 
 if [ "$#" -ge 1 ] && [ "$1" = "mcp" ]; then
@@ -73,9 +125,23 @@ fi
 
 docker_args=""
 # Allow to access host network. It's usefull to forward adb to instance.
-# Just run "adb start-server" on host machine and adb inside the instance 
+# Just run "adb start-server" on host machine and adb inside the instance
 # will be able to connect to your device.
 # docker_args+=" --network=host"
+
+# By default (Linux/macOS) run the container as the current host user so that
+# files created in /work are owned by you instead of root. The image keeps a
+# shared, world-writable HOME at /root (frida/adb configs live there), which we
+# point HOME to explicitly since a mapped UID has no /etc/passwd entry.
+# Set JDDLAB_ROOT=1 to force running as root inside the container instead.
+docker_user_args=""
+if [ -z "$JDDLAB_ROOT" ] && command -v id >/dev/null 2>&1; then
+  jddlab_uid=$(id -u 2>/dev/null)
+  jddlab_gid=$(id -g 2>/dev/null)
+  if [ -n "$jddlab_uid" ] && [ "$jddlab_uid" != "0" ]; then
+    docker_user_args="--user $jddlab_uid:$jddlab_gid -e HOME=/root"
+  fi
+fi
 
 # Escape application args
 save () {
@@ -84,6 +150,6 @@ save () {
 }
 APP_ARGS=`save "$@"`
 
-eval set -- run -it --rm $docker_args -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
+eval set -- run -it --rm $docker_args $docker_user_args -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
 exec "docker" "$@"
 exit $?

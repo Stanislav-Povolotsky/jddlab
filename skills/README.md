@@ -11,6 +11,10 @@ Copilot, etc.).
 | Directory | What it covers |
 |---|---|
 | [`android-apk-patch/`](android-apk-patch/SKILL.md) | End-to-end Android APK patching: decompile → modify smali/resources → recompile → align → sign → install |
+| [`java-deobfuscation/`](java-deobfuscation/SKILL.md) | Detect and reverse Java/Android obfuscation (ProGuard/R8, string encryption, control-flow) with java-deobfuscator & simplify |
+| [`ssl-unpinning/`](ssl-unpinning/SKILL.md) | Bypass TLS certificate pinning: android-unpinner, Frida gadget (apk-patcher), objection, and manual smali patches |
+| [`secret-scanning/`](secret-scanning/SKILL.md) | Find hardcoded secrets, keys, and endpoints with APKscan plus manual follow-up |
+| [`native-jni-analysis/`](native-jni-analysis/SKILL.md) | Analyze native `.so`/JNI code: extract JNI bindings and decompile with Ghidra headless |
 
 ## Prerequisites
 

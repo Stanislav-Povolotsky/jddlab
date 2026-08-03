@@ -33,3 +33,10 @@ COPY scripts/run/ /
 RUN /root/scripts/run/prepare.sh && rm -rf /root/scripts
 
 COPY --from=builder /root/scripts/installation/installed /
+
+# Allow running the container as an arbitrary (non-root) host UID while keeping
+# /root as the single shared HOME (frida/adb configs and .bashrc live there). The
+# jddlab launcher maps the host user's UID:GID by default on Linux/macOS so files
+# written to /work are owned by the user instead of root. A mapped UID has no
+# /etc/passwd entry, so HOME=/root must be world read/write to work for everyone.
+RUN chmod -R a+rwX /root
