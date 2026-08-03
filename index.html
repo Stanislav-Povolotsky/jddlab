@@ -18,6 +18,23 @@
 <li>Quick Updates: Simply pull the latest container version to get new tools, features, and patches.</li>
 </ul>
 
+<h2>Contents</h2>
+
+<ul>
+<li><a href="#demo">Demo</a></li>
+<li><a href="#installation">Installation</a>
+<ul>
+<li><a href="#installation-as-a-command-line-tool-recommended">Command-line tool (recommended)</a></li>
+<li><a href="#installation-as-a-docker-image">Docker image</a></li>
+</ul></li>
+<li><a href="#mcp-server">MCP server</a></li>
+<li><a href="#ai-skills">AI Skills</a></li>
+<li><a href="#how-to">How to</a></li>
+<li><a href="#tools">Tools</a> - full list with usage examples</li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#license">License</a></li>
+</ul>
+
 <h2>Demo</h2>
 
 <p><img src="https://github.com/user-attachments/assets/4c0c8e5d-28e8-4697-a167-7723298ef751" alt="Demo: how to use jddlab" /></p>
@@ -90,6 +107,48 @@ jddlab apktool --version
 <code>
 jddlab update
 </code></p>
+
+<h4>Useful launcher commands</h4>
+
+<p><code>
+jddlab help          # Show launcher usage and sub-commands
+jddlab tools         # List all tools/commands available inside the image
+jddlab version       # Show launcher version and image build version
+jddlab versions      # Show the version of every bundled tool
+jddlab update        # Pull the latest jddlab image
+</code></p>
+
+<p>The same commands also accept a <code>--</code> prefix (<code>jddlab --tools</code>, <code>jddlab --version</code>, etc.).</p>
+
+<h4>File ownership (Linux/macOS)</h4>
+
+<p>On Linux and macOS the launcher runs the container as your <strong>current host user</strong>
+(<code>--user $(id -u):$(id -g)</code>), so files created under <code>/work</code> are owned by you
+instead of <code>root</code>. The container still uses a shared, world-writable home at
+<code>/root</code> (where the frida/adb configs live), so this is transparent.</p>
+
+<p>If you need the container to run as <code>root</code> inside (for example to write to a
+location that requires it), set <code>JDDLAB_ROOT=1</code>:</p>
+
+<p><code>
+JDDLAB_ROOT=1 jddlab apktool --version
+</code></p>
+
+<p>Which launcher you use already matches your environment:</p>
+
+<ul>
+<li><strong>Native Windows</strong> (<code>jddlab.cmd</code> from cmd/PowerShell): no UID mapping. Docker
+Desktop's filesystem driver already gives new files normal Windows ownership,
+and mapping to an arbitrary UID would actually break its mounts.</li>
+<li><strong>WSL2 / Linux / macOS</strong> (the <code>jddlab</code> shell script): your host user is mapped.
+When you work inside WSL on the Linux filesystem this is a real bind mount, so
+UID mapping is exactly what prevents root-owned files.</li>
+</ul>
+
+<blockquote>
+  <p>Note: UID mapping requires the current image. Run <code>jddlab update</code> after
+  upgrading the launcher.</p>
+</blockquote>
 
 <h3>Installation as a docker image</h3>
 
@@ -293,6 +352,47 @@ startup_timeout_sec = 120
 
 <p>The server infers a host mount root, rewrites <code>app.apk</code> and <code>decoded</code> to <code>/work/app.apk</code> and <code>/work/decoded</code>, then runs Docker.</p>
 
+<h2>AI Skills</h2>
+
+<p>Skills are Markdown knowledge bases (see <a href="skills/README.md"><code>skills/</code></a>) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in <code>skills/&lt;name&gt;/SKILL.md</code> and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.</p>
+
+<h3>Install skills with jddlab</h3>
+
+<p>```shell</p>
+
+<h1>Install into the current project (default)</h1>
+
+<p>jddlab skills add claude-cli
+jddlab skills add vscode
+jddlab skills add opencode
+jddlab skills add all</p>
+
+<h1>Install for all projects (user scope)</h1>
+
+<p>jddlab skills add all --scope user</p>
+
+<h1>Remove</h1>
+
+<p>jddlab skills remove all</p>
+
+<h1>List available skills</h1>
+
+<p>jddlab skills list
+```</p>
+
+<p>On Windows the same commands work with <code>jddlab.cmd</code>.</p>
+
+<p><strong>Installation scope</strong> (where skill content is written):</p>
+
+<p>| Scope | opencode | claude-cli | vscode / copilot | codex |
+|---|---|---|---|---|
+| <code>project</code> (default) | <code>.opencode/skills/</code> | <code>.claude/CLAUDE.md</code> | <code>.github/copilot-instructions.md</code> | <code>.codex/skills/</code> |
+| <code>user</code> | <code>~/.config/opencode/skills/</code> | <code>~/.claude/CLAUDE.md</code> | <code>~/.github/copilot-instructions.md</code> | <code>~/.codex/skills/</code> |</p>
+
+<h3>Available skills</h3>
+
+<p>See <a href="skills/README.md"><code>skills/README.md</code></a> for the full list of skills.</p>
+
 <h2>How to</h2>
 
 <h3>How to use ADB with jddlab</h3>
@@ -328,6 +428,33 @@ docker run -it --rm -v "$HOME/.android:/root/.android" -v "$PWD:/work" stanislav
 
 <h2>Tools</h2>
 
+<p>The image bundles the tools below. Click a name to jump to its section with
+command-line arguments and usage examples. The exact version of every tool in
+your image is available via <code>jddlab versions</code> and in each
+<a href="https://github.com/Stanislav-Povolotsky/jddlab/releases">GitHub release</a>.</p>
+
+<p>| Tool | Purpose |
+|---|---|
+| <a href="#apktool---a-tool-for-reverse-engineering-android-apk-files">Apktool</a> | Decode/rebuild APK resources and smali |
+| <a href="#jadx---dex-to-java-decompiler">jadx</a> | Decompile DEX/APK to readable Java |
+| <a href="#fernflower-java-decompiler">FernFlower</a> | Java bytecode decompiler |
+| <a href="tools/vineflower.md">Vineflower</a> | Modern FernFlower fork (better output) |
+| <a href="#procyon---is-a-suite-of-java-metaprogramming-tools-including-java-decompiler">Procyon</a> | Java decompiler + bytecode tooling |
+| <a href="#krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler">Krakatau (v1/v2)</a> | Java decompiler, assembler, disassembler |
+| <a href="#apkeditor---powerful-android-apk-editor">APKEditor</a> | Edit/merge/split/protect APKs |
+| <a href="#apkscan---tool-to-scan-for-secrets-endpoints-and-other-sensitive-data-after-decompiling-and-deobfuscating-android-files">APKscan</a> | Scan for secrets, endpoints, sensitive data |
+| <a href="#enjarify---a-tool-for-translating-dalvik-bytecode-to-equivalent-java-bytecode">Enjarify</a> | Dalvik bytecode → Java bytecode |
+| <a href="#simplify---android-virtual-machine-and-deobfuscator">Simplify</a> | Android VM-based deobfuscator |
+| <a href="#java-deobfuscator---can-help-to-deobfuscate-commercially-available-obfuscators-for-java">Java Deobfuscator</a> | Deobfuscate common Java obfuscators |
+| <a href="#dex2jar---tools-to-work-with-android-dex-and-java-class-files">dex2jar</a> | Work with <code>.dex</code>/<code>.class</code>, string decrypt, weaving |
+| <a href="#smali-and-baksmali---tools-for-assembling-and-disassembling-android-dex-bytecode">smali / baksmali</a> | Assemble/disassemble DEX bytecode |
+| <a href="#androguard---the-swiss-army-knife-which-combines-lot-of-tools">androguard</a> | APK/DEX analysis swiss-army knife |
+| <a href="#objection---runtime-mobile-exploration-toolkit">objection</a> | Runtime mobile exploration (Frida) |
+| <a href="#ghidra---software-reverse-engineering-framework">ghidra</a> | Native code reverse engineering |
+| <a href="#android-unpinner---remove-certificate-pinning-from-apks">android-unpinner</a> | Remove certificate pinning from APKs |
+| <a href="#apk-patcher---the-easiest-way-to-integrate-frida-into-apk">apk-patcher</a> | Inject Frida gadget into an APK |
+| Android SDK build-tools | <code>apksigner</code>, <code>zipalign</code>, <code>adb</code> (Android SDK) |</p>
+
 <h3>Apktool - a tool for reverse engineering Android apk files</h3>
 
 <p>URL: https://github.com/iBotPeaches/Apktool  </p>
@@ -342,8 +469,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="&#x6d;&#97;&#x69;&#108;t&#111;&#x3a;&#x62;&#114;&#117;&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#x67;&#109;&#97;&#x69;l&#46;&#99;&#111;&#x6d;">&#x62;&#114;&#117;&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#x67;&#109;&#97;&#x69;l&#46;&#99;&#111;&#x6d;</a>
-Copyright 2010 Connor Tumbleson <a href="&#109;a&#x69;&#108;&#x74;&#111;&#58;&#99;&#x6f;&#110;&#110;o&#x72;&#46;&#116;&#117;&#109;&#x62;&#x6c;e&#115;&#x6f;&#x6e;&#x40;&#x67;&#109;&#97;&#105;&#x6c;&#x2e;&#99;&#111;&#x6d;">&#99;&#x6f;&#110;&#110;o&#x72;&#46;&#116;&#117;&#109;&#x62;&#x6c;e&#115;&#x6f;&#x6e;&#x40;&#x67;&#109;&#97;&#105;&#x6c;&#x2e;&#99;&#111;&#x6d;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#109;&#97;&#105;l&#x74;&#x6f;&#58;&#98;&#x72;u&#x74;&#x2e;&#97;l&#x6c;&#108;&#x40;&#103;&#109;&#97;i&#x6c;&#x2e;&#x63;&#111;&#x6d;">&#98;&#x72;u&#x74;&#x2e;&#97;l&#x6c;&#108;&#x40;&#103;&#109;&#97;i&#x6c;&#x2e;&#x63;&#111;&#x6d;</a>
+Copyright 2010 Connor Tumbleson <a href="&#x6d;&#97;&#x69;&#108;&#116;&#x6f;&#x3a;&#99;&#x6f;&#x6e;&#x6e;&#x6f;&#114;&#x2e;&#116;&#117;&#109;&#98;&#x6c;&#x65;&#115;&#111;n&#64;&#103;&#109;&#97;&#105;&#108;&#x2e;&#x63;&#111;&#x6d;">&#99;&#x6f;&#x6e;&#x6e;&#x6f;&#114;&#x2e;&#116;&#117;&#109;&#98;&#x6c;&#x65;&#115;&#111;n&#64;&#103;&#109;&#97;&#105;&#108;&#x2e;&#x63;&#111;&#x6d;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
@@ -1460,4 +1587,83 @@ shell> jddlab apk-patcher -h</p>
 2025-01-28 21:05:56.323 | SUCCESS  | [+] All done! The output APK can be found under /work/test.patched
 </code>
 </details></p>
+
+<h2>Troubleshooting</h2>
+
+<p><details>
+   <summary><b>Docker errors: <code>Cannot connect to the Docker daemon</code> / <code>docker: command not found</code></b></summary></p>
+
+<ul>
+<li>Make sure Docker is installed and the Docker engine/Desktop is <strong>running</strong>.</li>
+<li>On Windows, install and enable <a href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL2</a>
+and enable WSL integration in Docker Desktop settings.</li>
+<li>On Linux, either add your user to the <code>docker</code> group (<code>sudo usermod -aG docker $USER</code>,
+then re-login) or run the command with <code>sudo</code>.
+</details></li>
+</ul>
+
+<p><details>
+   <summary><b>Files created by jddlab are owned by <code>root</code> (Linux/macOS)</b></summary></p>
+
+<p>Recent launcher versions run the container as your host user by default, so new
+files under <code>/work</code> are owned by you. If you still see root-owned files:</p>
+
+<ul>
+<li>Update the launcher (re-download <code>jddlab</code>) and run <code>jddlab update</code> to get an
+image that supports UID mapping.</li>
+<li>Make sure you did not set <code>JDDLAB_ROOT=1</code>.</li>
+<li>To fix already-created files: <code>sudo chown -R "$(id -u):$(id -g)" .</code></li>
+<li>If you run the raw <code>docker run</code> command instead of the launcher, add
+<code>--user "$(id -u):$(id -g)" -e HOME=/root</code> yourself.
+</details></li>
+</ul>
+
+<p><details>
+   <summary><b>A tool cannot see my file / <code>No such file or directory</code></b></summary></p>
+
+<p>Only the <strong>current directory and its subfolders</strong> are mounted into the container
+as <code>/work</code>. Files outside it are not visible. <code>cd</code> into the folder that contains
+your APK before running jddlab, and reference files by relative path
+(<code>./app.apk</code>) or as <code>/work/app.apk</code>.
+</details></p>
+
+<p><details>
+   <summary><b>ADB cannot find my device</b></summary></p>
+
+<ul>
+<li>Use wireless debugging as described in <a href="#how-to-use-adb-with-jddlab">How to use ADB with jddlab</a>.</li>
+<li>To forward the host ADB server into the container, run <code>adb start-server</code> on
+the host and uncomment the <code>--network=host</code> line in the <code>jddlab</code> launcher.</li>
+<li>See the <a href="#how-to-use-adb-with-jddlab">Security warning</a> about the preinstalled
+ADB keys and mounting your own <code>~/.android</code>.
+</details></li>
+</ul>
+
+<p><details>
+   <summary><b><code>OutOfMemoryError</code> / a decompiler is killed on a large APK</b></summary></p>
+
+<p>Increase the JVM heap for the tool, e.g. <code>JAVA_OPTS="-Xmx6g"</code>, and make sure
+Docker has enough memory allotted (Docker Desktop → Settings → Resources).
+</details></p>
+
+<p><details>
+   <summary><b><code>jddlab update</code> says the image is up to date but a tool is outdated</b></summary></p>
+
+<p><code>jddlab update</code> pulls <code>stanislavpovolotsky/jddlab:latest</code>. Run <code>jddlab versions</code>
+to see the exact bundled tool versions. If a tool is behind upstream, open an
+issue - the image is rebuilt to track upstream releases.
+</details></p>
+
+<h2>License</h2>
+
+<p>The original jddlab code in this repository (launcher scripts, <code>scripts/</code>,
+<code>mcp/</code>, and <code>skills/</code>) is released under the <a href="LICENSE">MIT License</a>.</p>
+
+<p>jddlab is a <strong>pack</strong>: it bundles many independent third-party reverse-engineering
+tools into a Docker image, and <strong>each bundled tool keeps its own license</strong> and
+belongs to its respective authors. The MIT license above does not supersede
+those. The version and upstream URL of every bundled tool are recorded in the
+image at <code>/usr/local/jddlab/software-list.txt</code> (<code>jddlab versions</code>) and in each
+<a href="https://github.com/Stanislav-Povolotsky/jddlab/releases">release</a>. Review each
+upstream project's license before redistribution or commercial use.</p>
 
