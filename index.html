@@ -395,8 +395,21 @@ jddlab skills add all</p>
 
 <p>| Scope | opencode | claude-cli | vscode / copilot | codex |
 |---|---|---|---|---|
-| <code>project</code> (default) | <code>.opencode/skills/</code> | <code>.claude/CLAUDE.md</code> | <code>.github/copilot-instructions.md</code> | <code>.codex/skills/</code> |
-| <code>user</code> | <code>~/.config/opencode/skills/</code> | <code>~/.claude/CLAUDE.md</code> | <code>~/.github/copilot-instructions.md</code> | <code>~/.codex/skills/</code> |</p>
+| <code>project</code> (default) | <code>.opencode/skills/</code> | <code>.claude/skills/</code> | <code>.github/copilot-instructions.md</code> | <code>.agents/skills/</code> |
+| <code>user</code> | <code>~/.config/opencode/skills/</code> | <code>~/.claude/skills/</code> | <code>~/.github/copilot-instructions.md</code> | <code>~/.agents/skills/</code> |</p>
+
+<p>Notes:</p>
+
+<ul>
+<li><strong>Claude Code / opencode / Codex</strong> load real skills (directories with a <code>SKILL.md</code>
+that has <code>name</code> + <code>description</code> front-matter). For Claude Code, run <code>/skills</code>
+(restart it if already running) to see them.</li>
+<li><strong>Codex</strong> uses the cross-agent <code>.agents/skills/</code> location. opencode also discovers
+<code>.claude/skills/</code> and <code>.agents/skills/</code>, so skills installed for one of these clients
+are often visible to the others.</li>
+<li><strong>VS Code Copilot</strong> has no native skills feature, so the installer injects a skills
+index into <code>.github/copilot-instructions.md</code> instead.</li>
+</ul>
 
 <h3>Available skills</h3>
 
@@ -478,8 +491,8 @@ It also makes working with apps easier thanks to project-like file structure and
 shell> jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="m&#97;&#105;&#x6c;t&#x6f;&#x3a;&#x62;&#x72;u&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#103;&#x6d;&#x61;&#105;&#x6c;&#x2e;&#99;&#x6f;&#109;">&#x62;&#x72;u&#x74;&#x2e;&#x61;&#x6c;&#108;&#x6c;&#x40;&#103;&#x6d;&#x61;&#105;&#x6c;&#x2e;&#99;&#x6f;&#109;</a>
-Copyright 2010 Connor Tumbleson <a href="&#x6d;&#x61;&#x69;&#x6c;&#116;&#x6f;&#58;c&#x6f;&#x6e;&#x6e;&#x6f;&#x72;.&#x74;&#117;&#109;&#98;&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#x6f;&#x6d;">c&#x6f;&#x6e;&#x6e;&#x6f;&#x72;.&#x74;&#117;&#109;&#98;&#108;&#x65;&#x73;&#x6f;&#x6e;&#64;&#x67;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#99;&#x6f;&#x6d;</a></p>
+Copyright 2010 Ryszard Winiewski <a href="&#109;&#97;&#x69;&#108;&#x74;&#111;&#58;&#x62;&#114;&#x75;&#x74;.&#x61;&#108;&#108;&#x6c;&#x40;g&#x6d;&#x61;&#x69;&#108;&#x2e;&#x63;&#111;&#109;">&#x62;&#114;&#x75;&#x74;.&#x61;&#108;&#108;&#x6c;&#x40;g&#x6d;&#x61;&#x69;&#108;&#x2e;&#x63;&#111;&#109;</a>
+Copyright 2010 Connor Tumbleson <a href="&#109;&#97;&#105;&#x6c;&#116;&#111;&#58;&#99;&#x6f;&#110;&#110;&#x6f;&#114;&#x2e;t&#117;&#109;b&#x6c;&#x65;&#115;o&#110;&#x40;&#103;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#109;">&#99;&#x6f;&#110;&#110;&#x6f;&#114;&#x2e;t&#117;&#109;b&#x6c;&#x65;&#115;o&#110;&#x40;&#103;&#x6d;&#x61;&#x69;&#x6c;&#x2e;&#x63;&#x6f;&#109;</a></p>
 
 <p>usage: apktool
  -advance,--advanced   Print advanced information.
