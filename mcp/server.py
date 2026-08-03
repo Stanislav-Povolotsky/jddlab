@@ -466,16 +466,28 @@ class McpServer:
 
 
 def read_message() -> dict[str, Any] | None:
+    # MCP's stdio transport is newline-delimited JSON: each message is a single
+    # line beginning with '{' (or '[') and terminated by '\n'. Detect that and
+    # parse it directly; fall back to LSP-style Content-Length header framing for
+    # any client that still uses it.
+    line = sys.stdin.buffer.readline()
+    while line in (b"\n", b"\r\n"):  # skip stray blank lines between messages
+        line = sys.stdin.buffer.readline()
+    if not line:
+        return None
+    if line.lstrip()[:1] in (b"{", b"["):
+        return json.loads(line.decode("utf-8"))
+
     headers: dict[str, str] = {}
     while True:
+        text = line.decode("ascii").strip()
+        if not text:
+            break
+        key, _, value = text.partition(":")
+        headers[key.lower()] = value.strip()
         line = sys.stdin.buffer.readline()
         if not line:
             return None
-        line = line.decode("ascii").strip()
-        if not line:
-            break
-        key, _, value = line.partition(":")
-        headers[key.lower()] = value.strip()
     length = int(headers.get("content-length", "0"))
     if length <= 0:
         return None
@@ -487,11 +499,12 @@ _write_lock = threading.Lock()
 
 
 def write_message(message: dict[str, Any]) -> None:
+    # Newline-delimited JSON per the MCP stdio transport. json.dumps produces no
+    # embedded newlines, so a single trailing '\n' frames the message.
     body = json.dumps(message, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    header = f"Content-Length: {len(body)}\r\n\r\n".encode("ascii")
     with _write_lock:
-        sys.stdout.buffer.write(header)
         sys.stdout.buffer.write(body)
+        sys.stdout.buffer.write(b"\n")
         sys.stdout.buffer.flush()
 
 

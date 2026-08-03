@@ -57,5 +57,14 @@ if exist "%~dp0mcp\bootstrap.py" (
   exit /b !ERRORLEVEL!
 )
 if "%JDDLAB_MCP_BOOTSTRAP_URL%"=="" set "JDDLAB_MCP_BOOTSTRAP_URL=https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/mcp/bootstrap.py"
-%jddlab_python% -c "import os, urllib.request; exec(urllib.request.urlopen(os.environ['JDDLAB_MCP_BOOTSTRAP_URL'], timeout=120).read().decode('utf-8'))" %mcp_args%
-exit /b !ERRORLEVEL!
+set "jddlab_bootstrap_tmp=%TEMP%\jddlab_bootstrap_%RANDOM%.py"
+curl -fsSL "%JDDLAB_MCP_BOOTSTRAP_URL%" -o "%jddlab_bootstrap_tmp%"
+if errorlevel 1 (
+  echo Failed to download bootstrap.py from %JDDLAB_MCP_BOOTSTRAP_URL%
+  del /f /q "%jddlab_bootstrap_tmp%" 2>nul
+  exit /b 1
+)
+%jddlab_python% "%jddlab_bootstrap_tmp%" %mcp_args%
+set "jddlab_exit=%ERRORLEVEL%"
+del /f /q "%jddlab_bootstrap_tmp%" 2>nul
+exit /b !jddlab_exit!

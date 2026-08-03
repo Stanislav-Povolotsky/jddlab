@@ -30,8 +30,17 @@ if [ "$#" -ge 1 ] && [ "$1" = "mcp" ]; then
   if [ -f "$local_bootstrap" ]; then
     exec "$jddlab_python" "$local_bootstrap" "$@"
   fi
-  JDDLAB_MCP_BOOTSTRAP_URL=${JDDLAB_MCP_BOOTSTRAP_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/mcp/bootstrap.py"} \
-    exec "$jddlab_python" -c 'import os, urllib.request; exec(urllib.request.urlopen(os.environ["JDDLAB_MCP_BOOTSTRAP_URL"], timeout=120).read().decode("utf-8"))' "$@"
+  JDDLAB_MCP_BOOTSTRAP_URL=${JDDLAB_MCP_BOOTSTRAP_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/mcp/bootstrap.py"}
+  jddlab_bootstrap_tmp=$(mktemp /tmp/jddlab_bootstrap_XXXXXX.py)
+  if ! curl -fsSL "$JDDLAB_MCP_BOOTSTRAP_URL" -o "$jddlab_bootstrap_tmp"; then
+    echo "Failed to download bootstrap.py from $JDDLAB_MCP_BOOTSTRAP_URL" >&2
+    rm -f "$jddlab_bootstrap_tmp"
+    exit 1
+  fi
+  "$jddlab_python" "$jddlab_bootstrap_tmp" "$@"
+  jddlab_exit=$?
+  rm -f "$jddlab_bootstrap_tmp"
+  exit $jddlab_exit
 fi
 
 docker_args=""

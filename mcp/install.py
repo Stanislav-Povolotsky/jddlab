@@ -127,10 +127,16 @@ def install_vscode(args: argparse.Namespace) -> int:
 
 def install_claude_cli(args: argparse.Namespace) -> int:
     claude = shutil.which("claude")
+    # Default to the "user" scope so the server is available across ALL
+    # Claude Code projects. Without --scope, `claude mcp add` uses the "local"
+    # scope, which binds the server to the current working directory only.
+    scope = getattr(args, "scope", None) or "user"
     command = [
         "claude",
         "mcp",
         "add",
+        "--scope",
+        scope,
         "--transport",
         "stdio",
         SERVER_NAME,
@@ -182,7 +188,8 @@ def remove_vscode(args: argparse.Namespace) -> int:
 
 def remove_claude_cli(args: argparse.Namespace) -> int:
     claude = shutil.which("claude")
-    command = ["claude", "mcp", "remove", SERVER_NAME]
+    scope = getattr(args, "scope", None) or "user"
+    command = ["claude", "mcp", "remove", "--scope", scope, SERVER_NAME]
     if args.print_only:
         print(" ".join(command))
         return 0
@@ -279,13 +286,31 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Install jddlab MCP connectors.")
     parser.add_argument("--config", help="Override the target client config path.")
     parser.add_argument("--print-only", action="store_true", help="Print external CLI commands instead of running them.")
+    parser.add_argument(
+        "--scope",
+        choices=["user", "project", "local"],
+        default="user",
+        help="Claude Code CLI scope (default: user = available in all projects).",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
     clients = sorted(set(INSTALLERS) | {"all"})
     add = subparsers.add_parser("add", help="Add jddlab MCP to a client.")
     add.add_argument("client", choices=clients)
+    add.add_argument(
+        "--scope",
+        choices=["user", "project", "local"],
+        default=None,
+        help="Claude Code CLI scope (overrides top-level --scope).",
+    )
     add.set_defaults(func=add_client)
     remove = subparsers.add_parser("remove", help="Remove jddlab MCP from a client.")
     remove.add_argument("client", choices=sorted(set(REMOVERS) | {"all"}))
+    remove.add_argument(
+        "--scope",
+        choices=["user", "project", "local"],
+        default=None,
+        help="Claude Code CLI scope (overrides top-level --scope).",
+    )
     remove.set_defaults(func=remove_client)
     subparsers.add_parser("doctor", help="Check local prerequisites.").set_defaults(func=doctor)
     subparsers.add_parser("status", help="Show local MCP installation status.").set_defaults(func=status)
@@ -295,6 +320,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    # Sub-command --scope (if explicitly given) overrides top-level --scope.
+    if getattr(args, "scope", None) is None:
+        args.scope = "user"
     return args.func(args)
 
 
