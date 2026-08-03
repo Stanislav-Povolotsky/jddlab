@@ -217,11 +217,11 @@ python mcp/server.py --list-commands
 
 ### Install MCP connectors with jddlab
 
-The standalone `jddlab` and `jddlab.cmd` launchers include an `mcp` subcommand. The launcher does not need a local repository checkout. On first use it downloads the latest `jddlab-mcp-<version>.zip` asset from the GitHub release, verifies the `.sha256` file when present, extracts it into `~/.jddlab/mcp/current`, and then runs the bundled installer.
+The standalone `jddlab` and `jddlab.cmd` launchers include an `mcp` subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) **out of the Docker image** — which ships them at `/usr/local/jddlab/host` — into `~/.jddlab/mcp/current` using `docker cp`, and then runs the installer from there. No separate download is involved, so the host files always match the image, and `docker cp` writes them owned by your user.
 
-> This bundle also contains the [AI skills](#ai-skills), so `jddlab skills ...`
-> reuses the same download (see below). Running `jddlab update` refreshes this
-> installed bundle in addition to pulling the Docker image.
+> The same files back `jddlab skills ...` (see below). Running `jddlab update`
+> re-extracts them from the freshly pulled image; `jddlab mcp update` /
+> `jddlab skills update` refresh them on demand.
 
 Examples:
 
@@ -242,17 +242,14 @@ On Windows the same commands work with `jddlab.cmd`:
 jddlab mcp add codex
 ```
 
-The MCP bundle is installed under:
+The extracted files are installed under:
 
 - Linux/macOS: `~/.jddlab/mcp/current`
 - Windows: `%USERPROFILE%\.jddlab\mcp\current`
 
 Advanced environment variables:
 
-- `JDDLAB_MCP_HOME`: override the MCP install directory.
-- `JDDLAB_MCP_BUNDLE`: install from a local `jddlab-mcp-*.zip` file instead of GitHub.
-- `JDDLAB_MCP_BOOTSTRAP_URL`: override the bootstrap script URL used by standalone launchers.
-- `JDDLAB_GITHUB_REPOSITORY`: override the GitHub repository used for release downloads.
+- `JDDLAB_MCP_HOME`: override the install directory (default `~/.jddlab/mcp`).
 
 ### Connect from Claude Desktop
 
@@ -334,10 +331,10 @@ Skills are Markdown knowledge bases (see [`skills/`](skills/README.md)) that tea
 ### Install skills with jddlab
 
 Like the `mcp` subcommand, `jddlab skills` works without a local repository checkout:
-it installs from the shared `jddlab-mcp-<version>.zip` bundle (skills ship inside it),
-reusing `~/.jddlab/mcp/current` if the MCP bundle is already downloaded and fetching it
-otherwise. `jddlab update` refreshes this bundle. From a repository checkout the local
-`skills/` are used directly.
+it runs the skills installer copied out of the Docker image (shared with the MCP files
+under `~/.jddlab/mcp/current`), extracting on first use and reusing it afterwards.
+`jddlab update` (or `jddlab skills update`) re-extracts from the image. From a
+repository checkout the local `skills/` are used directly.
 
 ```shell
 # Install into the current project (default)

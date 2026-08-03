@@ -28,7 +28,7 @@ jddlab mcp add vscode
 jddlab mcp doctor
 ```
 
-The launcher downloads the latest `jddlab-mcp-<version>.zip` release asset into `~/.jddlab/mcp/current` and runs the bundled installer. The examples below are useful for manual setup or troubleshooting.
+The launcher copies the MCP server out of the Docker image (from `/usr/local/jddlab/host`) into `~/.jddlab/mcp/current` using `docker cp`, then runs the installer from there. The examples below are useful for manual setup or troubleshooting.
 
 ## Prerequisites
 

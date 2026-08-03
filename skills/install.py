@@ -314,8 +314,8 @@ def main(argv: list[str] | None = None) -> int:
     if not SKILLS_ROOT.is_dir():
         print(
             f"jddlab skills directory was not found next to this installer: {SKILLS_ROOT}\n"
-            "Run 'jddlab skills ...' from a jddlab repository checkout, or update your\n"
-            "jddlab launcher so it downloads the skills bundle via skills/bootstrap.py.",
+            "Run 'jddlab skills ...' via the jddlab launcher (it copies the skills out of\n"
+            "the Docker image into ~/.jddlab/mcp/current), or run this from a repo checkout.",
             file=sys.stderr,
         )
         return 1

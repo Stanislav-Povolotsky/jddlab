@@ -40,3 +40,12 @@ COPY --from=builder /root/scripts/installation/installed /
 # written to /work are owned by the user instead of root. A mapped UID has no
 # /etc/passwd entry, so HOME=/root must be world read/write to work for everyone.
 RUN chmod -R a+rwX /root
+
+# Host-side helpers shipped INSIDE the image. The jddlab launcher copies this tree out
+# of the image into ~/.jddlab/mcp/current (via `docker cp`) to run the MCP server and
+# install AI skills - so the host files always match the image and no separate download
+# is needed. Layout mirrors the install roots: current/{mcp,skills,tools,VERSION}.
+COPY mcp     /usr/local/jddlab/host/mcp
+COPY skills  /usr/local/jddlab/host/skills
+COPY tools   /usr/local/jddlab/host/tools
+COPY VERSION /usr/local/jddlab/host/VERSION

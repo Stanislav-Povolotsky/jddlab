@@ -8,6 +8,38 @@ jddlab_query_image() {
   docker run --rm "$jddlab_docker_image" "$@"
 }
 
+jddlab_resolve_python() {
+  if command -v python3 >/dev/null 2>&1; then jddlab_python=python3
+  elif command -v python >/dev/null 2>&1; then jddlab_python=python
+  else jddlab_python=""; fi
+}
+
+# Copy the host-side helper tree (/usr/local/jddlab/host) out of the image into
+# ~/.jddlab/mcp/current, so the MCP server and skills installer run on the host from
+# files that always match the image. $1 = "1" forces re-extraction. Uses `docker cp`
+# (not a mount) so the extracted files are owned by the host user.
+jddlab_extract_host_bundle() {
+  _jddlab_force="$1"
+  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
+  if [ "$_jddlab_force" != "1" ] && [ -f "$jddlab_mcp_home/current/mcp/server.py" ]; then
+    return 0
+  fi
+  echo "Extracting jddlab MCP/skills from the image..." >&2
+  _jddlab_cid=$(docker create "$jddlab_docker_image") || return 1
+  _jddlab_tmp="$jddlab_mcp_home/current.new"
+  rm -rf "$_jddlab_tmp"
+  mkdir -p "$_jddlab_tmp"
+  if docker cp "$_jddlab_cid:/usr/local/jddlab/host/." "$_jddlab_tmp"; then
+    docker rm "$_jddlab_cid" >/dev/null 2>&1
+    rm -rf "$jddlab_mcp_home/current"
+    mv "$_jddlab_tmp" "$jddlab_mcp_home/current"
+    return 0
+  fi
+  docker rm "$_jddlab_cid" >/dev/null 2>&1
+  rm -rf "$_jddlab_tmp"
+  return 1
+}
+
 jddlab_print_help() {
   cat <<EOF
 jddlab - Java Decompilation & Deobfuscation Lab (launcher $jddlab_launcher_version)
@@ -21,14 +53,15 @@ Launcher sub-commands:
   jddlab tools | --tools       List the tools/commands available in the image
   jddlab version | --version   Show launcher and image build versions
   jddlab versions | --versions Show versions of every bundled tool
-  jddlab update                Pull the latest jddlab image
+  jddlab update                Pull the latest image (and refresh installed MCP/skills)
   jddlab mcp <args...>         Manage MCP connectors (add/remove/status/doctor/update)
-  jddlab skills <args...>      Manage AI skills (add/remove/list)
+  jddlab skills <args...>      Manage AI skills (add/remove/list/update)
 
 Environment variables:
   JDDLAB_ROOT=1                Run the container as root instead of your host user
                                (Linux/macOS map your UID:GID by default so files
                                written to /work are owned by you, not root)
+  JDDLAB_MCP_HOME              Directory for extracted MCP/skills (default ~/.jddlab/mcp)
 EOF
 }
 
@@ -38,19 +71,11 @@ if [ "$#" -eq 1 ]; then
       echo "Updating jddlab..."
       docker pull "$jddlab_docker_image"
       jddlab_update_rc=$?
-      # If an MCP/skills bundle was installed under ~/.jddlab, refresh it too.
+      # Refresh the extracted MCP/skills if they were installed under ~/.jddlab.
       jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
       if [ -d "$jddlab_mcp_home/current" ]; then
-        if command -v python3 >/dev/null 2>&1; then jddlab_python=python3
-        elif command -v python >/dev/null 2>&1; then jddlab_python=python
-        else jddlab_python=""; fi
-        installed_bootstrap="$jddlab_mcp_home/current/mcp/bootstrap.py"
-        script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
-        [ -f "$installed_bootstrap" ] || installed_bootstrap="$script_dir/mcp/bootstrap.py"
-        if [ -n "$jddlab_python" ] && [ -f "$installed_bootstrap" ]; then
-          echo "Updating installed jddlab MCP/skills bundle..."
-          "$jddlab_python" "$installed_bootstrap" update || echo "Bundle update failed (image was still updated)." >&2
-        fi
+        echo "Refreshing installed jddlab MCP/skills from the image..."
+        jddlab_extract_host_bundle 1 || echo "Refresh failed (image was still updated)." >&2
       fi
       exit $jddlab_update_rc
       ;;
@@ -79,46 +104,44 @@ fi
 
 if [ "$#" -ge 1 ] && [ "$1" = "mcp" ]; then
   shift
-  if command -v python3 >/dev/null 2>&1; then
-    jddlab_python=python3
-  elif command -v python >/dev/null 2>&1; then
-    jddlab_python=python
-  else
+  jddlab_resolve_python
+  if [ -z "$jddlab_python" ]; then
     echo "Python 3.10 or newer is required to install jddlab MCP connectors." >&2
     exit 1
   fi
-  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
-  installed_bootstrap="$jddlab_mcp_home/current/mcp/bootstrap.py"
-  if [ -f "$installed_bootstrap" ]; then
-    exec "$jddlab_python" "$installed_bootstrap" "$@"
+  # `jddlab mcp update` refreshes the extracted copy from the image.
+  if [ "$1" = "update" ]; then
+    jddlab_extract_host_bundle 1 && echo "jddlab MCP/skills refreshed from the image."
+    exit $?
   fi
+  # From a repository checkout, run the local installer directly (dev-friendly).
   script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
-  local_bootstrap="$script_dir/mcp/bootstrap.py"
-  if [ -f "$local_bootstrap" ]; then
-    exec "$jddlab_python" "$local_bootstrap" "$@"
+  local_installer="$script_dir/mcp/install.py"
+  if [ -f "$local_installer" ]; then
+    exec "$jddlab_python" "$local_installer" "$@"
   fi
-  JDDLAB_MCP_BOOTSTRAP_URL=${JDDLAB_MCP_BOOTSTRAP_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/mcp/bootstrap.py"}
-  jddlab_bootstrap_tmp=$(mktemp /tmp/jddlab_bootstrap_XXXXXX.py)
-  if ! curl -fsSL "$JDDLAB_MCP_BOOTSTRAP_URL" -o "$jddlab_bootstrap_tmp"; then
-    echo "Failed to download bootstrap.py from $JDDLAB_MCP_BOOTSTRAP_URL" >&2
-    rm -f "$jddlab_bootstrap_tmp"
-    exit 1
+  # Standalone: run the installer copied out of the image.
+  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
+  if [ ! -f "$jddlab_mcp_home/current/mcp/install.py" ]; then
+    if ! jddlab_extract_host_bundle 0; then
+      echo "Failed to extract MCP files from the image. Is Docker running and the image pulled? Try 'jddlab update'." >&2
+      exit 1
+    fi
   fi
-  "$jddlab_python" "$jddlab_bootstrap_tmp" "$@"
-  jddlab_exit=$?
-  rm -f "$jddlab_bootstrap_tmp"
-  exit $jddlab_exit
+  exec "$jddlab_python" "$jddlab_mcp_home/current/mcp/install.py" "$@"
 fi
 
 if [ "$#" -ge 1 ] && [ "$1" = "skills" ]; then
   shift
-  if command -v python3 >/dev/null 2>&1; then
-    jddlab_python=python3
-  elif command -v python >/dev/null 2>&1; then
-    jddlab_python=python
-  else
+  jddlab_resolve_python
+  if [ -z "$jddlab_python" ]; then
     echo "Python 3.10 or newer is required to install jddlab skills." >&2
     exit 1
+  fi
+  # `jddlab skills update` refreshes the extracted copy from the image.
+  if [ "$1" = "update" ]; then
+    jddlab_extract_host_bundle 1 && echo "jddlab MCP/skills refreshed from the image."
+    exit $?
   fi
   # From a repository checkout, install the local skills directly (dev-friendly).
   script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
@@ -126,28 +149,15 @@ if [ "$#" -ge 1 ] && [ "$1" = "skills" ]; then
   if [ -f "$local_installer" ]; then
     exec "$jddlab_python" "$local_installer" "$@"
   fi
-  # Standalone: install skills from the shared jddlab bundle (same bundle as MCP,
-  # cached under ~/.jddlab/mcp) via bootstrap.
+  # Standalone: run the installer copied out of the image.
   jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
-  installed_bootstrap="$jddlab_mcp_home/current/skills/bootstrap.py"
-  if [ -f "$installed_bootstrap" ]; then
-    exec "$jddlab_python" "$installed_bootstrap" "$@"
+  if [ ! -f "$jddlab_mcp_home/current/skills/install.py" ]; then
+    if ! jddlab_extract_host_bundle 0; then
+      echo "Failed to extract skills from the image. Is Docker running and the image pulled? Try 'jddlab update'." >&2
+      exit 1
+    fi
   fi
-  local_bootstrap="$script_dir/skills/bootstrap.py"
-  if [ -f "$local_bootstrap" ]; then
-    exec "$jddlab_python" "$local_bootstrap" "$@"
-  fi
-  JDDLAB_SKILLS_BOOTSTRAP_URL=${JDDLAB_SKILLS_BOOTSTRAP_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/skills/bootstrap.py"}
-  jddlab_skills_tmp=$(mktemp /tmp/jddlab_skills_XXXXXX.py)
-  if ! curl -fsSL "$JDDLAB_SKILLS_BOOTSTRAP_URL" -o "$jddlab_skills_tmp"; then
-    echo "Failed to download skills/bootstrap.py from $JDDLAB_SKILLS_BOOTSTRAP_URL" >&2
-    rm -f "$jddlab_skills_tmp"
-    exit 1
-  fi
-  "$jddlab_python" "$jddlab_skills_tmp" "$@"
-  jddlab_exit=$?
-  rm -f "$jddlab_skills_tmp"
-  exit $jddlab_exit
+  exec "$jddlab_python" "$jddlab_mcp_home/current/skills/install.py" "$@"
 fi
 
 docker_args=""
