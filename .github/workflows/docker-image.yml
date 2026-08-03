@@ -246,7 +246,7 @@ jobs:
           cat release_body.md      >> $GITHUB_ENV
           echo "EOF"               >> $GITHUB_ENV
 
-      - name: Package MCP Server
+      - name: Package MCP Server and Skills
         if: env.CONTINUE_BUILD != 'false'
         run: |
           set -euo pipefail
@@ -254,7 +254,9 @@ jobs:
           MCP_ROOT="jddlab-mcp"
           rm -rf dist
           mkdir -p "dist/$MCP_ROOT"
-          cp -r mcp tools VERSION "dist/$MCP_ROOT/"
+          # The bundle ships both the MCP server and the AI skills so the standalone
+          # `jddlab mcp` and `jddlab skills` launchers share one download.
+          cp -r mcp tools skills VERSION "dist/$MCP_ROOT/"
           python - <<'PY'
           import json
           from pathlib import Path

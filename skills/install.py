@@ -311,6 +311,14 @@ def main(argv: list[str] | None = None) -> int:
     # Sub-command --scope (if explicitly given) overrides top-level --scope.
     if getattr(args, "scope", None) is None:
         args.scope = "project"
+    if not SKILLS_ROOT.is_dir():
+        print(
+            f"jddlab skills directory was not found next to this installer: {SKILLS_ROOT}\n"
+            "Run 'jddlab skills ...' from a jddlab repository checkout, or update your\n"
+            "jddlab launcher so it downloads the skills bundle via skills/bootstrap.py.",
+            file=sys.stderr,
+        )
+        return 1
     return args.func(args)
 
 

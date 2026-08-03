@@ -4,11 +4,7 @@ set "folder_to_serve=%CD%"
 set jddlab_docker_image=stanislavpovolotsky/jddlab:latest
 set jddlab_launcher_version=1.0
 
-if "%~1"=="update" (
-  echo Updating jddlab...
-  docker pull "%jddlab_docker_image%"
-  exit /b %ERRORLEVEL%
-)
+if "%~1"=="update" goto update
 
 if "%~2"=="" (
   if "%~1"=="help" goto help
@@ -52,20 +48,32 @@ set "skills_args="
 goto skills_args_loop
 
 :skills_execute
-set "jddlab_python=python"
-where %jddlab_python% >nul 2>nul
-if errorlevel 1 set "jddlab_python=python3"
-where %jddlab_python% >nul 2>nul
-if errorlevel 1 set "jddlab_python=py -3"
+call :resolve_python
+rem Repo checkout: install the local skills directly (dev-friendly).
 if exist "%~dp0skills\install.py" (
   %jddlab_python% "%~dp0skills\install.py" %skills_args%
   exit /b !ERRORLEVEL!
 )
-if "%JDDLAB_SKILLS_INSTALL_URL%"=="" set "JDDLAB_SKILLS_INSTALL_URL=https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/skills/install.py"
+rem Standalone: install skills from the shared jddlab bundle (same bundle as MCP,
+rem cached under %USERPROFILE%\.jddlab\mcp) via bootstrap.
+if "%JDDLAB_MCP_HOME%"=="" (
+  set "jddlab_mcp_home=%USERPROFILE%\.jddlab\mcp"
+) else (
+  set "jddlab_mcp_home=%JDDLAB_MCP_HOME%"
+)
+if exist "%jddlab_mcp_home%\current\skills\bootstrap.py" (
+  %jddlab_python% "%jddlab_mcp_home%\current\skills\bootstrap.py" %skills_args%
+  exit /b !ERRORLEVEL!
+)
+if exist "%~dp0skills\bootstrap.py" (
+  %jddlab_python% "%~dp0skills\bootstrap.py" %skills_args%
+  exit /b !ERRORLEVEL!
+)
+if "%JDDLAB_SKILLS_BOOTSTRAP_URL%"=="" set "JDDLAB_SKILLS_BOOTSTRAP_URL=https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/skills/bootstrap.py"
 set "jddlab_skills_tmp=%TEMP%\jddlab_skills_%RANDOM%.py"
-curl -fsSL "%JDDLAB_SKILLS_INSTALL_URL%" -o "%jddlab_skills_tmp%"
+curl -fsSL "%JDDLAB_SKILLS_BOOTSTRAP_URL%" -o "%jddlab_skills_tmp%"
 if errorlevel 1 (
-  echo Failed to download skills/install.py from %JDDLAB_SKILLS_INSTALL_URL%
+  echo Failed to download skills/bootstrap.py from %JDDLAB_SKILLS_BOOTSTRAP_URL%
   del /f /q "%jddlab_skills_tmp%" 2>nul
   exit /b 1
 )
@@ -84,11 +92,7 @@ set "mcp_args="
 goto mcp_args_loop
 
 :mcp_execute
-set "jddlab_python=python"
-where %jddlab_python% >nul 2>nul
-if errorlevel 1 set "jddlab_python=python3"
-where %jddlab_python% >nul 2>nul
-if errorlevel 1 set "jddlab_python=py -3"
+call :resolve_python
 if "%JDDLAB_MCP_HOME%"=="" (
   set "jddlab_mcp_home=%USERPROFILE%\.jddlab\mcp"
 ) else (
@@ -146,3 +150,32 @@ exit /b 0
 :versions
 docker run --rm "%jddlab_docker_image%" cat /usr/local/jddlab/software-list.txt
 exit /b %ERRORLEVEL%
+
+:resolve_python
+set "jddlab_python=python"
+where %jddlab_python% >nul 2>nul
+if errorlevel 1 set "jddlab_python=python3"
+where %jddlab_python% >nul 2>nul
+if errorlevel 1 set "jddlab_python=py -3"
+goto :eof
+
+:update
+echo Updating jddlab...
+docker pull "%jddlab_docker_image%"
+set "jddlab_update_rc=%ERRORLEVEL%"
+rem If an MCP/skills bundle was installed under %USERPROFILE%\.jddlab, refresh it too.
+if "%JDDLAB_MCP_HOME%"=="" (
+  set "jddlab_mcp_home=%USERPROFILE%\.jddlab\mcp"
+) else (
+  set "jddlab_mcp_home=%JDDLAB_MCP_HOME%"
+)
+if exist "%jddlab_mcp_home%\current" (
+  call :resolve_python
+  set "installed_bootstrap=%jddlab_mcp_home%\current\mcp\bootstrap.py"
+  if not exist "!installed_bootstrap!" set "installed_bootstrap=%~dp0mcp\bootstrap.py"
+  if exist "!installed_bootstrap!" (
+    echo Updating installed jddlab MCP/skills bundle...
+    !jddlab_python! "!installed_bootstrap!" update
+  )
+)
+exit /b %jddlab_update_rc%

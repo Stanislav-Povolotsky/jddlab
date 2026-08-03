@@ -37,7 +37,22 @@ if [ "$#" -eq 1 ]; then
     update)
       echo "Updating jddlab..."
       docker pull "$jddlab_docker_image"
-      exit $?
+      jddlab_update_rc=$?
+      # If an MCP/skills bundle was installed under ~/.jddlab, refresh it too.
+      jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
+      if [ -d "$jddlab_mcp_home/current" ]; then
+        if command -v python3 >/dev/null 2>&1; then jddlab_python=python3
+        elif command -v python >/dev/null 2>&1; then jddlab_python=python
+        else jddlab_python=""; fi
+        installed_bootstrap="$jddlab_mcp_home/current/mcp/bootstrap.py"
+        script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
+        [ -f "$installed_bootstrap" ] || installed_bootstrap="$script_dir/mcp/bootstrap.py"
+        if [ -n "$jddlab_python" ] && [ -f "$installed_bootstrap" ]; then
+          echo "Updating installed jddlab MCP/skills bundle..."
+          "$jddlab_python" "$installed_bootstrap" update || echo "Bundle update failed (image was still updated)." >&2
+        fi
+      fi
+      exit $jddlab_update_rc
       ;;
     help|--help|-h)
       jddlab_print_help
@@ -105,15 +120,27 @@ if [ "$#" -ge 1 ] && [ "$1" = "skills" ]; then
     echo "Python 3.10 or newer is required to install jddlab skills." >&2
     exit 1
   fi
+  # From a repository checkout, install the local skills directly (dev-friendly).
   script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
   local_installer="$script_dir/skills/install.py"
   if [ -f "$local_installer" ]; then
     exec "$jddlab_python" "$local_installer" "$@"
   fi
-  JDDLAB_SKILLS_INSTALL_URL=${JDDLAB_SKILLS_INSTALL_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/skills/install.py"}
+  # Standalone: install skills from the shared jddlab bundle (same bundle as MCP,
+  # cached under ~/.jddlab/mcp) via bootstrap.
+  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
+  installed_bootstrap="$jddlab_mcp_home/current/skills/bootstrap.py"
+  if [ -f "$installed_bootstrap" ]; then
+    exec "$jddlab_python" "$installed_bootstrap" "$@"
+  fi
+  local_bootstrap="$script_dir/skills/bootstrap.py"
+  if [ -f "$local_bootstrap" ]; then
+    exec "$jddlab_python" "$local_bootstrap" "$@"
+  fi
+  JDDLAB_SKILLS_BOOTSTRAP_URL=${JDDLAB_SKILLS_BOOTSTRAP_URL:-"https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/skills/bootstrap.py"}
   jddlab_skills_tmp=$(mktemp /tmp/jddlab_skills_XXXXXX.py)
-  if ! curl -fsSL "$JDDLAB_SKILLS_INSTALL_URL" -o "$jddlab_skills_tmp"; then
-    echo "Failed to download skills/install.py from $JDDLAB_SKILLS_INSTALL_URL" >&2
+  if ! curl -fsSL "$JDDLAB_SKILLS_BOOTSTRAP_URL" -o "$jddlab_skills_tmp"; then
+    echo "Failed to download skills/bootstrap.py from $JDDLAB_SKILLS_BOOTSTRAP_URL" >&2
     rm -f "$jddlab_skills_tmp"
     exit 1
   fi

@@ -104,7 +104,7 @@ jddlab help          # Show launcher usage and sub-commands
 jddlab tools         # List all tools/commands available inside the image
 jddlab version       # Show launcher version and image build version
 jddlab versions      # Show the version of every bundled tool
-jddlab update        # Pull the latest jddlab image
+jddlab update        # Pull the latest image (and refresh the installed MCP/skills bundle)
 ```
 
 The same commands also accept a `--` prefix (`jddlab --tools`, `jddlab --version`, etc.).
@@ -219,6 +219,10 @@ python mcp/server.py --list-commands
 
 The standalone `jddlab` and `jddlab.cmd` launchers include an `mcp` subcommand. The launcher does not need a local repository checkout. On first use it downloads the latest `jddlab-mcp-<version>.zip` asset from the GitHub release, verifies the `.sha256` file when present, extracts it into `~/.jddlab/mcp/current`, and then runs the bundled installer.
 
+> This bundle also contains the [AI skills](#ai-skills), so `jddlab skills ...`
+> reuses the same download (see below). Running `jddlab update` refreshes this
+> installed bundle in addition to pulling the Docker image.
+
 Examples:
 
 ```shell
@@ -328,6 +332,12 @@ The server infers a host mount root, rewrites `app.apk` and `decoded` to `/work/
 Skills are Markdown knowledge bases (see [`skills/`](skills/README.md)) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in `skills/<name>/SKILL.md` and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.
 
 ### Install skills with jddlab
+
+Like the `mcp` subcommand, `jddlab skills` works without a local repository checkout:
+it installs from the shared `jddlab-mcp-<version>.zip` bundle (skills ship inside it),
+reusing `~/.jddlab/mcp/current` if the MCP bundle is already downloaded and fetching it
+otherwise. `jddlab update` refreshes this bundle. From a repository checkout the local
+`skills/` are used directly.
 
 ```shell
 # Install into the current project (default)
