@@ -514,12 +514,16 @@ Patch the comparison branch to always return valid.
 
 ### 6.4 Certificate Pinning Bypass (automated)
 
+`android-unpinner` needs a sub-command. Use `patch-apk` to produce a patched APK
+(`target.unpinned.apk`) without a connected device (do not use `all`, which also
+installs + instruments over Frida and needs a USB device):
+
 ```json
 {
   "tool": "jddlab_android_unpinner",
-  "args": ["target.apk", "-o", "unpinned.apk"],
+  "args": ["patch-apk", "target.apk"],
   "input_paths": ["target.apk"],
-  "output_paths": ["unpinned.apk"]
+  "output_paths": ["target.unpinned.apk"]
 }
 ```
 
@@ -541,18 +545,21 @@ adb logcat -s "AndroidRuntime:E" "*:S"
 
 ### 7.2 Frida Injection via jddlab
 
-Inject Frida gadget into an APK for dynamic analysis:
+Inject a Frida gadget into an APK for dynamic analysis. `apk-patcher` takes the APK
+**base name without the extension, with the trailing dot** (`target.apk` -> `./target.`)
+as a positional argument, and writes `target.patched`; flags are `-l <script>`,
+`-a <arch>`, `-d <dir>`, `-c <config>`, `-f`, `-v` (there is no `-o`):
 
 ```json
 {
   "tool": "jddlab_apk_patcher",
-  "args": ["--lief-frida", "target.apk", "-o", "frida_target.apk"],
+  "args": ["./target."],
   "input_paths": ["target.apk"],
-  "output_paths": ["frida_target.apk"]
+  "output_paths": ["target.patched"]
 }
 ```
 
-Then re-sign `frida_target.apk` via `jddlab_zipalign` + `jddlab_apksigner`.
+Then re-sign the APK inside `target.patched` via `jddlab_zipalign` + `jddlab_apksigner`.
 
 ### 7.3 Objection (runtime exploration via Frida)
 
@@ -636,12 +643,14 @@ Detect the obfuscator:
 }
 ```
 
-Run deobfuscation (needs a config YAML):
+Run deobfuscation. `java-deobfuscator` is driven by a YAML config (via `--config`, two
+dashes); the input, output and transformers all live **inside the YAML**, not as CLI
+flags (see the java-deobfuscation skill for a config example):
 
 ```json
 {
   "tool": "jddlab_java_deobfuscator",
-  "args": ["-input", "target.jar", "-config", "deobf-config.yml", "-output", "deobf.jar"],
+  "args": ["--config", "deobf-config.yml"],
   "input_paths": ["target.jar", "deobf-config.yml"],
   "output_paths": ["deobf.jar"]
 }
@@ -660,23 +669,29 @@ Convert DEX to JAR first if needed:
 
 ### 8.2 Native Code Analysis via Ghidra
 
+`ghidra-decompile` takes **positional** args (`<input-binary> [<output.c>]`) and emits a
+single `.c` file - no `-i`/`-o` flags:
+
 ```json
 {
   "tool": "jddlab_ghidra_decompile",
-  "args": ["-i", "lib/arm64-v8a/libnative.so", "-o", "ghidra_output"],
+  "args": ["lib/arm64-v8a/libnative.so", "libnative.decompiled.c"],
   "input_paths": ["lib/arm64-v8a/libnative.so"],
-  "output_paths": ["ghidra_output"]
+  "output_paths": ["libnative.decompiled.c"]
 }
 ```
 
 ### 8.3 Extract JNI Artifacts
 
+`extract_jni <apk> [-o <file.json>]` reports JNI method signatures as JSON (a file with
+`-o`, else stdout):
+
 ```json
 {
   "tool": "jddlab_extract_jni",
-  "args": ["target.apk", "-o", "jni_output"],
+  "args": ["target.apk", "-o", "jni_methods.json"],
   "input_paths": ["target.apk"],
-  "output_paths": ["jni_output"]
+  "output_paths": ["jni_methods.json"]
 }
 ```
 

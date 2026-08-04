@@ -53,17 +53,22 @@ run on - usually `arm64-v8a`.
 
 ## 3. Step 1: Extract Native Libraries & JNI Bindings
 
-`extract_jni` pulls native libraries and their JNI method bindings out of an APK,
-which helps correlate Java `native` methods with exported symbols:
+`extract_jni` parses an **APK** and lists its JNI method signatures, which helps
+correlate Java `native` methods with the native functions. Its CLI is
+`extract_jni <apk> [-o <file.json>]`: with `-o` it writes a **JSON file** (not a
+directory), and without `-o` it prints the JSON to stdout.
 
 ```json
 {
   "tool": "jddlab_extract_jni",
-  "args": ["target.apk", "-o", "jni_out"],
+  "args": ["target.apk", "-o", "jni_methods.json"],
   "input_paths": ["target.apk"],
-  "output_paths": ["jni_out"]
+  "output_paths": ["jni_methods.json"]
 }
 ```
+
+> `extract_jni` does **not** extract the `.so` files themselves - it only reports the
+> JNI method signatures. Get the `.so` binaries with `apktool`/`jadx` (below).
 
 If you just need the raw `.so` files, decode the APK and read `lib/<abi>/`:
 
@@ -109,20 +114,24 @@ this mapping for you.
 
 ## 5. Step 3: Decompile with Ghidra (headless)
 
-`ghidra-decompile` runs Ghidra headless and emits decompiled C for a binary:
+`ghidra-decompile` runs Ghidra headless and emits decompiled C for a binary. Its CLI
+is **positional** - `ghidra-decompile <input-binary> [<output.c>]` - and the output is
+a **single `.c` file** (defaults to `<input>.c` if you omit it). Do NOT pass `-i`/`-o`
+flags or a directory:
 
 ```json
 {
   "tool": "jddlab_ghidra_decompile",
-  "args": ["-i", "dec/lib/arm64-v8a/libnative.so", "-o", "ghidra_out"],
+  "args": ["dec/lib/arm64-v8a/libnative.so", "libnative.decompiled.c"],
   "input_paths": ["dec/lib/arm64-v8a/libnative.so"],
-  "output_paths": ["ghidra_out"],
+  "output_paths": ["libnative.decompiled.c"],
   "timeout_seconds": 3600
 }
 ```
 
 Ghidra analysis is CPU/RAM heavy - give it a generous `timeout_seconds` and ensure
-Docker has enough memory. See `tools/ghidra-decompile.md` for input/output flags.
+Docker has enough memory. The decompiled C can be large; grep it for the JNI functions
+(`Java_...`) instead of reading it whole. See `tools/ghidra-decompile.md` for details.
 
 For a full project (multiple binaries, scripting, cross-references), use the headless
 analyzer directly via `jddlab_ghidra` with a project dir and `-import`.

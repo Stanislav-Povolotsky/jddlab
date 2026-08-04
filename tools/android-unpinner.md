@@ -10,12 +10,12 @@ android-unpinner [OPTIONS] COMMAND [ARGS]...
 
 ## Main modes
 
-Run `android-unpinner --help` for the complete command list. The common workflow is `patch-apks <apk...>`.
+Run `android-unpinner --help` for the complete command list. The common workflow is `patch-apk <apk...>`.
 
 ## Example
 
 ```json
-{"args":["patch-apks","test.apk"],"input_paths":["test.apk"],"output_paths":["."]}
+{"args":["patch-apk","test.apk"],"input_paths":["test.apk"],"output_paths":["."]}
 ```
 
 

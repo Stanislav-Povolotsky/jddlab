@@ -63,19 +63,23 @@ running app from the host - but that is outside the container (needs USB/host Fr
 `android-unpinner` rewrites the APK to disable common pinning implementations and
 injects a Frida gadget where needed - no device root required.
 
+Use the **`patch-apk`** sub-command to produce a patched APK **without** a connected
+device (it writes `target.unpinned.apk`):
+
 ```json
 {
   "tool": "jddlab_android_unpinner",
-  "args": ["all", "target.apk"],
+  "args": ["patch-apk", "target.apk"],
   "input_paths": ["target.apk"],
-  "output_paths": ["target.apk"]
+  "output_paths": ["target.unpinned.apk"]
 }
 ```
 
-Check `jddlab android-unpinner --help` (or `tools/android-unpinner.md`) for
-sub-commands (`patch-apk`, `push-frida`, `run`) and output flags. It typically emits a
-patched, signed APK ready to install. If it produces a debug-signed APK you can install
-it directly; otherwise re-sign per §7.
+> Do **not** use the `all` sub-command here: `all` patches *and* installs + instruments
+> the app over Frida, which requires a connected USB device. Other sub-commands are
+> `push-frida` and `run`; see `jddlab android-unpinner --help` (or
+> `tools/android-unpinner.md`). The patched APK is debug-signed and installable; if you
+> modify it further, re-sign per §7.
 
 ---
 

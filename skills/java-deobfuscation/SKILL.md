@@ -112,11 +112,16 @@ Run it:
 ```json
 {
   "tool": "jddlab_java_deobfuscator",
-  "args": ["-config", "deobf-config.yml"],
+  "args": ["--config", "deobf-config.yml"],
   "input_paths": ["deobf-config.yml", "target.jar"],
   "output_paths": ["target-deobf.jar"]
 }
 ```
+
+> The flag is `--config` (two dashes). Many transformers also need the Android
+> framework classes on the classpath - add a `path:` section to the YAML pointing at
+> `/usr/local/android-sdk-linux/platforms/android-*/android.jar` if a transformer
+> complains about missing classes.
 
 Iterate: enable one transformer family at a time, re-decompile, and check the diff.
 Enabling everything at once often fails on the first incompatible class.
@@ -164,12 +169,13 @@ Disassemble to smali first (if needed):
 }
 ```
 
-Run simplify:
+Run simplify. Its input is a **positional** argument (`simplify <input> [options]`),
+with `-o` for the output - do NOT use `-i`:
 
 ```json
 {
   "tool": "jddlab_simplify",
-  "args": ["-i", "smali_in", "-o", "out.dex"],
+  "args": ["smali_in", "-o", "out.dex"],
   "input_paths": ["smali_in"],
   "output_paths": ["out.dex"],
   "timeout_seconds": 3600
