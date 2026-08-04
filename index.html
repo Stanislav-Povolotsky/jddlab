@@ -1,32 +1,1302 @@
-<h1>jddlab - Java <strong>D</strong>ecompilation &amp; <strong>D</strong>eobfuscation <strong>Lab</strong></h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jddlab - Java Decompilation &amp;amp; Deobfuscation Lab</title>
+<link rel="stylesheet" href="hljs/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
+<style>
+.markdown-body {
+  --base-size-16: 1rem;
+  --base-size-24: 1.5rem;
+  --base-size-4: 0.25rem;
+  --base-size-40: 2.5rem;
+  --base-size-8: 0.5rem;
+  --base-text-weight-medium: 500;
+  --base-text-weight-normal: 400;
+  --base-text-weight-semibold: 600;
+  --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+  --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --fgColor-accent: Highlight;
+}
+@media (prefers-color-scheme: dark) {
+  .markdown-body, [data-theme="dark"] {
+    /*dark */
+    color-scheme: dark;
+    --fgColor-accent: #4493f8;
+    --bgColor-attention-muted: #bb800926;
+    --bgColor-default: #0d1117;
+    --bgColor-muted: #151b23;
+    --bgColor-neutral-muted: #656c7633;
+    --borderColor-accent-emphasis: #1f6feb;
+    --borderColor-attention-emphasis: #9e6a03;
+    --borderColor-danger-emphasis: #da3633;
+    --borderColor-default: #3d444d;
+    --borderColor-done-emphasis: #8957e5;
+    --borderColor-success-emphasis: #238636;
+    --color-prettylights-syntax-brackethighlighter-angle: #9198a1;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+    --color-prettylights-syntax-carriage-return-bg: #b62324;
+    --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+    --color-prettylights-syntax-comment: #9198a1;
+    --color-prettylights-syntax-constant: #79c0ff;
+    --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+    --color-prettylights-syntax-entity: #d2a8ff;
+    --color-prettylights-syntax-entity-tag: #7ee787;
+    --color-prettylights-syntax-keyword: #ff7b72;
+    --color-prettylights-syntax-markup-bold: #f0f6fc;
+    --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+    --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+    --color-prettylights-syntax-markup-deleted-bg: #67060c;
+    --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+    --color-prettylights-syntax-markup-heading: #1f6feb;
+    --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+    --color-prettylights-syntax-markup-ignored-text: #f0f6fc;
+    --color-prettylights-syntax-markup-inserted-bg: #033a16;
+    --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+    --color-prettylights-syntax-markup-italic: #f0f6fc;
+    --color-prettylights-syntax-markup-list: #f2cc60;
+    --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+    --color-prettylights-syntax-storage-modifier-import: #f0f6fc;
+    --color-prettylights-syntax-string: #a5d6ff;
+    --color-prettylights-syntax-string-regexp: #7ee787;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #3d444d;
+    --color-prettylights-syntax-variable: #ffa657;
+    --fgColor-attention: #d29922;
+    --fgColor-danger: #f85149;
+    --fgColor-default: #f0f6fc;
+    --fgColor-done: #ab7df8;
+    --fgColor-muted: #9198a1;
+    --fgColor-success: #3fb950;
+    --borderColor-muted: #3d444db3;
+    --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
+    --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
+    --focus-outlineColor: var(--borderColor-accent-emphasis);
+    --borderColor-neutral-muted: var(--borderColor-muted);
+  }
+}
+@media (prefers-color-scheme: light) {
+  .markdown-body, [data-theme="light"] {
+    /*light */
+    color-scheme: light;
+    --fgColor-danger: #d1242f;
+    --bgColor-attention-muted: #fff8c5;
+    --bgColor-muted: #f6f8fa;
+    --bgColor-neutral-muted: #818b981f;
+    --borderColor-accent-emphasis: #0969da;
+    --borderColor-attention-emphasis: #9a6700;
+    --borderColor-danger-emphasis: #cf222e;
+    --borderColor-default: #d1d9e0;
+    --borderColor-done-emphasis: #8250df;
+    --borderColor-success-emphasis: #1a7f37;
+    --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+    --color-prettylights-syntax-carriage-return-bg: #cf222e;
+    --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+    --color-prettylights-syntax-comment: #59636e;
+    --color-prettylights-syntax-constant: #0550ae;
+    --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+    --color-prettylights-syntax-entity: #6639ba;
+    --color-prettylights-syntax-entity-tag: #0550ae;
+    --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
+    --color-prettylights-syntax-keyword: #cf222e;
+    --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+    --color-prettylights-syntax-markup-changed-text: #953800;
+    --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+    --color-prettylights-syntax-markup-deleted-text: #82071e;
+    --color-prettylights-syntax-markup-heading: #0550ae;
+    --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+    --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+    --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+    --color-prettylights-syntax-markup-inserted-text: #116329;
+    --color-prettylights-syntax-markup-list: #3b2300;
+    --color-prettylights-syntax-meta-diff-range: #8250df;
+    --color-prettylights-syntax-string: #0a3069;
+    --color-prettylights-syntax-string-regexp: #116329;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+    --color-prettylights-syntax-variable: #953800;
+    --fgColor-accent: #0969da;
+    --fgColor-attention: #9a6700;
+    --fgColor-done: #8250df;
+    --fgColor-muted: #59636e;
+    --fgColor-success: #1a7f37;
+    --bgColor-default: #ffffff;
+    --borderColor-muted: #d1d9e0b3;
+    --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
+    --color-prettylights-syntax-markup-bold: #1f2328;
+    --color-prettylights-syntax-markup-italic: #1f2328;
+    --color-prettylights-syntax-storage-modifier-import: #1f2328;
+    --fgColor-default: #1f2328;
+    --focus-outlineColor: var(--borderColor-accent-emphasis);
+    --borderColor-neutral-muted: var(--borderColor-muted);
+  }
+}
 
+.markdown-body {
+  /** CSS default easing. Use for hover state changes and micro-interactions. */
+  /** Accelerating motion. Use for elements exiting the viewport (moving off-screen). */
+  /** Smooth acceleration and deceleration. Use for elements moving or morphing within the viewport. */
+  /** Decelerating motion. Use for elements entering the viewport or appearing on screen. */
+  /** Constant motion with no acceleration. Use for continuous animations like progress bars or loaders. */
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  margin: 0;
+  font-weight: var(--base-text-weight-normal, 400);
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-default);
+  font-family: var(--fontStack-sansSerif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji");
+  font-size: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.markdown-body a {
+  text-decoration: underline;
+  text-underline-offset: .2rem;
+}
+
+.markdown-body .octicon {
+  display: inline-block;
+  fill: currentColor;
+  vertical-align: text-bottom;
+}
+
+.markdown-body h1:hover .anchor .octicon-link:before,
+.markdown-body h2:hover .anchor .octicon-link:before,
+.markdown-body h3:hover .anchor .octicon-link:before,
+.markdown-body h4:hover .anchor .octicon-link:before,
+.markdown-body h5:hover .anchor .octicon-link:before,
+.markdown-body h6:hover .anchor .octicon-link:before {
+  width: 16px;
+  height: 16px;
+  content: ' ';
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' aria-hidden='true'><path fill-rule='evenodd' d='M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z'></path></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' aria-hidden='true'><path fill-rule='evenodd' d='M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z'></path></svg>");
+}
+
+.markdown-body details,
+.markdown-body figcaption,
+.markdown-body figure {
+  display: block;
+}
+
+.markdown-body summary {
+  display: list-item;
+}
+
+.markdown-body [hidden] {
+  display: none !important;
+}
+
+.markdown-body a {
+  background-color: rgba(0,0,0,0);
+  color: var(--fgColor-accent);
+  text-decoration: none;
+}
+
+.markdown-body abbr[title] {
+  border-bottom: none;
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}
+
+.markdown-body b,
+.markdown-body strong {
+  font-weight: var(--base-text-weight-semibold, 600);
+}
+
+.markdown-body dfn {
+  font-style: italic;
+}
+
+.markdown-body h1 {
+  margin: .67em 0;
+  font-weight: var(--base-text-weight-semibold, 600);
+  padding-bottom: .3em;
+  font-size: 2em;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body mark {
+  background-color: var(--bgColor-attention-muted);
+  color: var(--fgColor-default);
+}
+
+.markdown-body small {
+  font-size: 90%;
+}
+
+.markdown-body sub,
+.markdown-body sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.markdown-body sub {
+  bottom: -0.25em;
+}
+
+.markdown-body sup {
+  top: -0.5em;
+}
+
+.markdown-body img {
+  border-style: none;
+  max-width: 100%;
+  box-sizing: content-box;
+}
+
+.markdown-body code,
+.markdown-body kbd,
+.markdown-body pre,
+.markdown-body samp {
+  font-family: monospace;
+  font-size: 1em;
+}
+
+.markdown-body figure {
+  margin: 1em var(--base-size-40);
+}
+
+.markdown-body hr {
+  box-sizing: content-box;
+  overflow: hidden;
+  background: rgba(0,0,0,0);
+  border-bottom: 1px solid var(--borderColor-muted);
+  height: .25em;
+  padding: 0;
+  margin: var(--base-size-24) 0;
+  background-color: var(--borderColor-default);
+  border: 0;
+}
+
+.markdown-body input {
+  font: inherit;
+  margin: 0;
+  overflow: visible;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.markdown-body [type=button],
+.markdown-body [type=reset],
+.markdown-body [type=submit] {
+  -webkit-appearance: button;
+  appearance: button;
+}
+
+.markdown-body [type=checkbox],
+.markdown-body [type=radio] {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.markdown-body [type=number]::-webkit-inner-spin-button,
+.markdown-body [type=number]::-webkit-outer-spin-button {
+  height: auto;
+}
+
+.markdown-body [type=search]::-webkit-search-cancel-button,
+.markdown-body [type=search]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.markdown-body ::-webkit-input-placeholder {
+  color: inherit;
+  opacity: .54;
+}
+
+.markdown-body ::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  appearance: button;
+  font: inherit;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body ::placeholder {
+  color: var(--fgColor-muted);
+  opacity: 1;
+}
+
+.markdown-body hr::before {
+  display: table;
+  content: "";
+}
+
+.markdown-body hr::after {
+  display: table;
+  clear: both;
+  content: "";
+}
+
+.markdown-body table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+  font-variant: tabular-nums;
+}
+
+.markdown-body td,
+.markdown-body th {
+  padding: 0;
+}
+
+.markdown-body details summary {
+  cursor: pointer;
+}
+
+.markdown-body a:focus,
+.markdown-body [role=button]:focus,
+.markdown-body input[type=radio]:focus,
+.markdown-body input[type=checkbox]:focus {
+  outline: 2px solid var(--focus-outlineColor);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+.markdown-body a:focus:not(:focus-visible),
+.markdown-body [role=button]:focus:not(:focus-visible),
+.markdown-body input[type=radio]:focus:not(:focus-visible),
+.markdown-body input[type=checkbox]:focus:not(:focus-visible) {
+  outline: solid 1px rgba(0,0,0,0);
+}
+
+.markdown-body a:focus-visible,
+.markdown-body [role=button]:focus-visible,
+.markdown-body input[type=radio]:focus-visible,
+.markdown-body input[type=checkbox]:focus-visible {
+  outline: 2px solid var(--focus-outlineColor);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+.markdown-body a:not([class]):focus,
+.markdown-body a:not([class]):focus-visible,
+.markdown-body input[type=radio]:focus,
+.markdown-body input[type=radio]:focus-visible,
+.markdown-body input[type=checkbox]:focus,
+.markdown-body input[type=checkbox]:focus-visible {
+  outline-offset: 0;
+}
+
+.markdown-body kbd {
+  display: inline-block;
+  padding: var(--base-size-4);
+  font: 11px var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
+  line-height: 10px;
+  color: var(--fgColor-default);
+  vertical-align: middle;
+  background-color: var(--bgColor-muted);
+  border: solid 1px var(--borderColor-neutral-muted);
+  border-bottom-color: var(--borderColor-neutral-muted);
+  border-radius: 6px;
+  box-shadow: inset 0 -1px 0 var(--borderColor-neutral-muted);
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: var(--base-size-24);
+  margin-bottom: var(--base-size-16);
+  font-weight: var(--base-text-weight-semibold, 600);
+  line-height: 1.25;
+}
+
+.markdown-body h2 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  padding-bottom: .3em;
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body h3 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: 1.25em;
+}
+
+.markdown-body h4 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: 1em;
+}
+
+.markdown-body h5 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: .875em;
+}
+
+.markdown-body h6 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: .85em;
+  color: var(--fgColor-muted);
+}
+
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.markdown-body blockquote {
+  margin: 0;
+  padding: 0 1em;
+  color: var(--fgColor-muted);
+  border-left: .25em solid var(--borderColor-default);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 2em;
+}
+
+.markdown-body ol ol,
+.markdown-body ul ol {
+  list-style-type: lower-roman;
+}
+
+.markdown-body ul ul ol,
+.markdown-body ul ol ol,
+.markdown-body ol ul ol,
+.markdown-body ol ol ol {
+  list-style-type: lower-alpha;
+}
+
+.markdown-body dd {
+  margin-left: 0;
+}
+
+.markdown-body tt,
+.markdown-body code,
+.markdown-body samp {
+  font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
+  font-size: 12px;
+}
+
+.markdown-body pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
+  font-size: 12px;
+  word-wrap: normal;
+}
+
+.markdown-body .octicon {
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-body input::-webkit-outer-spin-button,
+.markdown-body input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.markdown-body .mr-2 {
+  margin-right: var(--base-size-8, 8px) !important;
+}
+
+.markdown-body::before {
+  display: table;
+  content: "";
+}
+
+.markdown-body::after {
+  display: table;
+  clear: both;
+  content: "";
+}
+
+.markdown-body>*:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+.markdown-body a:not([href]) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.markdown-body .absent {
+  color: var(--fgColor-danger);
+}
+
+.markdown-body .anchor {
+  float: left;
+  padding-right: var(--base-size-4);
+  margin-left: -20px;
+  line-height: 1;
+}
+
+.markdown-body .anchor:focus {
+  outline: none;
+}
+
+.markdown-body p,
+.markdown-body blockquote,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body dl,
+.markdown-body table,
+.markdown-body pre,
+.markdown-body details {
+  margin-top: 0;
+  margin-bottom: var(--base-size-16);
+}
+
+.markdown-body blockquote>:first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1 .octicon-link,
+.markdown-body h2 .octicon-link,
+.markdown-body h3 .octicon-link,
+.markdown-body h4 .octicon-link,
+.markdown-body h5 .octicon-link,
+.markdown-body h6 .octicon-link {
+  color: var(--fgColor-default);
+  vertical-align: middle;
+  visibility: hidden;
+}
+
+.markdown-body h1:hover .anchor,
+.markdown-body h2:hover .anchor,
+.markdown-body h3:hover .anchor,
+.markdown-body h4:hover .anchor,
+.markdown-body h5:hover .anchor,
+.markdown-body h6:hover .anchor {
+  text-decoration: none;
+}
+
+.markdown-body h1:hover .anchor .octicon-link,
+.markdown-body h2:hover .anchor .octicon-link,
+.markdown-body h3:hover .anchor .octicon-link,
+.markdown-body h4:hover .anchor .octicon-link,
+.markdown-body h5:hover .anchor .octicon-link,
+.markdown-body h6:hover .anchor .octicon-link {
+  visibility: visible;
+}
+
+.markdown-body h1 tt,
+.markdown-body h1 code,
+.markdown-body h2 tt,
+.markdown-body h2 code,
+.markdown-body h3 tt,
+.markdown-body h3 code,
+.markdown-body h4 tt,
+.markdown-body h4 code,
+.markdown-body h5 tt,
+.markdown-body h5 code,
+.markdown-body h6 tt,
+.markdown-body h6 code {
+  padding: 0 .2em;
+  font-size: inherit;
+}
+
+.markdown-body summary h1,
+.markdown-body summary h2,
+.markdown-body summary h3,
+.markdown-body summary h4,
+.markdown-body summary h5,
+.markdown-body summary h6 {
+  display: inline-block;
+}
+
+.markdown-body summary h1 .anchor,
+.markdown-body summary h2 .anchor,
+.markdown-body summary h3 .anchor,
+.markdown-body summary h4 .anchor,
+.markdown-body summary h5 .anchor,
+.markdown-body summary h6 .anchor {
+  margin-left: -40px;
+}
+
+.markdown-body summary h1,
+.markdown-body summary h2 {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.markdown-body ul.no-list,
+.markdown-body ol.no-list {
+  padding: 0;
+  list-style-type: none;
+}
+
+.markdown-body ol[type="a s"] {
+  list-style-type: lower-alpha;
+}
+
+.markdown-body ol[type="A s"] {
+  list-style-type: upper-alpha;
+}
+
+.markdown-body ol[type="i s"] {
+  list-style-type: lower-roman;
+}
+
+.markdown-body ol[type="I s"] {
+  list-style-type: upper-roman;
+}
+
+.markdown-body ol[type="1"] {
+  list-style-type: decimal;
+}
+
+.markdown-body div>ol:not([type]) {
+  list-style-type: decimal;
+}
+
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.markdown-body li>p {
+  margin-top: var(--base-size-16);
+}
+
+.markdown-body li+li {
+  margin-top: .25em;
+}
+
+.markdown-body dl {
+  padding: 0;
+}
+
+.markdown-body dl dt {
+  padding: 0;
+  margin-top: var(--base-size-16);
+  font-size: 1em;
+  font-style: italic;
+  font-weight: var(--base-text-weight-semibold, 600);
+}
+
+.markdown-body dl dd {
+  padding: 0 var(--base-size-16);
+  margin-bottom: var(--base-size-16);
+}
+
+.markdown-body table th {
+  font-weight: var(--base-text-weight-semibold, 600);
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid var(--borderColor-default);
+}
+
+.markdown-body table td>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body table tr {
+  background-color: var(--bgColor-default);
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: var(--bgColor-muted);
+}
+
+.markdown-body table img {
+  background-color: rgba(0,0,0,0);
+}
+
+.markdown-body img[align=right] {
+  padding-left: 20px;
+}
+
+.markdown-body img[align=left] {
+  padding-right: 20px;
+}
+
+.markdown-body .emoji {
+  max-width: none;
+  vertical-align: text-top;
+  background-color: rgba(0,0,0,0);
+}
+
+.markdown-body span.frame {
+  display: block;
+  overflow: hidden;
+}
+
+.markdown-body span.frame>span {
+  display: block;
+  float: left;
+  width: auto;
+  padding: 7px;
+  margin: 13px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--borderColor-default);
+}
+
+.markdown-body span.frame span img {
+  display: block;
+  float: left;
+}
+
+.markdown-body span.frame span span {
+  display: block;
+  padding: 5px 0 0;
+  clear: both;
+  color: var(--fgColor-default);
+}
+
+.markdown-body span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both;
+}
+
+.markdown-body span.align-center>span {
+  display: block;
+  margin: 13px auto 0;
+  overflow: hidden;
+  text-align: center;
+}
+
+.markdown-body span.align-center span img {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.markdown-body span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both;
+}
+
+.markdown-body span.align-right>span {
+  display: block;
+  margin: 13px 0 0;
+  overflow: hidden;
+  text-align: right;
+}
+
+.markdown-body span.align-right span img {
+  margin: 0;
+  text-align: right;
+}
+
+.markdown-body span.float-left {
+  display: block;
+  float: left;
+  margin-right: 13px;
+  overflow: hidden;
+}
+
+.markdown-body span.float-left span {
+  margin: 13px 0 0;
+}
+
+.markdown-body span.float-right {
+  display: block;
+  float: right;
+  margin-left: 13px;
+  overflow: hidden;
+}
+
+.markdown-body span.float-right>span {
+  display: block;
+  margin: 13px auto 0;
+  overflow: hidden;
+  text-align: right;
+}
+
+.markdown-body code,
+.markdown-body tt {
+  padding: .2em .4em;
+  margin: 0;
+  font-size: 85%;
+  white-space: break-spaces;
+  background-color: var(--bgColor-neutral-muted);
+  border-radius: 6px;
+}
+
+.markdown-body code br,
+.markdown-body tt br {
+  display: none;
+}
+
+.markdown-body del code {
+  text-decoration: inherit;
+}
+
+.markdown-body samp {
+  font-size: 85%;
+}
+
+.markdown-body pre code {
+  font-size: 100%;
+}
+
+.markdown-body pre>code {
+  padding: 0;
+  margin: 0;
+  word-break: normal;
+  white-space: pre;
+  background: rgba(0,0,0,0);
+  border: 0;
+}
+
+.markdown-body .highlight {
+  margin-bottom: var(--base-size-16);
+}
+
+.markdown-body .highlight pre {
+  margin-bottom: 0;
+  word-break: normal;
+}
+
+.markdown-body .highlight pre,
+.markdown-body pre {
+  padding: var(--base-size-16);
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-muted);
+  border-radius: 6px;
+}
+
+.markdown-body pre code,
+.markdown-body pre tt {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: rgba(0,0,0,0);
+  border: 0;
+}
+
+.markdown-body .csv-data td,
+.markdown-body .csv-data th {
+  padding: 5px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.markdown-body .csv-data .blob-num {
+  padding: 10px var(--base-size-8) 9px;
+  text-align: right;
+  background: var(--bgColor-default);
+  border: 0;
+}
+
+.markdown-body .csv-data tr {
+  border-top: 0;
+}
+
+.markdown-body .csv-data th {
+  font-weight: var(--base-text-weight-semibold, 600);
+  background: var(--bgColor-muted);
+  border-top: 0;
+}
+
+.markdown-body [data-footnote-ref]::before {
+  content: "[";
+}
+
+.markdown-body [data-footnote-ref]::after {
+  content: "]";
+}
+
+.markdown-body .footnotes {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  border-top: 1px solid var(--borderColor-default);
+}
+
+.markdown-body .footnotes ol {
+  padding-left: var(--base-size-16);
+}
+
+.markdown-body .footnotes ol ul {
+  display: inline-block;
+  padding-left: var(--base-size-16);
+  margin-top: var(--base-size-16);
+}
+
+.markdown-body .footnotes li {
+  position: relative;
+}
+
+.markdown-body .footnotes li:target::before {
+  position: absolute;
+  top: calc(var(--base-size-8)*-1);
+  right: calc(var(--base-size-8)*-1);
+  bottom: calc(var(--base-size-8)*-1);
+  left: calc(var(--base-size-24)*-1);
+  pointer-events: none;
+  content: "";
+  border: 2px solid var(--borderColor-accent-emphasis);
+  border-radius: 6px;
+}
+
+.markdown-body .footnotes li:target {
+  color: var(--fgColor-default);
+}
+
+.markdown-body .footnotes .data-footnote-backref g-emoji {
+  font-family: monospace;
+}
+
+.markdown-body .pl-c {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+.markdown-body .pl-c1,
+.markdown-body .pl-s .pl-v {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+.markdown-body .pl-e,
+.markdown-body .pl-en {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+.markdown-body .pl-smi,
+.markdown-body .pl-s .pl-s1 {
+  color: var(--color-prettylights-syntax-storage-modifier-import);
+}
+
+.markdown-body .pl-ent {
+  color: var(--color-prettylights-syntax-entity-tag);
+}
+
+.markdown-body .pl-k {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+.markdown-body .pl-s,
+.markdown-body .pl-pds,
+.markdown-body .pl-s .pl-pse .pl-s1,
+.markdown-body .pl-sr,
+.markdown-body .pl-sr .pl-cce,
+.markdown-body .pl-sr .pl-sre,
+.markdown-body .pl-sr .pl-sra {
+  color: var(--color-prettylights-syntax-string);
+}
+
+.markdown-body .pl-v,
+.markdown-body .pl-smw {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+.markdown-body .pl-bu {
+  color: var(--color-prettylights-syntax-brackethighlighter-unmatched);
+}
+
+.markdown-body .pl-ii {
+  color: var(--color-prettylights-syntax-invalid-illegal-text);
+  background-color: var(--color-prettylights-syntax-invalid-illegal-bg);
+}
+
+.markdown-body .pl-c2 {
+  color: var(--color-prettylights-syntax-carriage-return-text);
+  background-color: var(--color-prettylights-syntax-carriage-return-bg);
+}
+
+.markdown-body .pl-sr .pl-cce {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+.markdown-body .pl-ml {
+  color: var(--color-prettylights-syntax-markup-list);
+}
+
+.markdown-body .pl-mh,
+.markdown-body .pl-mh .pl-en,
+.markdown-body .pl-ms {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-markup-heading);
+}
+
+.markdown-body .pl-mi {
+  font-style: italic;
+  color: var(--color-prettylights-syntax-markup-italic);
+}
+
+.markdown-body .pl-mb {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+.markdown-body .pl-md {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+  background-color: var(--color-prettylights-syntax-markup-deleted-bg);
+}
+
+.markdown-body .pl-mi1 {
+  color: var(--color-prettylights-syntax-markup-inserted-text);
+  background-color: var(--color-prettylights-syntax-markup-inserted-bg);
+}
+
+.markdown-body .pl-mc {
+  color: var(--color-prettylights-syntax-markup-changed-text);
+  background-color: var(--color-prettylights-syntax-markup-changed-bg);
+}
+
+.markdown-body .pl-mi2 {
+  color: var(--color-prettylights-syntax-markup-ignored-text);
+  background-color: var(--color-prettylights-syntax-markup-ignored-bg);
+}
+
+.markdown-body .pl-mdr {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+.markdown-body .pl-ba {
+  color: var(--color-prettylights-syntax-brackethighlighter-angle);
+}
+
+.markdown-body .pl-sg {
+  color: var(--color-prettylights-syntax-sublimelinter-gutter-mark);
+}
+
+.markdown-body .pl-corl {
+  text-decoration: underline;
+  color: var(--color-prettylights-syntax-constant-other-reference-link);
+}
+
+.markdown-body [role=button]:focus:not(:focus-visible),
+.markdown-body [role=tabpanel][tabindex="0"]:focus:not(:focus-visible),
+.markdown-body button:focus:not(:focus-visible),
+.markdown-body summary:focus:not(:focus-visible),
+.markdown-body a:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.markdown-body [tabindex="0"]:focus:not(:focus-visible),
+.markdown-body details-dialog:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.markdown-body g-emoji {
+  display: inline-block;
+  min-width: 1ch;
+  font-family: "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+  font-size: 1em;
+  font-style: normal !important;
+  font-weight: var(--base-text-weight-normal, 400);
+  line-height: 1;
+  vertical-align: -0.075em;
+}
+
+.markdown-body g-emoji img {
+  width: 1em;
+  height: 1em;
+}
+
+.markdown-body a:has(>p,>div,>pre,>blockquote) {
+  display: block;
+}
+
+.markdown-body a:has(>p,>div,>pre,>blockquote):not(:has(.snippet-clipboard-content,>pre)) {
+  width: fit-content;
+}
+
+.markdown-body a:has(>p,>div,>pre,>blockquote):has(.snippet-clipboard-content,>pre):focus-visible {
+  outline: 2px solid var(--focus-outlineColor);
+  outline-offset: 2px;
+}
+
+.markdown-body .task-list-item {
+  list-style-type: none;
+}
+
+.markdown-body .task-list-item label {
+  font-weight: var(--base-text-weight-normal, 400);
+}
+
+.markdown-body .task-list-item.enabled label {
+  cursor: pointer;
+}
+
+.markdown-body .task-list-item+.task-list-item {
+  margin-top: var(--base-size-4);
+}
+
+.markdown-body .task-list-item .handle {
+  display: none;
+}
+
+.markdown-body .task-list-item-checkbox {
+  margin: 0 .2em .25em -1.4em;
+  vertical-align: middle;
+}
+
+.markdown-body ul:dir(rtl) .task-list-item-checkbox {
+  margin: 0 -1.6em .25em .2em;
+}
+
+.markdown-body ol:dir(rtl) .task-list-item-checkbox {
+  margin: 0 -1.6em .25em .2em;
+}
+
+.markdown-body .contains-task-list:hover .task-list-item-convert-container,
+.markdown-body .contains-task-list:focus-within .task-list-item-convert-container {
+  display: block;
+  width: auto;
+  height: 24px;
+  overflow: visible;
+  clip-path: none;
+}
+
+.markdown-body ::-webkit-calendar-picker-indicator {
+  filter: invert(50%);
+}
+
+.markdown-body .markdown-alert {
+  padding: var(--base-size-8) var(--base-size-16);
+  margin-bottom: var(--base-size-16);
+  color: inherit;
+  border-left: .25em solid var(--borderColor-default);
+}
+
+.markdown-body .markdown-alert>:first-child {
+  margin-top: 0;
+}
+
+.markdown-body .markdown-alert>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body .markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: var(--base-text-weight-medium, 500);
+  align-items: center;
+  line-height: 1;
+}
+
+.markdown-body .markdown-alert.markdown-alert-note {
+  border-left-color: var(--borderColor-accent-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--fgColor-accent);
+}
+
+.markdown-body .markdown-alert.markdown-alert-important {
+  border-left-color: var(--borderColor-done-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--fgColor-done);
+}
+
+.markdown-body .markdown-alert.markdown-alert-warning {
+  border-left-color: var(--borderColor-attention-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--fgColor-attention);
+}
+
+.markdown-body .markdown-alert.markdown-alert-tip {
+  border-left-color: var(--borderColor-success-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--fgColor-success);
+}
+
+.markdown-body .markdown-alert.markdown-alert-caution {
+  border-left-color: var(--borderColor-danger-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--fgColor-danger);
+}
+
+.markdown-body>*:first-child>.heading-element:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body .highlight pre:has(+.zeroclipboard-container) {
+  min-height: 52px;
+}
+
+
+:root { color-scheme: light dark; }
+body { margin: 0; background: #ffffff; }
+.page-nav { font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 980px; margin: 0 auto; padding: 12px 45px 0; box-sizing: border-box; }
+.page-nav a { color: #0969da; text-decoration: none; }
+.page-nav a:hover { text-decoration: underline; }
+.markdown-body { box-sizing: border-box; max-width: 980px; margin: 0 auto; padding: 24px 45px 60px; }
+/* let the highlight.js theme own code-block colors */
+.markdown-body pre { padding: 0; }
+.markdown-body pre > code.hljs { display: block; padding: 16px; border-radius: 6px; overflow: auto; }
+@media (max-width: 767px) { .markdown-body, .page-nav { padding-left: 15px; padding-right: 15px; } }
+@media (prefers-color-scheme: dark) { body { background: #0d1117; } .page-nav a { color: #4493f8; } }
+</style>
+</head>
+<body>
+<div class="page-nav"><a href="index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
+<article class="markdown-body">
+<h1 id="jddlab---java-decompilation--deobfuscation-lab">jddlab - Java <strong>D</strong>ecompilation &amp; <strong>D</strong>eobfuscation <strong>Lab</strong></h1>
 <p><a href="https://github.com/Stanislav-Povolotsky/jddlab/"><img src="https://img.shields.io/github/actions/workflow/status/Stanislav-Povolotsky/jddlab/docker-image.yml" alt="GitHub Actions Workflow Status" /></a>
 <a href="https://github.com/Stanislav-Povolotsky/jddlab/"><img src="https://img.shields.io/docker/v/stanislavpovolotsky/jddlab/latest?arch=amd64&amp;sort=semver" alt="Docker Image Version" /></a>
-<a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab"><img src="https://img.shields.io/docker/image-size/stanislavpovolotsky/jddlab?sort=date&arch=amd64" alt="Docker Image Size" /></a>
+<a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab"><img src="https://img.shields.io/docker/image-size/stanislavpovolotsky/jddlab?sort=date&amp;arch=amd64" alt="Docker Image Size" /></a>
 <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab"><img src="https://img.shields.io/docker/pulls/stanislavpovolotsky/jddlab" alt="Docker Pulls" /></a></p>
-
 <ul>
 <li>jddlab is a <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">Docker image</a> that includes all the necessary tools to decompile and deobfuscate Java and Android APKs.</li>
 <li><code>jddlab</code> is a command-line tool that runs the <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">jddlab Docker image</a> and provides a quick and convenient way to use all the decompilation and deobfuscation tools.</li>
 </ul>
-
 <p>Why running <code>jddlab</code> is better than using separate tools on the host:</p>
-
 <ul>
 <li>Safety: Docker isolates jddlab tools from the host system, minimizing risks and vulnerabilities.</li>
 <li>Easy Installation: Install all the tools and dependencies with a single docker pull command.</li>
 <li>Quick Updates: Simply pull the latest container version to get new tools, features, and patches.</li>
 </ul>
-
-<h2>Contents</h2>
-
+<h2 id="contents">Contents</h2>
 <ul>
 <li><a href="#demo">Demo</a></li>
 <li><a href="#installation">Installation</a>
 <ul>
 <li><a href="#installation-as-a-command-line-tool-recommended">Command-line tool (recommended)</a></li>
 <li><a href="#installation-as-a-docker-image">Docker image</a></li>
-</ul></li>
+</ul>
+</li>
 <li><a href="#mcp-server">MCP server</a></li>
 <li><a href="#ai-skills">AI Skills</a></li>
 <li><a href="#how-to">How to</a></li>
@@ -34,116 +1304,84 @@
 <li><a href="#troubleshooting">Troubleshooting</a></li>
 <li><a href="#license">License</a></li>
 </ul>
-
-<h2>Demo</h2>
-
+<h2 id="demo">Demo</h2>
 <p><img src="https://github.com/user-attachments/assets/4c0c8e5d-28e8-4697-a167-7723298ef751" alt="Demo: how to use jddlab" /></p>
-
-<h2>Installation</h2>
-
-<h3>Prerequisites</h3>
-
+<h2 id="installation">Installation</h2>
+<h3 id="prerequisites">Prerequisites</h3>
 <p>First you need to have Docker installed. So you need:</p>
-
 <ul>
 <li><a href="https://www.docker.com/blog/top-questions-for-getting-started-with-docker/">Docker-compatible</a> operating system (Windows, Linux, or macOS).</li>
 <li>Administrative privileges to install software.</li>
 <li>For Windows: you should also install and enable <a href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL2 (Windows Subsystem for Linux)</a> support to run Linux images.</li>
 </ul>
-
 <p>Supported platforms:</p>
-
 <ul>
 <li><code>amd64</code> (x86_64 Intel or AMD CPUs)</li>
 <li><code>arm64</code> (ARM64 chips like Apple M1, M2, M3)</li>
 </ul>
-
-<h3>Installation as a command-line tool (recommended)</h3>
-
-<p><code>jddlab</code> command-line tool is essentially an alias for <code>docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest</code> command.<br />
+<h3 id="installation-as-a-command-line-tool-recommended">Installation as a command-line tool (recommended)</h3>
+<p><code>jddlab</code> command-line tool is essentially an alias for <code>docker run -it --rm -v &quot;$PWD:/work&quot; stanislavpovolotsky/jddlab:latest</code> command.<br />
 It runs <code>jddlab</code> docker instance and maps current folder as a <code>/work</code> folder (rw) to make all files in the current folder and subfolders accessable for jddlab commands.<br />
-For example if you have <code>test.apk</code> in the current folder, it will be accessible as <code>./test.apk</code> or <code>/work/test.apk</code> inside the jddlab instance.  </p>
-
+For example if you have <code>test.apk</code> in the current folder, it will be accessible as <code>./test.apk</code> or <code>/work/test.apk</code> inside the jddlab instance.</p>
 <blockquote>
-  <p>The <code>jddlab</code> / <code>jddlab.cmd</code> you download is a <strong>thin launcher</strong>: its only job is to
-  copy the real launcher (plus the MCP server and AI skills) out of the Docker image
-  into <code>~/.jddlab/mcp/current</code> and hand over to it. This means the real logic ships
-  <strong>inside the image</strong> and is refreshed together with it by <code>jddlab update</code> — you
-  download the thin launcher once and rarely need to update it by hand.</p>
+<p>The <code>jddlab</code> / <code>jddlab.cmd</code> you download is a <strong>thin launcher</strong>: its only job is to
+copy the real launcher (plus the MCP server and AI skills) out of the Docker image
+into <code>~/.jddlab/mcp/current</code> and hand over to it. This means the real logic ships
+<strong>inside the image</strong> and is refreshed together with it by <code>jddlab update</code> — you
+download the thin launcher once and rarely need to update it by hand.</p>
 </blockquote>
-
 <p>To install <code>jddlab</code> command-line tool:</p>
-
-<p><details>
-   <summary>on Linux or macOS (click to view)</summary></p>
-
-<p>Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab">jddlab script</a> to some folder in $PATH and make it executable.
-  - Current-user-only installation (recommended):
-    <code>
-    mkdir -p $HOME/bin &amp;&amp; curl -L -f -o $HOME/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; chmod +x $HOME/bin/jddlab &amp;&amp; RC='export PATH=$PATH:$HOME/bin' &amp;&amp; (command -v jddlab || (echo "$RC" &gt;&gt;~/.bashrc &amp;&amp; echo "$RC" &gt;&gt;~/.zshrc )) &amp;&amp; eval "$RC"
-</code>
-  - System installation (for all users):
-    <code>
-    sudo curl -L -f -o /usr/local/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; sudo chmod +x /usr/local/bin/jddlab
-</code>
+<details>
+   <summary>on Linux or macOS (click to view)</summary>
+<p>Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab">jddlab script</a> to some folder in $PATH and make it executable.</p>
+<ul>
+<li>Current-user-only installation (recommended):<pre><code>mkdir -p $HOME/bin &amp;&amp; curl -L -f -o $HOME/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; chmod +x $HOME/bin/jddlab &amp;&amp; RC='export PATH=$PATH:$HOME/bin' &amp;&amp; (command -v jddlab || (echo &quot;$RC&quot; &gt;&gt;~/.bashrc &amp;&amp; echo &quot;$RC&quot; &gt;&gt;~/.zshrc )) &amp;&amp; eval &quot;$RC&quot;
+</code></pre>
+</li>
+<li>System installation (for all users):<pre><code>sudo curl -L -f -o /usr/local/bin/jddlab https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab &amp;&amp; sudo chmod +x /usr/local/bin/jddlab
+</code></pre>
+</li>
+</ul>
 </details>
 <details>
-   <summary>on Windows (click to view)</summary></p>
-
-<p>Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd">jddlab.cmd script</a> to some folder in %PATH%.
-  - Current-user-only installation (recommended):
-    <code>
-    curl -L -f -o "%LOCALAPPDATA%\Microsoft\WindowsApps\jddlab.cmd" https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd
-</code>
-  - System installation (for all users):
-    <code>
-    powershell -ExecutionPolicy ByPass -c "Start-Process PowerShell -Verb RunAs 'cmd /c curl -L -o %SYSTEMROOT%\jddlab.cmd https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd'"
-</code>
-</details></p>
-
-<p>To enter shell mode, type:
-<code>
-jddlab
-</code></p>
-
-<p>To run a specific command, type <code>jddlab &lt;your command&gt;</code>:
-<code>
-jddlab apktool --version
-</code></p>
-
-<p>To update jddlab to the latest version run:
-<code>
-jddlab update
-</code></p>
-
-<h4>Useful launcher commands</h4>
-
-<p><code>
-jddlab help          # Show launcher usage and sub-commands
+   <summary>on Windows (click to view)</summary>
+<p>Download <a href="https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd">jddlab.cmd script</a> to some folder in %PATH%.</p>
+<ul>
+<li>Current-user-only installation (recommended):<pre><code>curl -L -f -o &quot;%LOCALAPPDATA%\Microsoft\WindowsApps\jddlab.cmd&quot; https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd
+</code></pre>
+</li>
+<li>System installation (for all users):<pre><code>powershell -ExecutionPolicy ByPass -c &quot;Start-Process PowerShell -Verb RunAs 'cmd /c curl -L -o %SYSTEMROOT%\jddlab.cmd https://raw.githubusercontent.com/Stanislav-Povolotsky/jddlab/refs/heads/main/jddlab.cmd'&quot;
+</code></pre>
+</li>
+</ul>
+</details>
+<p>To enter shell mode, type:</p>
+<pre><code>jddlab
+</code></pre>
+<p>To run a specific command, type <code>jddlab &lt;your command&gt;</code>:</p>
+<pre><code>jddlab apktool --version
+</code></pre>
+<p>To update jddlab to the latest version run:</p>
+<pre><code>jddlab update
+</code></pre>
+<h4 id="useful-launcher-commands">Useful launcher commands</h4>
+<pre><code>jddlab help          # Show launcher usage and sub-commands
 jddlab tools         # List all tools/commands available inside the image
 jddlab version       # Show launcher version and image build version
 jddlab versions      # Show the version of every bundled tool
 jddlab update        # Pull the latest image (and refresh the installed MCP/skills bundle)
-</code></p>
-
+</code></pre>
 <p>The same commands also accept a <code>--</code> prefix (<code>jddlab --tools</code>, <code>jddlab --version</code>, etc.).</p>
-
-<h4>File ownership (Linux/macOS)</h4>
-
+<h4 id="file-ownership-linuxmacos">File ownership (Linux/macOS)</h4>
 <p>On Linux and macOS the launcher runs the container as your <strong>current host user</strong>
 (<code>--user $(id -u):$(id -g)</code>), so files created under <code>/work</code> are owned by you
 instead of <code>root</code>. The container still uses a shared, world-writable home at
 <code>/root</code> (where the frida/adb configs live), so this is transparent.</p>
-
 <p>If you need the container to run as <code>root</code> inside (for example to write to a
 location that requires it), set <code>JDDLAB_ROOT=1</code>:</p>
-
-<p><code>
-JDDLAB_ROOT=1 jddlab apktool --version
-</code></p>
-
+<pre><code>JDDLAB_ROOT=1 jddlab apktool --version
+</code></pre>
 <p>Which launcher you use already matches your environment:</p>
-
 <ul>
 <li><strong>Native Windows</strong> (<code>jddlab.cmd</code> from cmd/PowerShell): no UID mapping. Docker
 Desktop's filesystem driver already gives new files normal Windows ownership,
@@ -152,61 +1390,40 @@ and mapping to an arbitrary UID would actually break its mounts.</li>
 When you work inside WSL on the Linux filesystem this is a real bind mount, so
 UID mapping is exactly what prevents root-owned files.</li>
 </ul>
-
 <blockquote>
-  <p>Note: UID mapping requires the current image. Run <code>jddlab update</code> after
-  upgrading the launcher.</p>
+<p>Note: UID mapping requires the current image. Run <code>jddlab update</code> after
+upgrading the launcher.</p>
 </blockquote>
-
-<h3>Installation as a docker image</h3>
-
+<h3 id="installation-as-a-docker-image">Installation as a docker image</h3>
 <p>You can run a latest version with the command:</p>
-
 <ul>
-<li>On Linux or macOS:
-<code>
-docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest
-</code></li>
-<li>On Windows:
-<code>
-docker run -it --rm -v "%CD%:/work" stanislavpovolotsky/jddlab:latest
-</code></li>
+<li>On Linux or macOS:<pre><code>docker run -it --rm -v &quot;$PWD:/work&quot; stanislavpovolotsky/jddlab:latest
+</code></pre>
+</li>
+<li>On Windows:<pre><code>docker run -it --rm -v &quot;%CD%:/work&quot; stanislavpovolotsky/jddlab:latest
+</code></pre>
+</li>
 </ul>
-
-<p>To enter shell mode, type:
-<code>
-docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest
-</code></p>
-
-<p>To run a specific command, just specify it at the end of the command line:
-<code>
-docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --version
-</code></p>
-
-<p>To update it to the latest version:
-<code>
-docker pull stanislavpovolotsky/jddlab:latest
-</code></p>
-
-<h2>MCP server</h2>
-
+<p>To enter shell mode, type:</p>
+<pre><code>docker run -it --rm -v &quot;$PWD:/work&quot; stanislavpovolotsky/jddlab:latest
+</code></pre>
+<p>To run a specific command, just specify it at the end of the command line:</p>
+<pre><code>docker run -it --rm -v &quot;$PWD:/work&quot; stanislavpovolotsky/jddlab:latest apktool --version
+</code></pre>
+<p>To update it to the latest version:</p>
+<pre><code>docker pull stanislavpovolotsky/jddlab:latest
+</code></pre>
+<h2 id="mcp-server">MCP server</h2>
 <p>This repository includes an MCP server that exposes jddlab tools to MCP clients such as Claude Desktop, Claude CLI, Codex, VS Code, and other stdio-compatible clients.</p>
-
 <p>The server lives in <code>mcp/server.py</code> and runs jddlab commands through Docker:</p>
-
-<p><code>text
-docker run --rm -v "&lt;host-mount-root&gt;:/work" stanislavpovolotsky/jddlab:latest &lt;command&gt; &lt;args&gt;
-</code></p>
-
+<pre><code class="language-text">docker run --rm -v &quot;&lt;host-mount-root&gt;:/work&quot; stanislavpovolotsky/jddlab:latest &lt;command&gt; &lt;args&gt;
+</code></pre>
 <p>The server exposes:</p>
-
 <ul>
 <li><code>jddlab_run</code>: a generic wrapper for any supported jddlab command.</li>
 <li>One MCP tool per command, for example <code>jddlab_apktool</code>, <code>jddlab_jadx</code>, <code>jddlab_ghidra_decompile</code>, <code>jddlab_android_unpinner</code>, and <code>jddlab_dex2jar</code>.</li>
 </ul>
-
 <p>Each MCP tool accepts:</p>
-
 <ul>
 <li><code>args</code>: native command arguments as an array of strings.</li>
 <li><code>workdir</code>: optional host directory to mount as <code>/work</code>.</li>
@@ -217,49 +1434,31 @@ docker run --rm -v "&lt;host-mount-root&gt;:/work" stanislavpovolotsky/jddlab:la
 <li><code>docker_image</code>: optional Docker image override.</li>
 <li><code>interactive</code>: add Docker <code>-it</code>; keep this false for most MCP clients.</li>
 </ul>
-
 <p>Tool-specific usage notes are in the <code>tools/</code> directory. Connector examples are in <code>mcp/connectors/</code>.</p>
-
-<h3>MCP prerequisites</h3>
-
+<h3 id="mcp-prerequisites">MCP prerequisites</h3>
 <ul>
 <li>Python 3.10 or newer.</li>
 <li>Docker installed and running.</li>
 <li>The jddlab Docker image:</li>
 </ul>
-
-<p><code>shell
-docker pull stanislavpovolotsky/jddlab:latest
-</code></p>
-
-<h3>Start the MCP server</h3>
-
+<pre><code class="language-shell">docker pull stanislavpovolotsky/jddlab:latest
+</code></pre>
+<h3 id="start-the-mcp-server">Start the MCP server</h3>
 <p>From the repository root:</p>
-
-<p><code>shell
-python mcp/server.py
-</code></p>
-
+<pre><code class="language-shell">python mcp/server.py
+</code></pre>
 <p>For a quick process-level smoke test:</p>
-
-<p><code>shell
-python mcp/server.py --list-commands
-</code></p>
-
-<h3>Install MCP connectors with jddlab</h3>
-
+<pre><code class="language-shell">python mcp/server.py --list-commands
+</code></pre>
+<h3 id="install-mcp-connectors-with-jddlab">Install MCP connectors with jddlab</h3>
 <p>The standalone <code>jddlab</code> and <code>jddlab.cmd</code> launchers include an <code>mcp</code> subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) <strong>out of the Docker image</strong> — which ships them at <code>/usr/local/jddlab/host</code> — into <code>~/.jddlab/mcp/current</code> using <code>docker cp</code>, and then runs the installer from there. No separate download is involved, so the host files always match the image, and <code>docker cp</code> writes them owned by your user.</p>
-
 <blockquote>
-  <p>The same files back <code>jddlab skills ...</code> (see below). Running <code>jddlab update</code>
-  re-extracts them from the freshly pulled image; <code>jddlab mcp update</code> /
-  <code>jddlab skills update</code> refresh them on demand.</p>
+<p>The same files back <code>jddlab skills ...</code> (see below). Running <code>jddlab update</code>
+re-extracts them from the freshly pulled image; <code>jddlab mcp update</code> /
+<code>jddlab skills update</code> refresh them on demand.</p>
 </blockquote>
-
 <p>Examples:</p>
-
-<p><code>shell
-jddlab mcp add claude-cli
+<pre><code class="language-shell">jddlab mcp add claude-cli
 jddlab mcp add claude-desktop
 jddlab mcp add codex
 jddlab mcp add vscode
@@ -267,147 +1466,120 @@ jddlab mcp add copilot
 jddlab mcp doctor
 jddlab mcp status
 jddlab mcp update
-</code></p>
-
+</code></pre>
 <p>On Windows the same commands work with <code>jddlab.cmd</code>:</p>
-
-<p><code>cmd
-jddlab mcp add codex
-</code></p>
-
+<pre><code class="language-cmd">jddlab mcp add codex
+</code></pre>
 <p>The extracted files are installed under:</p>
-
 <ul>
 <li>Linux/macOS: <code>~/.jddlab/mcp/current</code></li>
 <li>Windows: <code>%USERPROFILE%\.jddlab\mcp\current</code></li>
 </ul>
-
 <p>Advanced environment variables:</p>
-
 <ul>
 <li><code>JDDLAB_MCP_HOME</code>: override the install directory (default <code>~/.jddlab/mcp</code>).</li>
 </ul>
-
-<h3>Connect from Claude Desktop</h3>
-
+<h3 id="connect-from-claude-desktop">Connect from Claude Desktop</h3>
 <p>Add the following fragment to your Claude Desktop config and replace <code>&lt;REPO_PATH&gt;</code> with the absolute path to this repository.</p>
-
 <p>Typical config locations:</p>
-
 <ul>
 <li>macOS: <code>~/Library/Application Support/Claude/claude_desktop_config.json</code></li>
 <li>Windows: <code>%APPDATA%\Claude\claude_desktop_config.json</code></li>
 </ul>
-
-<p><code>json
-{
-  "mcpServers": {
-    "jddlab": {
-      "command": "python",
-      "args": ["&lt;REPO_PATH&gt;/mcp/server.py"]
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;jddlab&quot;: {
+      &quot;command&quot;: &quot;python&quot;,
+      &quot;args&quot;: [&quot;&lt;REPO_PATH&gt;/mcp/server.py&quot;]
     }
   }
 }
-</code></p>
-
+</code></pre>
 <p>Restart Claude Desktop after editing the config.</p>
-
-<h3>Connect from Claude CLI</h3>
-
-<p><code>shell
-claude mcp add jddlab -- python &lt;REPO_PATH&gt;/mcp/server.py
-</code></p>
-
+<h3 id="connect-from-claude-cli">Connect from Claude CLI</h3>
+<pre><code class="language-shell">claude mcp add jddlab -- python &lt;REPO_PATH&gt;/mcp/server.py
+</code></pre>
 <p>If your CLI version uses a different MCP management syntax, run:</p>
-
-<p><code>shell
-claude mcp --help
-</code></p>
-
-<h3>Connect from Codex</h3>
-
+<pre><code class="language-shell">claude mcp --help
+</code></pre>
+<h3 id="connect-from-codex">Connect from Codex</h3>
 <p>Add this fragment to <code>~/.codex/config.toml</code>:</p>
-
-<p><code>toml
-[mcp_servers.jddlab]
-command = "python"
-args = ["&lt;REPO_PATH&gt;/mcp/server.py"]
+<pre><code class="language-toml">[mcp_servers.jddlab]
+command = &quot;python&quot;
+args = [&quot;&lt;REPO_PATH&gt;/mcp/server.py&quot;]
 startup_timeout_sec = 120
-</code></p>
-
+</code></pre>
 <p>Restart Codex after editing the config.</p>
-
-<h3>Connect from VS Code or other MCP clients</h3>
-
+<h3 id="connect-from-vs-code-or-other-mcp-clients">Connect from VS Code or other MCP clients</h3>
 <p>Use <code>mcp/connectors/vscode-mcp.json</code> or <code>mcp/connectors/generic-mcp.json</code> as a starting point. Any stdio-compatible MCP client should use the same command:</p>
-
-<p><code>json
-{
-  "command": "python",
-  "args": ["&lt;REPO_PATH&gt;/mcp/server.py"]
+<pre><code class="language-json">{
+  &quot;command&quot;: &quot;python&quot;,
+  &quot;args&quot;: [&quot;&lt;REPO_PATH&gt;/mcp/server.py&quot;]
 }
-</code></p>
-
-<h3>MCP call example</h3>
-
+</code></pre>
+<h3 id="mcp-call-example">MCP call example</h3>
 <p>Call <code>jddlab_apktool</code> with:</p>
-
-<p><code>json
-{
-  "args": ["d", "-o", "decoded", "app.apk"],
-  "input_paths": ["app.apk"],
-  "output_paths": ["decoded"],
-  "timeout_seconds": 600
+<pre><code class="language-json">{
+  &quot;args&quot;: [&quot;d&quot;, &quot;-o&quot;, &quot;decoded&quot;, &quot;app.apk&quot;],
+  &quot;input_paths&quot;: [&quot;app.apk&quot;],
+  &quot;output_paths&quot;: [&quot;decoded&quot;],
+  &quot;timeout_seconds&quot;: 600
 }
-</code></p>
-
+</code></pre>
 <p>The server infers a host mount root, rewrites <code>app.apk</code> and <code>decoded</code> to <code>/work/app.apk</code> and <code>/work/decoded</code>, then runs Docker.</p>
-
-<h2>AI Skills</h2>
-
-<p>Skills are Markdown knowledge bases (see <a href="skills/README.md"><code>skills/</code></a>) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in <code>skills/&lt;name&gt;/SKILL.md</code> and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.</p>
-
-<h3>Install skills with jddlab</h3>
-
+<h2 id="ai-skills">AI Skills</h2>
+<p>Skills are Markdown knowledge bases (see <a href="skills/README.html"><code>skills/</code></a>) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in <code>skills/&lt;name&gt;/SKILL.md</code> and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.</p>
+<h3 id="install-skills-with-jddlab">Install skills with jddlab</h3>
 <p>Like the <code>mcp</code> subcommand, <code>jddlab skills</code> works without a local repository checkout:
 it runs the skills installer copied out of the Docker image (shared with the MCP files
 under <code>~/.jddlab/mcp/current</code>), extracting on first use and reusing it afterwards.
 <code>jddlab update</code> (or <code>jddlab skills update</code>) re-extracts from the image. From a
 repository checkout the local <code>skills/</code> are used directly.</p>
-
-<p>```shell</p>
-
-<h1>Install into the current project (default)</h1>
-
-<p>jddlab skills add claude-cli
+<pre><code class="language-shell"># Install into the current project (default)
+jddlab skills add claude-cli
 jddlab skills add vscode
 jddlab skills add opencode
-jddlab skills add all</p>
+jddlab skills add all
 
-<h1>Install for all projects (user scope)</h1>
+# Install for all projects (user scope)
+jddlab skills add all --scope user
 
-<p>jddlab skills add all --scope user</p>
+# Remove
+jddlab skills remove all
 
-<h1>Remove</h1>
-
-<p>jddlab skills remove all</p>
-
-<h1>List available skills</h1>
-
-<p>jddlab skills list
-```</p>
-
+# List available skills
+jddlab skills list
+</code></pre>
 <p>On Windows the same commands work with <code>jddlab.cmd</code>.</p>
-
 <p><strong>Installation scope</strong> (where skill content is written):</p>
-
-<p>| Scope | opencode | claude-cli | vscode / copilot | codex |
-|---|---|---|---|---|
-| <code>project</code> (default) | <code>.opencode/skills/</code> | <code>.claude/skills/</code> | <code>.github/copilot-instructions.md</code> | <code>.agents/skills/</code> |
-| <code>user</code> | <code>~/.config/opencode/skills/</code> | <code>~/.claude/skills/</code> | <code>~/.github/copilot-instructions.md</code> | <code>~/.agents/skills/</code> |</p>
-
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>opencode</th>
+<th>claude-cli</th>
+<th>vscode / copilot</th>
+<th>codex</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project</code> (default)</td>
+<td><code>.opencode/skills/</code></td>
+<td><code>.claude/skills/</code></td>
+<td><code>.github/copilot-instructions.md</code></td>
+<td><code>.agents/skills/</code></td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td><code>~/.config/opencode/skills/</code></td>
+<td><code>~/.claude/skills/</code></td>
+<td><code>~/.github/copilot-instructions.md</code></td>
+<td><code>~/.agents/skills/</code></td>
+</tr>
+</tbody>
+</table>
 <p>Notes:</p>
-
 <ul>
 <li><strong>Claude Code / opencode / Codex</strong> load real skills (directories with a <code>SKILL.md</code>
 that has <code>name</code> + <code>description</code> front-matter). For Claude Code, run <code>/skills</code>
@@ -418,26 +1590,17 @@ are often visible to the others.</li>
 <li><strong>VS Code Copilot</strong> has no native skills feature, so the installer injects a skills
 index into <code>.github/copilot-instructions.md</code> instead.</li>
 </ul>
-
-<h3>Available skills</h3>
-
-<p>See <a href="skills/README.md"><code>skills/README.md</code></a> for the full list of skills.</p>
-
-<h2>How to</h2>
-
-<h3>How to use ADB with jddlab</h3>
-
-<h4>Wireless debug</h4>
-
+<h3 id="available-skills">Available skills</h3>
+<p>See <a href="skills/README.html"><code>skills/README.md</code></a> for the full list of skills.</p>
+<h2 id="how-to">How to</h2>
+<h3 id="how-to-use-adb-with-jddlab">How to use ADB with jddlab</h3>
+<h4 id="wireless-debug">Wireless debug</h4>
 <p>The easiest way to enable wireless debugging with ADB:</p>
-
 <ol>
 <li>Open <strong>Developer options</strong> on your Android device.</li>
 <li>Enable <strong>Wireless debugging</strong>.</li>
 <li>Pair your device using <strong>Pair device with pairing code</strong> in the Wireless debugging section.<br />
-You will see an <strong>IP address &amp; Port</strong> and a <strong>Wi-Fi pairing code</strong>. Use these values in the <code>adb pair</code> command:
-<code>
-jddlab
+You will see an <strong>IP address &amp; Port</strong> and a <strong>Wi-Fi pairing code</strong>. Use these values in the <code>adb pair</code> command:<pre><code>jddlab
 # Pair your device for wireless debugging
 adb pair 192.168.1.45:37630
 Enter pairing code: 723456
@@ -445,108 +1608,156 @@ Successfully paired to 192.168.1.45:37630 [guid=adb-HT7AR1A03153-NEMbib]
 # Connect to your device via TCP/IP (use the IP address &amp; port shown in Wireless debugging settings)
 adb connect 192.168.1.45:38191
 connected to 192.168.1.45:38191
-</code></li>
+</code></pre>
+</li>
 </ol>
-
-<p>After pairing and connecting, you can use ADB commands wirelessly.  </p>
-
+<p>After pairing and connecting, you can use ADB commands wirelessly.</p>
 <p><strong>Security warning:</strong> jddlab comes with preinstalled ADB keys, which greatly simplifies usage. However, this also means that anyone with network access to your device can connect to it via the debugger.<br />
-<strong>Recommendation:</strong> Mount your local <code>~/.android</code> directory to <code>/root/.android</code> inside the container to use your own ADB keys and prevent unauthorized access.
-<code>
-docker run -it --rm -v "$HOME/.android:/root/.android" -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --version
-</code></p>
-
-<h2>Tools</h2>
-
+<strong>Recommendation:</strong> Mount your local <code>~/.android</code> directory to <code>/root/.android</code> inside the container to use your own ADB keys and prevent unauthorized access.</p>
+<pre><code>docker run -it --rm -v &quot;$HOME/.android:/root/.android&quot; -v &quot;$PWD:/work&quot; stanislavpovolotsky/jddlab:latest apktool --version
+</code></pre>
+<h2 id="tools">Tools</h2>
 <p>The image bundles the tools below. Click a name to jump to its section with
 command-line arguments and usage examples. The exact version of every tool in
 your image is available via <code>jddlab versions</code> and in each
 <a href="https://github.com/Stanislav-Povolotsky/jddlab/releases">GitHub release</a>.</p>
-
-<p>| Tool | Purpose |
-|---|---|
-| <a href="#apktool---a-tool-for-reverse-engineering-android-apk-files">Apktool</a> | Decode/rebuild APK resources and smali |
-| <a href="#jadx---dex-to-java-decompiler">jadx</a> | Decompile DEX/APK to readable Java |
-| <a href="#fernflower-java-decompiler">FernFlower</a> | Java bytecode decompiler |
-| <a href="tools/vineflower.md">Vineflower</a> | Modern FernFlower fork (better output) |
-| <a href="#procyon---is-a-suite-of-java-metaprogramming-tools-including-java-decompiler">Procyon</a> | Java decompiler + bytecode tooling |
-| <a href="#krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler">Krakatau (v1/v2)</a> | Java decompiler, assembler, disassembler |
-| <a href="#apkeditor---powerful-android-apk-editor">APKEditor</a> | Edit/merge/split/protect APKs |
-| <a href="#apkscan---tool-to-scan-for-secrets-endpoints-and-other-sensitive-data-after-decompiling-and-deobfuscating-android-files">APKscan</a> | Scan for secrets, endpoints, sensitive data |
-| <a href="#enjarify---a-tool-for-translating-dalvik-bytecode-to-equivalent-java-bytecode">Enjarify</a> | Dalvik bytecode → Java bytecode |
-| <a href="#simplify---android-virtual-machine-and-deobfuscator">Simplify</a> | Android VM-based deobfuscator |
-| <a href="#java-deobfuscator---can-help-to-deobfuscate-commercially-available-obfuscators-for-java">Java Deobfuscator</a> | Deobfuscate common Java obfuscators |
-| <a href="#dex2jar---tools-to-work-with-android-dex-and-java-class-files">dex2jar</a> | Work with <code>.dex</code>/<code>.class</code>, string decrypt, weaving |
-| <a href="#smali-and-baksmali---tools-for-assembling-and-disassembling-android-dex-bytecode">smali / baksmali</a> | Assemble/disassemble DEX bytecode |
-| <a href="#androguard---the-swiss-army-knife-which-combines-lot-of-tools">androguard</a> | APK/DEX analysis swiss-army knife |
-| <a href="#objection---runtime-mobile-exploration-toolkit">objection</a> | Runtime mobile exploration (Frida) |
-| <a href="#ghidra---software-reverse-engineering-framework">ghidra</a> | Native code reverse engineering |
-| <a href="#android-unpinner---remove-certificate-pinning-from-apks">android-unpinner</a> | Remove certificate pinning from APKs |
-| <a href="#apk-patcher---the-easiest-way-to-integrate-frida-into-apk">apk-patcher</a> | Inject Frida gadget into an APK |
-| Android SDK build-tools | <code>apksigner</code>, <code>zipalign</code>, <code>adb</code> (Android SDK) |</p>
-
-<h3>Apktool - a tool for reverse engineering Android apk files</h3>
-
-<p>URL: https://github.com/iBotPeaches/Apktool  </p>
-
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#apktool---a-tool-for-reverse-engineering-android-apk-files">Apktool</a></td>
+<td>Decode/rebuild APK resources and smali</td>
+</tr>
+<tr>
+<td><a href="#jadx---dex-to-java-decompiler">jadx</a></td>
+<td>Decompile DEX/APK to readable Java</td>
+</tr>
+<tr>
+<td><a href="#fernflower-java-decompiler">FernFlower</a></td>
+<td>Java bytecode decompiler</td>
+</tr>
+<tr>
+<td><a href="tools/vineflower.html">Vineflower</a></td>
+<td>Modern FernFlower fork (better output)</td>
+</tr>
+<tr>
+<td><a href="#procyon---is-a-suite-of-java-metaprogramming-tools-including-java-decompiler">Procyon</a></td>
+<td>Java decompiler + bytecode tooling</td>
+</tr>
+<tr>
+<td><a href="#krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler">Krakatau (v1/v2)</a></td>
+<td>Java decompiler, assembler, disassembler</td>
+</tr>
+<tr>
+<td><a href="#apkeditor---powerful-android-apk-editor">APKEditor</a></td>
+<td>Edit/merge/split/protect APKs</td>
+</tr>
+<tr>
+<td><a href="#apkscan---tool-to-scan-for-secrets-endpoints-and-other-sensitive-data-after-decompiling-and-deobfuscating-android-files">APKscan</a></td>
+<td>Scan for secrets, endpoints, sensitive data</td>
+</tr>
+<tr>
+<td><a href="#enjarify---a-tool-for-translating-dalvik-bytecode-to-equivalent-java-bytecode">Enjarify</a></td>
+<td>Dalvik bytecode → Java bytecode</td>
+</tr>
+<tr>
+<td><a href="#simplify---android-virtual-machine-and-deobfuscator">Simplify</a></td>
+<td>Android VM-based deobfuscator</td>
+</tr>
+<tr>
+<td><a href="#java-deobfuscator---can-help-to-deobfuscate-commercially-available-obfuscators-for-java">Java Deobfuscator</a></td>
+<td>Deobfuscate common Java obfuscators</td>
+</tr>
+<tr>
+<td><a href="#dex2jar---tools-to-work-with-android-dex-and-java-class-files">dex2jar</a></td>
+<td>Work with <code>.dex</code>/<code>.class</code>, string decrypt, weaving</td>
+</tr>
+<tr>
+<td><a href="#smali-and-baksmali---tools-for-assembling-and-disassembling-android-dex-bytecode">smali / baksmali</a></td>
+<td>Assemble/disassemble DEX bytecode</td>
+</tr>
+<tr>
+<td><a href="#androguard---the-swiss-army-knife-which-combines-lot-of-tools">androguard</a></td>
+<td>APK/DEX analysis swiss-army knife</td>
+</tr>
+<tr>
+<td><a href="#objection---runtime-mobile-exploration-toolkit">objection</a></td>
+<td>Runtime mobile exploration (Frida)</td>
+</tr>
+<tr>
+<td><a href="#ghidra---software-reverse-engineering-framework">ghidra</a></td>
+<td>Native code reverse engineering</td>
+</tr>
+<tr>
+<td><a href="#android-unpinner---remove-certificate-pinning-from-apks">android-unpinner</a></td>
+<td>Remove certificate pinning from APKs</td>
+</tr>
+<tr>
+<td><a href="#apk-patcher---the-easiest-way-to-integrate-frida-into-apk">apk-patcher</a></td>
+<td>Inject Frida gadget into an APK</td>
+</tr>
+<tr>
+<td>Android SDK build-tools</td>
+<td><code>apksigner</code>, <code>zipalign</code>, <code>adb</code> (Android SDK)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="apktool---a-tool-for-reverse-engineering-android-apk-files">Apktool - a tool for reverse engineering Android apk files</h3>
+<p>URL: <a href="https://github.com/iBotPeaches/Apktool">https://github.com/iBotPeaches/Apktool</a></p>
 <p>Apktool is a tool for reverse engineering third-party, closed, binary, Android apps.
 It can decode resources to nearly original form and rebuild them after making some modifications; it makes it possible to debug smali code step-by-step.
-It also makes working with apps easier thanks to project-like file structure and automation of some repetitive tasks such as building apk, etc.
+It also makes working with apps easier thanks to project-like file structure and automation of some repetitive tasks such as building apk, etc.</p>
 <details>
-   <summary>apktool command-line arguments</summary></p>
-
-<p>````
-shell> jddlab apktool
+   <summary>apktool command-line arguments</summary>
+<pre><code>shell&gt; jddlab apktool
 Apktool 2.10.0 - a tool for reengineering Android apk files
 with smali v3.0.8 and baksmali v3.0.8
-Copyright 2010 Ryszard Winiewski <a href="&#x6d;&#x61;&#x69;&#x6c;&#x74;&#111;&#58;&#x62;&#114;&#117;&#116;&#46;&#x61;&#108;&#108;l&#64;&#103;&#x6d;&#97;&#105;&#x6c;&#x2e;&#99;&#x6f;&#x6d;">&#x62;&#114;&#117;&#116;&#46;&#x61;&#108;&#108;l&#64;&#103;&#x6d;&#97;&#105;&#x6c;&#x2e;&#99;&#x6f;&#x6d;</a>
-Copyright 2010 Connor Tumbleson <a href="&#x6d;&#97;&#x69;&#x6c;&#116;&#111;:&#99;&#x6f;&#x6e;&#x6e;&#111;&#x72;&#x2e;&#x74;&#x75;&#x6d;&#98;&#x6c;&#101;&#115;&#x6f;&#x6e;&#x40;&#103;&#x6d;&#97;&#x69;l&#x2e;&#99;&#111;m">&#99;&#x6f;&#x6e;&#x6e;&#111;&#x72;&#x2e;&#x74;&#x75;&#x6d;&#98;&#x6c;&#101;&#115;&#x6f;&#x6e;&#x40;&#103;&#x6d;&#97;&#x69;l&#x2e;&#99;&#111;m</a></p>
+Copyright 2010 Ryszard Winiewski &lt;brut.alll@gmail.com&gt;
+Copyright 2010 Connor Tumbleson &lt;connor.tumbleson@gmail.com&gt;
 
-<p>usage: apktool
+usage: apktool
  -advance,--advanced   Print advanced information.
  -version,--version    Print the version.
-usage: apktool if|install-framework [options] <framework.apk>
- -p,--frame-path <dir>   Store framework files into <dir>.
- -t,--tag <tag>          Tag frameworks using <tag>.
-usage: apktool d[ecode] [options] <file_apk>
+usage: apktool if|install-framework [options] &lt;framework.apk&gt;
+ -p,--frame-path &lt;dir&gt;   Store framework files into &lt;dir&gt;.
+ -t,--tag &lt;tag&gt;          Tag frameworks using &lt;tag&gt;.
+usage: apktool d[ecode] [options] &lt;file_apk&gt;
  -f,--force              Force delete destination directory.
- -o,--output <dir>       The name of folder that gets written. (default: apk.out)
- -p,--frame-path <dir>   Use framework files located in <dir>.
+ -o,--output &lt;dir&gt;       The name of folder that gets written. (default: apk.out)
+ -p,--frame-path &lt;dir&gt;   Use framework files located in &lt;dir&gt;.
  -r,--no-res             Do not decode resources.
  -s,--no-src             Do not decode sources.
- -t,--frame-tag <tag>    Use framework files tagged by <tag>.
-usage: apktool b[uild] [options] <app_path>
+ -t,--frame-tag &lt;tag&gt;    Use framework files tagged by &lt;tag&gt;.
+usage: apktool b[uild] [options] &lt;app_path&gt;
  -f,--force-all          Skip changes detection and build all files.
- -o,--output <file>      The name of apk that gets written. (default: dist/name.apk)
- -p,--frame-path <dir>   Use framework files located in <dir>.</p>
+ -o,--output &lt;file&gt;      The name of apk that gets written. (default: dist/name.apk)
+ -p,--frame-path &lt;dir&gt;   Use framework files located in &lt;dir&gt;.
 
-<p>For additional info, see: https://apktool.org 
+For additional info, see: https://apktool.org 
 For smali/baksmali info, see: https://github.com/google/smali
-````
-</details></p>
-
-<p>Example 1. Unpacking APK:
-<code>
-jddlab apktool d -o ./unpacked/ sample.apk
-</code></p>
-
-<h3>jadx - Dex to Java decompiler</h3>
-
-<p>URL: https://github.com/skylot/jadx  </p>
-
-<p>Tools for producing Java source code from Android Dex and Apk files.
+</code></pre>
+</details>
+<p>Example 1. Unpacking APK:</p>
+<pre><code>jddlab apktool d -o ./unpacked/ sample.apk
+</code></pre>
+<h3 id="jadx---dex-to-java-decompiler">jadx - Dex to Java decompiler</h3>
+<p>URL: <a href="https://github.com/skylot/jadx">https://github.com/skylot/jadx</a></p>
+<p>Tools for producing Java source code from Android Dex and Apk files.</p>
 <details>
-   <summary>jadx command-line arguments</summary></p>
+   <summary>jadx command-line arguments</summary>
+<pre><code>shell&gt; jddlab jadx --help
+jadx - dex to java decompiler, version: 1.5.0
 
-<p>````
-shell> jddlab jadx --help
-jadx - dex to java decompiler, version: 1.5.0</p>
+usage: jadx [command] [options] &lt;input files&gt; (.apk, .dex, .jar, .class, .smali, .zip, .aar, .arsc, .aab, .xapk, .jadx.kts)
+commands (use '&lt;command&gt; --help' for command options):
+  plugins	  - manage jadx plugins
 
-<p>usage: jadx [command] [options] <input files> (.apk, .dex, .jar, .class, .smali, .zip, .aar, .arsc, .aab, .xapk, .jadx.kts)
-commands (use '<command> --help' for command options):
-  plugins     - manage jadx plugins</p>
-
-<p>options:
+options:
   -d, --output-dir                    - output directory
   -ds, --output-dir-src               - output directory for sources
   -dr, --output-dir-res               - output directory for resources
@@ -584,7 +1795,7 @@ commands (use '<command> --help' for command options):
   --deobf                             - activate deobfuscation
   --deobf-min                         - min length of name, renamed if shorter, default: 3
   --deobf-max                         - max length of name, renamed if longer, default: 64
-  --deobf-whitelist                   - space separated list of classes (full name) and packages (ends with '.<em>') to exclude from deobfuscation, default: android.support.v4.</em> android.support.v7.* android.support.v4.os.* android.support.annotation.Px androidx.core.os.* androidx.annotation.Px
+  --deobf-whitelist                   - space separated list of classes (full name) and packages (ends with '.*') to exclude from deobfuscation, default: android.support.v4.* android.support.v7.* android.support.v4.os.* android.support.annotation.Px androidx.core.os.* androidx.annotation.Px
   --deobf-cfg-file                    - deobfuscation mappings file used for JADX auto-generated names (in the JOBF file format), default: same dir and name as input file with '.jobf' extension
   --deobf-cfg-file-mode               - set mode for handling the JADX auto-generated names' deobfuscation map file:
                                          'read' - read if found, don't save (default)
@@ -617,9 +1828,9 @@ commands (use '<command> --help' for command options):
   -v, --verbose                       - verbose output (set --log-level to DEBUG)
   -q, --quiet                         - turn off output (set --log-level to QUIET)
   --version                           - print jadx version
-  -h, --help                          - print this help</p>
+  -h, --help                          - print this help
 
-<p>Plugin options (-P<name>=<value>):
+Plugin options (-P&lt;name&gt;=&lt;value&gt;):
  1) dex-input: Load .dex and .apk files
     - dex-input.verify-checksum       - verify dex file checksum before load, values: [yes, no], default: yes
  2) java-convert: Convert .class, .jar and .aar files to dex
@@ -634,55 +1845,43 @@ commands (use '<command> --help' for command options):
     - kotlin-metadata.to-string       - rename fields using toString, values: [yes, no], default: yes
     - kotlin-metadata.getters         - rename simple getters to field names, values: [yes, no], default: yes
  4) rename-mappings: various mappings support
-    - rename-mappings.format          - mapping format, values: [AUTO, TINY<em>FILE, TINY</em>2<em>FILE, ENIGMA</em>FILE, ENIGMA<em>DIR, SRG</em>FILE, XSRG<em>FILE, JAM</em>FILE, CSRG<em>FILE, TSRG</em>FILE, TSRG<em>2</em>FILE, PROGUARD<em>FILE, RECAF</em>SIMPLE<em>FILE, JOBF</em>FILE], default: AUTO
-    - rename-mappings.invert          - invert mapping on load, values: [yes, no], default: no</p>
+    - rename-mappings.format          - mapping format, values: [AUTO, TINY_FILE, TINY_2_FILE, ENIGMA_FILE, ENIGMA_DIR, SRG_FILE, XSRG_FILE, JAM_FILE, CSRG_FILE, TSRG_FILE, TSRG_2_FILE, PROGUARD_FILE, RECAF_SIMPLE_FILE, JOBF_FILE], default: AUTO
+    - rename-mappings.invert          - invert mapping on load, values: [yes, no], default: no
 
-<p>Environment variables:
-  JADX<em>DISABLE</em>XML<em>SECURITY - set to 'true' to disable all security checks for XML files
-  JADX</em>DISABLE<em>ZIP</em>SECURITY - set to 'true' to disable all security checks for zip files
-  JADX<em>ZIP</em>MAX<em>ENTRIES</em>COUNT - maximum allowed number of entries in zip files (default: 100 000)
-  JADX<em>TMP</em>DIR - custom temp directory, using system by default</p>
+Environment variables:
+  JADX_DISABLE_XML_SECURITY - set to 'true' to disable all security checks for XML files
+  JADX_DISABLE_ZIP_SECURITY - set to 'true' to disable all security checks for zip files
+  JADX_ZIP_MAX_ENTRIES_COUNT - maximum allowed number of entries in zip files (default: 100 000)
+  JADX_TMP_DIR - custom temp directory, using system by default
 
-<p>Examples:
+Examples:
   jadx -d out classes.dex
-  jadx --rename-flags "none" classes.dex
-  jadx --rename-flags "valid, printable" classes.dex
+  jadx --rename-flags &quot;none&quot; classes.dex
+  jadx --rename-flags &quot;valid, printable&quot; classes.dex
   jadx --log-level ERROR app.apk
   jadx -Pdex-input.verify-checksum=no app.apk
-````
-</details></p>
-
-<p>Example 1. Decompiling APK with some deobfuscation:
-<code>
-jddlab jadx sample.apk --deobf --output-dir ./jadx/
-</code></p>
-
-<h3>FernFlower Java decompiler</h3>
-
-<p>URL: https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine<br />
-URL: https://mvnrepository.com/artifact/com.jetbrains.intellij.java/java-decompiler-engine  </p>
-
-<p>Fernflower is the first actually working analytical decompiler for Java and probably for a high-level programming language in general.
+</code></pre>
+</details>
+<p>Example 1. Decompiling APK with some deobfuscation:</p>
+<pre><code>jddlab jadx sample.apk --deobf --output-dir ./jadx/
+</code></pre>
+<h3 id="fernflower-java-decompiler">FernFlower Java decompiler</h3>
+<p>URL: <a href="https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine">https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine</a><br />
+URL: <a href="https://mvnrepository.com/artifact/com.jetbrains.intellij.java/java-decompiler-engine">https://mvnrepository.com/artifact/com.jetbrains.intellij.java/java-decompiler-engine</a></p>
+<p>Fernflower is the first actually working analytical decompiler for Java and probably for a high-level programming language in general.</p>
 <details>
-   <summary>fernflower command-line arguments</summary></p>
-
-<p><code>
-shell&gt; jddlab fernflower
+   <summary>fernflower command-line arguments</summary>
+<pre><code>shell&gt; jddlab fernflower
 Usage: java -jar fernflower.jar [-&lt;option&gt;=&lt;value&gt;]* [&lt;source&gt;]+ &lt;destination&gt;
 Example: java -jar fernflower.jar -dgs=true c:\my\source\ c:\my.jar d:\decompiled\
-</code>
-</details></p>
-
-<h3>Procyon - is a suite of Java metaprogramming tools including Java Decompiler</h3>
-
-<p>URL: https://github.com/mstrobel/procyon  </p>
-
-<p>Procyon is a suite of Java metaprogramming tools, including a rich reflection API, a LINQ-inspired expression tree API for runtime code generation, and a Java decompiler.
+</code></pre>
+</details>
+<h3 id="procyon---is-a-suite-of-java-metaprogramming-tools-including-java-decompiler">Procyon - is a suite of Java metaprogramming tools including Java Decompiler</h3>
+<p>URL: <a href="https://github.com/mstrobel/procyon">https://github.com/mstrobel/procyon</a></p>
+<p>Procyon is a suite of Java metaprogramming tools, including a rich reflection API, a LINQ-inspired expression tree API for runtime code generation, and a Java decompiler.</p>
 <details>
-   <summary>procyon command-line arguments</summary></p>
-
-<p><code>
-shell&gt; jddlab procyon
+   <summary>procyon command-line arguments</summary>
+<pre><code>shell&gt; jddlab procyon
 Usage: &lt;main class&gt; [options] &lt;type names or class/jar files&gt;
   Options:
     -b, --bytecode-ast
@@ -791,122 +1990,103 @@ Usage: &lt;main class&gt; [options] &lt;type names or class/jar files&gt;
       Include line numbers in raw bytecode mode; supports Java mode with -o 
       only. 
       Default: false
-</code>
-</details></p>
-
-<h3>Krakatau (v1 and v2) - Java decompiler, assembler, and disassembler</h3>
-
-<p>URL: https://github.com/Storyyeller/Krakatau  </p>
-
-<p>Krakatau provides an assembler and disassembler for Java bytecode, which allows you to convert binary classfiles to a human readable text format, make changes, and convert it back to a classfile, even for obfuscated code.
+</code></pre>
+</details>
+<h3 id="krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler">Krakatau (v1 and v2) - Java decompiler, assembler, and disassembler</h3>
+<p>URL: <a href="https://github.com/Storyyeller/Krakatau">https://github.com/Storyyeller/Krakatau</a></p>
+<p>Krakatau provides an assembler and disassembler for Java bytecode, which allows you to convert binary classfiles to a human readable text format, make changes, and convert it back to a classfile, even for obfuscated code.</p>
 <details>
-   <summary>krakatau-disassemble command-line arguments</summary></p>
-
-<p>````
-shell> jddlab krakatau-disassemble --help
+   <summary>krakatau-disassemble command-line arguments</summary>
+<pre><code>shell&gt; jddlab krakatau-disassemble --help
 Krakatau  Copyright (C) 2012-22  Robert Grosse
 This program is provided as open source under the GNU General Public License.
-See LICENSE.TXT for more details.</p>
+See LICENSE.TXT for more details.
 
-<p>usage: disassemble.py [-h] [-out OUT] [-r] [-path PATH] [-roundtrip] target</p>
+usage: disassemble.py [-h] [-out OUT] [-r] [-path PATH] [-roundtrip] target
 
-<p>Krakatau decompiler and bytecode analysis tool</p>
+Krakatau decompiler and bytecode analysis tool
 
-<p>positional arguments:
-  target      Name of class or jar file to disassemble</p>
+positional arguments:
+  target      Name of class or jar file to disassemble
 
-<p>options:
+options:
   -h, --help  show this help message and exit
   -out OUT    Path to generate files in
   -r          Process all files in the directory target and subdirectories
   -path PATH  Jar to look for class in
   -roundtrip  Create assembly file that can roundtrip to original binary.
-````
+</code></pre>
 </details>
 <details>
-   <summary>krakatau-assemble command-line arguments</summary></p>
+   <summary>krakatau-assemble command-line arguments</summary>
+<pre><code>shell&gt; jddlab krakatau-assemble --help
+usage: assemble.py [-h] [-out OUT] [-r] [-q] target
 
-<p>````
-shell> jddlab krakatau-assemble --help
-usage: assemble.py [-h] [-out OUT] [-r] [-q] target</p>
+Krakatau bytecode assembler
 
-<p>Krakatau bytecode assembler</p>
+positional arguments:
+  target      Name of file to assemble
 
-<p>positional arguments:
-  target      Name of file to assemble</p>
-
-<p>options:
+options:
   -h, --help  show this help message and exit
   -out OUT    Path to generate files in
   -r          Process all files in the directory target and subdirectories
   -q          Only display warnings and errors
-````
+</code></pre>
 </details>
 <details>
-   <summary>krakatau2 command-line arguments</summary></p>
+   <summary>krakatau2 command-line arguments</summary>
+<pre><code>shell&gt; jddlab krakatau2 help
+krakatau2 2.0.0-alpha
 
-<p>````
-shell> jddlab krakatau2 help
-krakatau2 2.0.0-alpha</p>
+USAGE:
+    krak2 &lt;SUBCOMMAND&gt;
 
-<p>USAGE:
-    krak2 <SUBCOMMAND></p>
-
-<p>OPTIONS:
+OPTIONS:
     -h, --help       Print help information
-    -V, --version    Print version information</p>
+    -V, --version    Print version information
 
-<p>SUBCOMMANDS:
-    asm<br />
-    dis<br />
+SUBCOMMANDS:
+    asm     
+    dis     
     help    Print this message or the help of the given subcommand(s)
-````
-</details></p>
-
-<h3>APKEditor - Powerful android apk editor</h3>
-
-<p>URL: https://github.com/REAndroid/APKEditor  </p>
-
-<p>Powerful android apk resources editor. 
-It can: Decompile, Build, Merge, Refactor, Protect, Show Info.
+</code></pre>
+</details>
+<h3 id="apkeditor---powerful-android-apk-editor">APKEditor - Powerful android apk editor</h3>
+<p>URL: <a href="https://github.com/REAndroid/APKEditor">https://github.com/REAndroid/APKEditor</a></p>
+<p>Powerful android apk resources editor.
+It can: Decompile, Build, Merge, Refactor, Protect, Show Info.</p>
 <details>
-   <summary>apkeditor command-line arguments</summary></p>
-
-<p>````
-shell> jddlab apkeditor -h
-APKEditor - 1.4.1<br />
-https://github.com/REAndroid/APKEditor<br />
-Android binary resource files editor<br />
-Commands:<br />
-  d | decode      Decodes android resources binary to readable json/xml/raw.<br />
-  b | build       Builds android binary from json/xml/raw.<br />
+   <summary>apkeditor command-line arguments</summary>
+<pre><code>shell&gt; jddlab apkeditor -h
+APKEditor - 1.4.1                                                               
+https://github.com/REAndroid/APKEditor                                          
+Android binary resource files editor                                            
+Commands:                                                                       
+  d | decode      Decodes android resources binary to readable json/xml/raw.    
+  b | build       Builds android binary from json/xml/raw.                      
   m | merge       Merges split apk files from directory or compressed apk files 
-                  like XAPK, APKM, APKS ...<br />
-  x | refactor    Refactors obfuscated resource names<br />
-  p | protect     Protects/Obfuscates apk resource files. Using unique<br />
-                  obfuscation techniques.<br />
-  info            Prints information of apk.<br />
-Other options:<br />
-  -h | -help      Displays this help and exit<br />
-  -v | -version   Displays version                                              </p>
-
-<p>To get help about each command run with:<br />
-<command> -h
-````
-</details></p>
-
-<h3>APKscan - tool to scan for secrets, endpoints, and other sensitive data after decompiling and deobfuscating Android files.</h3>
-
-<p>URL: https://github.com/LucasFaudman/apkscan  </p>
-
+                  like XAPK, APKM, APKS ...                                     
+  x | refactor    Refactors obfuscated resource names                           
+  p | protect     Protects/Obfuscates apk resource files. Using unique          
+                  obfuscation techniques.                                       
+  info            Prints information of apk.                                    
+Other options:                                                                  
+  -h | -help      Displays this help and exit                                   
+  -v | -version   Displays version                                              
+                                                                                
+To get help about each command run with:                                        
+&lt;command&gt; -h
+</code></pre>
+</details>
+<h3 id="apkscan---tool-to-scan-for-secrets-endpoints-and-other-sensitive-data-after-decompiling-and-deobfuscating-android-files">APKscan - tool to scan for secrets, endpoints, and other sensitive data after decompiling and deobfuscating Android files.</h3>
+<p>URL: <a href="https://github.com/LucasFaudman/apkscan">https://github.com/LucasFaudman/apkscan</a></p>
 <p>Scan for secrets, endpoints, and other sensitive data after decompiling and deobfuscating Android files.<br />
-(.apk, .xapk, .dex, .jar, .class, .smali, .zip, .aar, .arsc, .aab, .jadx.kts).
+(.apk, .xapk, .dex, .jar, .class, .smali, .zip, .aar, .arsc, .aab, .jadx.kts).</p>
 <details>
-   <summary>apkscan command-line arguments</summary></p>
-
-<p>````
-shell> jddlab apkscan -h
-usage: apkscan [-h] [-r [SECRET<em>LOCATOR</em>FILES ...]] [-o SECRETS<em>OUTPUT</em>FILE]
+   <summary>apkscan command-line arguments</summary>
+<pre><code>shell&gt; jddlab apkscan -h
+usage: apkscan [-h] [-r [SECRET_LOCATOR_FILES ...]] [-o SECRETS_OUTPUT_FILE]
                [-f {text,json,yaml}] [-g {file,locator,both}]
                [-c | --cleanup | --no-cleanup] [-q] [--jadx [JADX]]
                [--apktool [APKTOOL]] [--cfr [CFR]] [--procyon [PROCYON]]
@@ -914,43 +2094,43 @@ usage: apkscan [-h] [-r [SECRET<em>LOCATOR</em>FILES ...]] [-o SECRETS<em>OUTPUT
                [--enjarify-choice {auto,never,always}]
                [--unpack-xapks | --no-unpack-xapks]
                [-d | --deobfuscate | --no-deobfuscate]
-               [-w DECOMPILER<em>WORKING</em>DIR]
-               [--decompiler-output-suffix DECOMPILER<em>OUTPUT</em>SUFFIX]
-               [--decompiler-extra-args DECOMPILER<em>EXTRA</em>ARGS [DECOMPILER<em>EXTRA</em>ARGS ...]]
+               [-w DECOMPILER_WORKING_DIR]
+               [--decompiler-output-suffix DECOMPILER_OUTPUT_SUFFIX]
+               [--decompiler-extra-args DECOMPILER_EXTRA_ARGS [DECOMPILER_EXTRA_ARGS ...]]
                [-dct {thread,process,main}] [-dro {completed,submitted}]
-               [-dmw DECOMPILER<em>MAX</em>WORKERS] [-dcs DECOMPILER<em>CHUNKSIZE]
-               [-dto DECOMPILER</em>TIMEOUT] [-sct {thread,process,main}]
-               [-sro {completed,submitted}] [-smw SCANNER<em>MAX</em>WORKERS]
-               [-scs SCANNER<em>CHUNKSIZE] [-sto SCANNER</em>TIMEOUT]
-               [FILES<em>TO</em>SCAN ...]</p>
+               [-dmw DECOMPILER_MAX_WORKERS] [-dcs DECOMPILER_CHUNKSIZE]
+               [-dto DECOMPILER_TIMEOUT] [-sct {thread,process,main}]
+               [-sro {completed,submitted}] [-smw SCANNER_MAX_WORKERS]
+               [-scs SCANNER_CHUNKSIZE] [-sto SCANNER_TIMEOUT]
+               [FILES_TO_SCAN ...]
 
-<p>APKscan v0.4.0 - Scan for secrets, endpoints, and other sensitive
+APKscan v0.4.0 - Scan for secrets, endpoints, and other sensitive
 data after decompiling and deobfuscating Android files. (.apk,
 .xapk, .dex, .jar, .class, .smali, .zip, .aar, .arsc, .aab, .jadx.kts)
 (c) Lucas Faudman, 2024. License information in LICENSE file. Credits
-to the original authors of all dependencies used in this project. </p>
+to the original authors of all dependencies used in this project. 
 
-<p>options:
-  -h, --help            show this help message and exit</p>
+options:
+  -h, --help            show this help message and exit
 
-<p>Input Options:
-  FILES<em>TO</em>SCAN         Path(s) to Java files to decompile and scan.
-  -r [SECRET<em>LOCATOR</em>FILES ...], --rules [SECRET<em>LOCATOR</em>FILES ...]
+Input Options:
+  FILES_TO_SCAN         Path(s) to Java files to decompile and scan.
+  -r [SECRET_LOCATOR_FILES ...], --rules [SECRET_LOCATOR_FILES ...]
                         Path(s) to secret locator rules/patterns files OR
                         names of included locator sets. Files can be in
                         SecretLocator JSON, secret-patterns-db YAML, or
                         Gitleak TOML formats. Included locator sets:
-                        <strong>pycache</strong>, all<em>secret</em>locators, aws, azure, cloud,
+                        __pycache__, all_secret_locators, aws, azure, cloud,
                         curated, default, endpoints, gcp, generic, gitleaks,
-                        high-confidence, key<em>locators, leakin-regexes,
-                        locator</em>sort, locator<em>sort.cpython-310, nuclei-
+                        high-confidence, key_locators, leakin-regexes,
+                        locator_sort, locator_sort.cpython-310, nuclei-
                         regexes, secret. If not provided, default rules will
                         be used. See: /usr/local/python-
                         venv/lib/python3.10/site-
-                        packages/apkscan/secret</em>locators/default.json</p>
+                        packages/apkscan/secret_locators/default.json
 
-<p>Output Options:
-  -o SECRETS<em>OUTPUT</em>FILE, --output SECRETS<em>OUTPUT</em>FILE
+Output Options:
+  -o SECRETS_OUTPUT_FILE, --output SECRETS_OUTPUT_FILE
                         Output file for secrets found.
   -f {text,json,yaml}, --format {text,json,yaml}
                         Output format for secrets found.
@@ -960,13 +2140,13 @@ to the original authors of all dependencies used in this project. </p>
   -c, --cleanup, --no-cleanup
                         Remove decompiled output directories after scanning.
                         (default: False)
-  -q, --quiet           Suppress output from subprocesses.</p>
+  -q, --quiet           Suppress output from subprocesses.
 
-<p>Decompiler Choices:
+Decompiler Choices:
   Choose which decompiler(s) to use. Optionally specify path to decompiler
-  binary. Default is JADX.</p>
+  binary. Default is JADX.
 
-<p>--jadx [JADX], -J [JADX]
+  --jadx [JADX], -J [JADX]
                         Use JADX Java decompiler.
   --apktool [APKTOOL], -A [APKTOOL]
                         Use APKTool SMALI disassembler.
@@ -983,22 +2163,22 @@ to the original authors of all dependencies used in this project. </p>
                         use only when needed.
   --unpack-xapks, --no-unpack-xapks
                         Unpack XAPK files into APKs before decompiling.
-                        Default is True. (default: True)</p>
+                        Default is True. (default: True)
 
-<p>Decompiler Advanced Options:
-  Options for Java decompiler.</p>
+Decompiler Advanced Options:
+  Options for Java decompiler.
 
-<p>-d, --deobfuscate, --no-deobfuscate
+  -d, --deobfuscate, --no-deobfuscate
                         Deobfuscate file before scanning. (default: True)
-  -w DECOMPILER<em>WORKING</em>DIR, --decompiler-working-dir DECOMPILER<em>WORKING</em>DIR
+  -w DECOMPILER_WORKING_DIR, --decompiler-working-dir DECOMPILER_WORKING_DIR
                         Working directory where files will be decompiled.
-  --decompiler-output-suffix DECOMPILER<em>OUTPUT</em>SUFFIX
+  --decompiler-output-suffix DECOMPILER_OUTPUT_SUFFIX
                         Suffix for decompiled output directory names. Default
                         is '-decompiled'.
-  --decompiler-extra-args DECOMPILER<em>EXTRA</em>ARGS [DECOMPILER<em>EXTRA</em>ARGS ...]
+  --decompiler-extra-args DECOMPILER_EXTRA_ARGS [DECOMPILER_EXTRA_ARGS ...]
                         Additional arguments to pass to decompilers in form
-                        quoted whitespace separated '<DECOMPILER_NAME>
-                        <EXTRA_ARGS>...'. For example: --decompiler-extra-args
+                        quoted whitespace separated '&lt;DECOMPILER_NAME&gt;
+                        &lt;EXTRA_ARGS&gt;...'. For example: --decompiler-extra-args
                         'jadx --no-debug-info,--no-inline'.
   -dct {thread,process,main}, --decompiler-concurrency-type {thread,process,main}
                         Type of concurrency to use for decompilation. Default
@@ -1006,41 +2186,36 @@ to the original authors of all dependencies used in this project. </p>
   -dro {completed,submitted}, --decompiler-results-order {completed,submitted}
                         Order to process results from decompiler. Default is
                         'completed'.
-  -dmw DECOMPILER<em>MAX</em>WORKERS, --decompiler-max-workers DECOMPILER<em>MAX</em>WORKERS
+  -dmw DECOMPILER_MAX_WORKERS, --decompiler-max-workers DECOMPILER_MAX_WORKERS
                         Maximum number of workers to use for decompilation.
-  -dcs DECOMPILER<em>CHUNKSIZE, --decompiler-chunksize DECOMPILER</em>CHUNKSIZE
+  -dcs DECOMPILER_CHUNKSIZE, --decompiler-chunksize DECOMPILER_CHUNKSIZE
                         Number of files to decompile per thread/process.
-  -dto DECOMPILER<em>TIMEOUT, --decompiler-timeout DECOMPILER</em>TIMEOUT
-                        Timeout for decompilation in seconds.</p>
+  -dto DECOMPILER_TIMEOUT, --decompiler-timeout DECOMPILER_TIMEOUT
+                        Timeout for decompilation in seconds.
 
-<p>Secret Scanner Advanced Options:
-  Options for secret scanner.</p>
+Secret Scanner Advanced Options:
+  Options for secret scanner.
 
-<p>-sct {thread,process,main}, --scanner-concurrency-type {thread,process,main}
+  -sct {thread,process,main}, --scanner-concurrency-type {thread,process,main}
                         Type of concurrency to use for scanning. Default is
                         'process'.
   -sro {completed,submitted}, --scanner-results-order {completed,submitted}
                         Order to process results from scanner. Default is
                         'completed'.
-  -smw SCANNER<em>MAX</em>WORKERS, --scanner-max-workers SCANNER<em>MAX</em>WORKERS
+  -smw SCANNER_MAX_WORKERS, --scanner-max-workers SCANNER_MAX_WORKERS
                         Maximum number of workers to use for scanning.
-  -scs SCANNER<em>CHUNKSIZE, --scanner-chunksize SCANNER</em>CHUNKSIZE
+  -scs SCANNER_CHUNKSIZE, --scanner-chunksize SCANNER_CHUNKSIZE
                         Number of files to scan per thread/process.
-  -sto SCANNER<em>TIMEOUT, --scanner-timeout SCANNER</em>TIMEOUT
+  -sto SCANNER_TIMEOUT, --scanner-timeout SCANNER_TIMEOUT
                         Timeout for scanning in seconds.
-````
-</details></p>
-
-<h3>Enjarify - a tool for translating Dalvik bytecode to equivalent Java bytecode.</h3>
-
-<p>URL: https://github.com/LucasFaudman/enjarify-adapter  </p>
-
-<p>Translates Dalvik bytecode (.dex or .apk) to Java bytecode (.jar).
+</code></pre>
+</details>
+<h3 id="enjarify---a-tool-for-translating-dalvik-bytecode-to-equivalent-java-bytecode">Enjarify - a tool for translating Dalvik bytecode to equivalent Java bytecode.</h3>
+<p>URL: <a href="https://github.com/LucasFaudman/enjarify-adapter">https://github.com/LucasFaudman/enjarify-adapter</a></p>
+<p>Translates Dalvik bytecode (.dex or .apk) to Java bytecode (.jar).</p>
 <details>
-   <summary>enjarify command-line arguments</summary></p>
-
-<p>````
-shell> jddlab enjarify -H
+   <summary>enjarify command-line arguments</summary>
+<pre><code>shell&gt; jddlab enjarify -H
 usage: enjarify [-h] [-o OUTPUT] [-f] [-q]
                 [--inline-consts | --no-inline-consts]
                 [--prune-store-loads | --no-prune-store-loads]
@@ -1050,14 +2225,14 @@ usage: enjarify [-h] [-o OUTPUT] [-f] [-q]
                 [--sort-registers | --no-sort-registers]
                 [--split-pool | --no-split-pool]
                 [--delay-consts | --no-delay-consts]
-                INPUT_FILE</p>
+                INPUT_FILE
 
-<p>Translates Dalvik bytecode (.dex or .apk) to Java bytecode (.jar)</p>
+Translates Dalvik bytecode (.dex or .apk) to Java bytecode (.jar)
 
-<p>positional arguments:
-  INPUT_FILE            Input .dex or .apk file</p>
+positional arguments:
+  INPUT_FILE            Input .dex or .apk file
 
-<p>options:
+options:
   -h, --help            show this help message and exit
   -o OUTPUT, --output OUTPUT
                         Output .jar file. Default is [input-
@@ -1086,25 +2261,20 @@ usage: enjarify [-h] [-o OUTPUT] [-f] [-q]
                         False)
   --delay-consts, --no-delay-consts
                         Delay constants. Default is False. (default: False)
-````
-</details></p>
-
-<h3>Simplify - Android virtual machine and deobfuscator</h3>
-
-<p>URL: https://github.com/CalebFenton/simplify  </p>
-
-<p>Simplify virtually executes an app to understand its behavior and then tries to optimize the code so that it behaves 
-identically but is easier for a human to understand. Each optimization type is simple and generic, so it doesn't 
-matter what the specific type of obfuscation is used.
+</code></pre>
+</details>
+<h3 id="simplify---android-virtual-machine-and-deobfuscator">Simplify - Android virtual machine and deobfuscator</h3>
+<p>URL: <a href="https://github.com/CalebFenton/simplify">https://github.com/CalebFenton/simplify</a></p>
+<p>Simplify virtually executes an app to understand its behavior and then tries to optimize the code so that it behaves
+identically but is easier for a human to understand. Each optimization type is simple and generic, so it doesn't
+matter what the specific type of obfuscation is used.</p>
 <details>
-   <summary>simplify command-line arguments</summary></p>
-
-<p><code>
-shell&gt; jddlab simplify -h
+   <summary>simplify command-line arguments</summary>
+<pre><code>shell&gt; jddlab simplify -h
 usage: java -jar simplify.jar &lt;input&gt; [options]
 deobfuscates a dalvik executable
  -et,--exclude-types &lt;pattern&gt;   Exclude classes and methods which include
-                                 REGEX, eg: "com/android", applied after
+                                 REGEX, eg: &quot;com/android&quot;, applied after
                                  include-types
  -h,--help                       Display this message
  -ie,--ignore-errors             Ignore errors while executing and optimizing
@@ -1113,7 +2283,7 @@ deobfuscates a dalvik executable
                                  Android support library packages, default:
                                  false
  -it,--include-types &lt;pattern&gt;   Limit execution to classes and methods which
-                                 include REGEX, eg: ";-&gt;targetMethod\("
+                                 include REGEX, eg: &quot;;-&gt;targetMethod\(&quot;
     --max-address-visits &lt;N&gt;     Give up executing a method after visiting the
                                  same address N times, limits loops, default:
                                  10000
@@ -1133,38 +2303,31 @@ deobfuscates a dalvik executable
     --remove-weak                Remove code even if there are weak side
                                  effects, default: true
  -v,--verbose &lt;LEVEL&gt;            Set verbosity to LEVEL, default: 0
-</code>
-</details></p>
-
-<h3>Java Deobfuscator - can help to deobfuscate commercially-available obfuscators for Java.</h3>
-
-<p>URL: https://github.com/java-deobfuscator/deobfuscator  </p>
-
-<p>This project aims to deobfuscate most commercially-available obfuscators for Java.
+</code></pre>
+</details>
+<h3 id="java-deobfuscator---can-help-to-deobfuscate-commercially-available-obfuscators-for-java">Java Deobfuscator - can help to deobfuscate commercially-available obfuscators for Java.</h3>
+<p>URL: <a href="https://github.com/java-deobfuscator/deobfuscator">https://github.com/java-deobfuscator/deobfuscator</a></p>
+<p>This project aims to deobfuscate most commercially-available obfuscators for Java.</p>
 <details>
-   <summary>java-deobfuscator-detect command-line arguments</summary></p>
-
-<p><code>
-shell&gt; jddlab java-deobfuscator-detect
+   <summary>java-deobfuscator-detect command-line arguments</summary>
+<pre><code>shell&gt; jddlab java-deobfuscator-detect
 Format: java-deobfuscator-detect &lt;jar-file&gt;
-</code>
+</code></pre>
 </details>
 <details>
-   <summary>java-deobfuscator command-line arguments</summary></p>
+   <summary>java-deobfuscator command-line arguments</summary>
+<pre><code>shell&gt; jddlab java-deobfuscator
+Format: java-deobfuscator --config config.yml
 
-<p>````
-shell> jddlab java-deobfuscator
-Format: java-deobfuscator --config config.yml</p>
+config.yml example to determine the obfuscators used:
+--------------------------------------------
+input: input.jar
+detect: true
+--------------------------------------------
 
-<h2>config.yml example to determine the obfuscators used:</h2>
-
-<p>input: input.jar</p>
-
-<h2>detect: true</h2>
-
-<h2>config.yml example to transform:</h2>
-
-<p>input: input.jar
+config.yml example to transform:
+--------------------------------------------
+input: input.jar
 output: output.jar
 path:
  - /usr/local/android-sdk-linux/platforms/android-35/android.jar
@@ -1172,23 +2335,17 @@ transformers:
   - normalizer.MethodNormalizer:
       mapping-file: normalizer.txt
   - stringer.StringEncryptionTransformer
-  - normalizer.ClassNormalizer: {}</p>
-
-<h2>    normalizer.FieldNormalizer: {}</h2>
-
-<p>````
-</details></p>
-
-<h3>dex2jar - tools to work with android .dex and java .class files</h3>
-
-<p>URL: https://github.com/pxb1988/dex2jar  </p>
-
-<p>dex2jar - tool to convert Android .dex files (Dalvik Executable) to .jar format (to analyze Java bytecode).
+  - normalizer.ClassNormalizer: {}
+    normalizer.FieldNormalizer: {}
+--------------------------------------------
+</code></pre>
+</details>
+<h3 id="dex2jar---tools-to-work-with-android-dex-and-java-class-files">dex2jar - tools to work with android .dex and java .class files</h3>
+<p>URL: <a href="https://github.com/pxb1988/dex2jar">https://github.com/pxb1988/dex2jar</a></p>
+<p>dex2jar - tool to convert Android .dex files (Dalvik Executable) to .jar format (to analyze Java bytecode).</p>
 <details>
-   <summary>dex2jar command-line arguments</summary></p>
-
-<p><code>
-shell&gt; jddlab dex2jar --help
+   <summary>dex2jar command-line arguments</summary>
+<pre><code>shell&gt; jddlab dex2jar --help
 d2j-dex2jar -- convert dex to jar
 usage: d2j-dex2jar [options] &lt;file0&gt; [file1 ... fileN]
 options:
@@ -1207,85 +2364,73 @@ options:
  -s                           same with --topological-sort/-ts
  -ts,--topological-sort       sort block by topological, that will generate more
                                readable code, default enabled
-</code>
-</details></p>
-
-<h3>smali and baksmali - tools for assembling and disassembling Android .dex bytecode</h3>
-
-<p>URL: https://github.com/google/smali<br />
-URL: https://github.com/baksmali/smali/releases (compiled standalone fat-versions)  </p>
-
-<p><strong>smali</strong> is an assembler for the Android .dex (Dalvik Executable) bytecode format, allowing for the creation or modification of bytecode files.
+</code></pre>
+</details>
+<h3 id="smali-and-baksmali---tools-for-assembling-and-disassembling-android-dex-bytecode">smali and baksmali - tools for assembling and disassembling Android .dex bytecode</h3>
+<p>URL: <a href="https://github.com/google/smali">https://github.com/google/smali</a><br />
+URL: <a href="https://github.com/baksmali/smali/releases">https://github.com/baksmali/smali/releases</a> (compiled standalone fat-versions)</p>
+<p><strong>smali</strong> is an assembler for the Android .dex (Dalvik Executable) bytecode format, allowing for the creation or modification of bytecode files.</p>
 <details>
-   <summary>smali command-line arguments</summary></p>
+   <summary>smali command-line arguments</summary>
+<pre><code>shell&gt; jddlab smali --help
+usage: smali [-h] [-v] [&lt;command [&lt;args&gt;]]
 
-<p>````
-shell> jddlab smali --help
-usage: smali [-h] [-v] [<command [<args>]]</p>
-
-<p>Options:
+Options:
   -h,-?,--help - Show usage information
-  -v,--version - Print the version of baksmali and then exit</p>
+  -v,--version - Print the version of baksmali and then exit
 
-<p>Commands:
+Commands:
   assemble(ass,as,a) - Assembles smali files into a dex file.
-  help(h) - Shows usage information</p>
+  help(h) - Shows usage information
 
-<p>See smali help <command> for more information about a specific command
-````
-</details></p>
-
-<p><strong>baksmali</strong> is a disassembler for .dex bytecode, converting it into readable smali code for analysis and modification of Android applications.
+See smali help &lt;command&gt; for more information about a specific command
+</code></pre>
+</details>
+<p><strong>baksmali</strong> is a disassembler for .dex bytecode, converting it into readable smali code for analysis and modification of Android applications.</p>
 <details>
-   <summary>baksmali command-line arguments</summary></p>
+   <summary>baksmali command-line arguments</summary>
+<pre><code>shell&gt; jddlab baksmali --help
+usage: baksmali [--help] [--version] [&lt;command [&lt;args&gt;]]
 
-<p>````
-shell> jddlab baksmali --help
-usage: baksmali [--help] [--version] [<command [<args>]]</p>
-
-<p>Options:
+Options:
   --help,-h,-? - Show usage information
-  --version,-v - Print the version of baksmali and then exit</p>
+  --version,-v - Print the version of baksmali and then exit
 
-<p>Commands:
+Commands:
   deodex(de,x) - Deodexes an odex/oat file
   disassemble(dis,d) - Disassembles a dex file.
   dump(du) - Prints an annotated hex dump for the given dex file
   help(h) - Shows usage information
-  list(l) - Lists various objects in a dex file.</p>
+  list(l) - Lists various objects in a dex file.
 
-<p>See baksmali help <command> for more information about a specific command
-````
-</details></p>
+See baksmali help &lt;command&gt; for more information about a specific command
+</code></pre>
+</details>
+<h3 id="androguard---the-swiss-army-knife-which-combines-lot-of-tools">androguard - the swiss army knife which combines lot of tools</h3>
+<p>URL: <a href="https://github.com/androguard/androguard">https://github.com/androguard/androguard</a></p>
+<p>Androguard is a tool to play with Android files (DEX, ODEX, APK, Android’s binary xml, Android resources).</p>
+<ul>
+<li>Decompile APKs and create CFG</li>
+<li>Disassembler for DEX</li>
+<li>Androguard Shell</li>
+<li>Create Call Graph from APK</li>
+<li>Print Certificate Fingerprints</li>
+<li>AndroidManifest.xml parser</li>
+<li>resources.arsc parser</li>
+</ul>
+<details>
+   <summary>androguard command-line arguments</summary>
+<pre><code>shell&gt; jddlab androguard --help
+Usage: androguard [OPTIONS] COMMAND [ARGS]...
 
-<h3>androguard - the swiss army knife which combines lot of tools</h3>
+  Androguard is a full Python tool to reverse Android Applications.
 
-<p>URL: https://github.com/androguard/androguard  </p>
-
-<p>Androguard is a tool to play with Android files (DEX, ODEX, APK, Android’s binary xml, Android resources).
-- Decompile APKs and create CFG
-- Disassembler for DEX
-- Androguard Shell
-- Create Call Graph from APK
-- Print Certificate Fingerprints
-- AndroidManifest.xml parser
-- resources.arsc parser</p>
-
-<p><details>
-   <summary>androguard command-line arguments</summary></p>
-
-<p>````
-shell> jddlab androguard --help
-Usage: androguard [OPTIONS] COMMAND [ARGS]...</p>
-
-<p>Androguard is a full Python tool to reverse Android Applications.</p>
-
-<p>Options:
+Options:
   --version           Show the version and exit.
   --verbose, --debug  Print more
-  --help              Show this message and exit.</p>
+  --help              Show this message and exit.
 
-<p>Commands:
+Commands:
   analyze      Open a IPython Shell and start reverse engineering.
   apkid        Return the packageName/versionCode/versionName per APK as...
   arsc         Decode resources.arsc either directly from a given file or...
@@ -1297,15 +2442,11 @@ Usage: androguard [OPTIONS] COMMAND [ARGS]...</p>
   dump         Start and dump dynamically an installed APK on the phone
   sign         Return the fingerprint(s) of all certificates inside an APK.
   trace        Push an APK on the phone and start to trace all...
-````
-</details></p>
-
-<h3>objection - runtime mobile exploration toolkit</h3>
-
-<p>URL: https://github.com/sensepost/objection  </p>
-
+</code></pre>
+</details>
+<h3 id="objection---runtime-mobile-exploration-toolkit">objection - runtime mobile exploration toolkit</h3>
+<p>URL: <a href="https://github.com/sensepost/objection">https://github.com/sensepost/objection</a></p>
 <p>Objection is a Frida-powered toolkit for runtime analysis of mobile apps, which can:</p>
-
 <ul>
 <li>Bypass SSL pinning.</li>
 <li>Inspect and interact with container file systems.</li>
@@ -1313,15 +2454,12 @@ Usage: androguard [OPTIONS] COMMAND [ARGS]...</p>
 <li>Perform memory related tasks, such as dumping &amp; patching.</li>
 <li>Explore and manipulate objects on the heap.</li>
 </ul>
+<details>
+   <summary>objection command-line arguments</summary>
+<pre><code>shell&gt; jddlab objection --help
+Usage: objection [OPTIONS] COMMAND [ARGS]...
 
-<p><details>
-   <summary>objection command-line arguments</summary></p>
-
-<p>````
-shell> jddlab objection --help
-Usage: objection [OPTIONS] COMMAND [ARGS]...</p>
-
-<p>Options:
+Options:
   -N, --network            Connect using a network connection instead of USB.
   -h, --host TEXT          [default: 127.0.0.1]
   -P, --port INTEGER       [default: 27042]
@@ -1335,9 +2473,9 @@ Usage: objection [OPTIONS] COMMAND [ARGS]...</p>
   -f, --foremost           Use the current foremost application.
   --debugger               Enable the Chrome debug port.
   --uid TEXT               Specify the uid to run as (Android only).
-  --help                   Show this message and exit.</p>
+  --help                   Show this message and exit.
 
-<p>Commands:
+Commands:
   api       Start the objection API server in headless mode.
   patchapk  Patch an APK with the frida-gadget.so.
   patchipa  Patch an IPA with the FridaGadget dylib.
@@ -1345,158 +2483,122 @@ Usage: objection [OPTIONS] COMMAND [ARGS]...</p>
   signapk   Zipalign and sign an APK with the objection key.
   start     Start a new session
   version   Prints the current version and exits.
-````
-</details></p>
+</code></pre>
+</details>
+<details>
+   <summary>Example 1. Disable SSL pinning for 'com.app.name':</summary>
+<pre><code>jddlab
+# Connect to a device via TCP/IP (you should pair device before using wireless debug)
+adb connect 192.168.1.45:38191
+connected to 192.168.1.45:38191
 
-<p><details>
-   <summary>Example 1. Disable SSL pinning for 'com.app.name':</summary></p>
-
-<p>````
-jddlab</p>
-
-<h1>Connect to a device via TCP/IP (you should pair device before using wireless debug)</h1>
-
-<p>adb connect 192.168.1.45:38191
-connected to 192.168.1.45:38191</p>
-
-<h1>Add Frida gadget to APK</h1>
-
-<p>objection patchapk --source app.apk
-No architecture specified. Determining it using <code>adb</code>...
+# Add Frida gadget to APK
+objection patchapk --source app.apk
+No architecture specified. Determining it using `adb`...
 Detected target device architecture as: arm64-v8a
 Writing patched smali back to: /tmp/tmptlo0epk4.apktemp/smali_classes3/com/app/test/certpinning/MainActivity.smali
 Built new APK with injected loadLibrary and frida-gadget
-Signed the new APK</p>
+Signed the new APK
 
-<h1>Installing patched apk</h1>
-
-<p>adb install -r app.objection.apk
+# Installing patched apk
+adb install -r app.objection.apk
 Performing Streamed Install
-Success</p>
+Success
 
-<h1>Running application</h1>
+# Running application
+adb shell monkey -p com.app.name 1
+Events injected: 1
 
-<p>adb shell monkey -p com.app.name 1
-Events injected: 1</p>
+# Using objection to disable SSL pinning
+objection -g &quot;Gadget&quot; explore -s &quot;android sslpinning disable&quot;
+</code></pre>
+</details>
+<details>
+   <summary>Example 2. Disable SSL pinning for 'com.app.name' for Android 10 (using Frida 16 gadget and objection@16)</summary>
+<pre><code>jddlab
+# Connect to a device via TCP/IP (you should pair device before using wireless debug)
+adb connect 192.168.1.45:38191
 
-<h1>Using objection to disable SSL pinning</h1>
-
-<p>objection -g "Gadget" explore -s "android sslpinning disable"
-````
-</details></p>
-
-<p><details>
-   <summary>Example 2. Disable SSL pinning for 'com.app.name' for Android 10 (using Frida 16 gadget and objection@16)</summary></p>
-
-<p>````
-jddlab</p>
-
-<h1>Connect to a device via TCP/IP (you should pair device before using wireless debug)</h1>
-
-<p>adb connect 192.168.1.45:38191</p>
-
-<h1>Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)</h1>
-
-<p>objection@16 patchapk --source app.apk --gadget-version 16.1.3
+# Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)
+objection@16 patchapk --source app.apk --gadget-version 16.1.3
 Patcher will be using Gadget version: 16.1.3
-Signed the new APK</p>
+Signed the new APK
 
-<h1>Installing patched apk</h1>
-
-<p>adb install -r app.objection.apk
+# Installing patched apk
+adb install -r app.objection.apk
 Performing Streamed Install
-Success</p>
+Success
 
-<h1>Running application</h1>
+# Running application
+adb shell monkey -p com.app.name 1
+Events injected: 1
 
-<p>adb shell monkey -p com.app.name 1
-Events injected: 1</p>
-
-<h1>Using objection to disable SSL pinning (we are using Frida v16.x.x compatible objection to control application)</h1>
-
-<p>objection@16 -g "Gadget" explore -s "android sslpinning disable"
-````
-</details></p>
-
-<h3>ghidra - Software Reverse Engineering Framework</h3>
-
-<p>URL: https://github.com/NationalSecurityAgency/ghidra  </p>
-
-<p>Ghidra is useful while analyzing JNI native libraries. Ghidra framework includes a suite of full-featured, high-end software analysis tools that enable users to analyze compiled code on a variety of platforms including Windows, macOS, and Linux. Capabilities include disassembly, assembly, decompilation, graphing, and scripting, along with hundreds of other features. Ghidra supports a wide variety of processor instruction sets and executable formats and can be run in both user-interactive and automated modes. </p>
-
-<p>Example 1. Decompiling protected.so dynamic library:
-<code>
-jddlab ghidra-decompile protected.so
+# Using objection to disable SSL pinning (we are using Frida v16.x.x compatible objection to control application)
+objection@16 -g &quot;Gadget&quot; explore -s &quot;android sslpinning disable&quot;
+</code></pre>
+</details>
+<h3 id="ghidra---software-reverse-engineering-framework">ghidra - Software Reverse Engineering Framework</h3>
+<p>URL: <a href="https://github.com/NationalSecurityAgency/ghidra">https://github.com/NationalSecurityAgency/ghidra</a></p>
+<p>Ghidra is useful while analyzing JNI native libraries. Ghidra framework includes a suite of full-featured, high-end software analysis tools that enable users to analyze compiled code on a variety of platforms including Windows, macOS, and Linux. Capabilities include disassembly, assembly, decompilation, graphing, and scripting, along with hundreds of other features. Ghidra supports a wide variety of processor instruction sets and executable formats and can be run in both user-interactive and automated modes.</p>
+<p>Example 1. Decompiling <a href="http://protected.so">protected.so</a> dynamic library:</p>
+<pre><code>jddlab ghidra-decompile protected.so
 Result:
 INFO  CustomDecompileScript.java&gt; Decompilation completed. Output written to: protected.so.c (GhidraScript)
-</code></p>
-
-<p><details>
-   <summary>ghidra command-line arguments</summary></p>
-
-<p>````
-shell> jddlab ghidra
+</code></pre>
+<details>
+   <summary>ghidra command-line arguments</summary>
+<pre><code>shell&gt; jddlab ghidra
 Headless Analyzer Usage: analyzeHeadless
-           <project_location> <project_name>[/<folder_path>]
-             | ghidra://<server>[:<port>]/<repository_name>[/<folder_path>]
-           [[-import [<directory>|<file>]+] | [-process [<project_file>]]]
-           [-prescript <ScriptName>]
-           [-postscript <ScriptName>]
-           [-scriptPath "<path1>[;<path2>...]"]
-           [-propertiesPath "<path1>[;<path2>...]"]
-           [-scriptlog <path to script log file>]
-           [-log <path to log file>]
+           &lt;project_location&gt; &lt;project_name&gt;[/&lt;folder_path&gt;]
+             | ghidra://&lt;server&gt;[:&lt;port&gt;]/&lt;repository_name&gt;[/&lt;folder_path&gt;]
+           [[-import [&lt;directory&gt;|&lt;file&gt;]+] | [-process [&lt;project_file&gt;]]]
+           [-prescript &lt;ScriptName&gt;]
+           [-postscript &lt;ScriptName&gt;]
+           [-scriptPath &quot;&lt;path1&gt;[;&lt;path2&gt;...]&quot;]
+           [-propertiesPath &quot;&lt;path1&gt;[;&lt;path2&gt;...]&quot;]
+           [-scriptlog &lt;path to script log file&gt;]
+           [-log &lt;path to log file&gt;]
            [-overwrite]
            [-recursive]
            [-readOnly]
            [-deleteproject]
            [-noanalysis]
-           [-processor <languageID>]
-           [-cspec <compilerSpecID>]
-           [-analysisTimeoutPerFile <timeout in seconds>]
-           [-keystore <KeystorePath>]
-           [-connect [<userID>]]
+           [-processor &lt;languageID&gt;]
+           [-cspec &lt;compilerSpecID&gt;]
+           [-analysisTimeoutPerFile &lt;timeout in seconds&gt;]
+           [-keystore &lt;KeystorePath&gt;]
+           [-connect [&lt;userID&gt;]]
            [-p]
-           [-commit ["<comment>"]]]
+           [-commit [&quot;&lt;comment&gt;&quot;]]]
            [-okToDelete]
-           [-max-cpu <max cpu cores to use>]
-           [-librarySearchPaths <path1>[;<path2>...]]
-           [-loader <desired loader name>]
-           [-loader-<loader argument name> <loader argument value>]</p>
+           [-max-cpu &lt;max cpu cores to use&gt;]
+           [-librarySearchPaths &lt;path1&gt;[;&lt;path2&gt;...]]
+           [-loader &lt;desired loader name&gt;]
+           [-loader-&lt;loader argument name&gt; &lt;loader argument value&gt;]
 
-<pre><code> - All uses of $GHIDRA_HOME or $USER_HOME in script path must be preceded by '\'
+     - All uses of $GHIDRA_HOME or $USER_HOME in script path must be preceded by '\'
+
+Please refer to 'analyzeHeadless README.html' for detailed usage examples and notes.
 </code></pre>
-
-<p>Please refer to 'analyzeHeadless README.html' for detailed usage examples and notes.
-````
-</details></p>
-
-<p><details>
-   <summary>ghidra-decompile command-line arguments</summary></p>
-
-<p><code>
-shell&gt; jddlab ghidra-decompile
+</details>
+<details>
+   <summary>ghidra-decompile command-line arguments</summary>
+<pre><code>shell&gt; jddlab ghidra-decompile
 Command-line tool to decompile binary file with ghidra
 Format: ghidra-decompile &lt;input-binary-file&gt; [&lt;output-file-for-c-code&gt;]
 Example: ghidra-decompile test.so test.code.c
-</code>
-</details></p>
-
-<h3>android-unpinner - remove certificate pinning from APKs</h3>
-
-<p>URL: https://github.com/mitmproxy/android-unpinner</p>
-
+</code></pre>
+</details>
+<h3 id="android-unpinner---remove-certificate-pinning-from-apks">android-unpinner - remove certificate pinning from APKs</h3>
+<p>URL: <a href="https://github.com/mitmproxy/android-unpinner">https://github.com/mitmproxy/android-unpinner</a></p>
 <p>android-unpinner removes certificate pinning from APKs. Does not require root.</p>
+<details>
+   <summary>android-unpinner command-line arguments</summary>
+<pre><code>shell&gt; jddlab android-unpinner --help
 
-<p><details>
-   <summary>android-unpinner command-line arguments</summary></p>
-
-<p>````
-shell> jddlab android-unpinner --help</p>
-
-<p>Usage: android-unpinner [OPTIONS] COMMAND [ARGS]...                            </p>
-
-<p>╭─ Options ────────────────────────────────────────────────────────────────────╮
+ Usage: android-unpinner [OPTIONS] COMMAND [ARGS]...                            
+                                                                                
+╭─ Options ────────────────────────────────────────────────────────────────────╮
 │ --help      Show this message and exit.                                      │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ───────────────────────────────────────────────────────────────────╮
@@ -1509,92 +2611,75 @@ shell> jddlab android-unpinner --help</p>
 │ push-resources    Copy Frida gadget and scripts to device.                   │
 │ start-app         Start app on device and inject Frida gadget.               │
 ╰──────────────────────────────────────────────────────────────────────────────╯
-````
-</details></p>
-
-<p>Example 1. Removing certificate pinning from test.apk:
-<code>
-jddlab android-unpinner patch-apks test.apk 
+</code></pre>
+</details>
+<p>Example 1. Removing certificate pinning from test.apk:</p>
+<pre><code>jddlab android-unpinner patch-apks test.apk 
 Result:
 [23:27:04] Patching test.apk...
 [23:27:04] Make APK debuggable...
 [23:27:13] Zipalign &amp; re-sign APK...
 [23:27:24] Created patched APK: test.unpinned.apk
 [23:27:24] All done! 🎉
-</code></p>
+</code></pre>
+<h3 id="apk-patcher---the-easiest-way-to-integrate-frida-into-apk">apk-patcher - the easiest way to integrate Frida into APK</h3>
+<p>URL: <a href="https://github.com/Foo-Manroot/apk-patcher">https://github.com/Foo-Manroot/apk-patcher</a></p>
+<p>&quot;When trying to modify an android application, Frida comes really handy. However, on non-rooted devices it can sometimes be difficult to inject the gadget into the apk. This is in my experience less and less true, since I encounter every time more APKs that, one way or another, break something along the process. Since apktool decodes all resources, just a missing reference makes the whole process fail. On the other hand, split APKs (those that come with not only a base.apk, but also other files like *_config.xxhdpi.apk et al.) are harder to recompile, because there are certain dependencies between those different files, and fixing all the resource IDs (which has to be done before apktool lets you merge all into a fat APK) is a pain that not always fully works. This script aims to help with the injection task, by modifying the least amount of files possible so there are no issues later with the resources.&quot;</p>
+<details>
+   <summary>apk-patcher command-line arguments</summary>
+<pre><code>shell&gt; jddlab apk-patcher -h
 
-<h3>apk-patcher - the easiest way to integrate Frida into APK</h3>
-
-<p>URL: https://github.com/Foo-Manroot/apk-patcher  </p>
-
-<p>"When trying to modify an android application, Frida comes really handy. However, on non-rooted devices it can sometimes be difficult to inject the gadget into the apk. This is in my experience less and less true, since I encounter every time more APKs that, one way or another, break something along the process. Since apktool decodes all resources, just a missing reference makes the whole process fail. On the other hand, split APKs (those that come with not only a base.apk, but also other files like *_config.xxhdpi.apk et al.) are harder to recompile, because there are certain dependencies between those different files, and fixing all the resource IDs (which has to be done before apktool lets you merge all into a fat APK) is a pain that not always fully works. This script aims to help with the injection task, by modifying the least amount of files possible so there are no issues later with the resources."</p>
-
-<p><details>
-   <summary>apk-patcher command-line arguments</summary></p>
-
-<p>````
-shell> jddlab apk-patcher -h</p>
-
-<p>usage: APK patcher
+usage: APK patcher
        [-h]
        [-f]
-       [-c GADGET<em>CONFIG]
+       [-c GADGET_CONFIG]
        [-v]
-       [-l frida</em>script]
-       [-a {armeabi-v7a,arm64-v8a,x86,x86<em>64}]
-       [-d DIR</em>LIB]
-       base_path</p>
+       [-l frida_script]
+       [-a {armeabi-v7a,arm64-v8a,x86,x86_64}]
+       [-d DIR_LIB]
+       base_path
 
-<p>Script to automate the decompilation, patch and rebuild of any Android split applications (those apps that have base.apk, plus .config.<something>.apk) to inject the provided Frida script.</p>
+Script to automate the decompilation, patch and rebuild of any Android split applications (those apps that have base.apk, plus .config.&lt;something&gt;.apk) to inject the provided Frida script.
 
-<p>positional arguments:
-  base<em>path
+positional arguments:
+  base_path
     Common prefix for all the split apk files.
     For example, if we have:
       - com.example.1234.apk
-      - com.example.1234.config.armeabi</em>v7a.apk
+      - com.example.1234.config.armeabi_v7a.apk
       - com.example.1234.config.en.apk
-      - com.example.1234.config.xxhdpi.apk</p>
+      - com.example.1234.config.xxhdpi.apk
+    
+    'base-name' must be &quot;com.example.1234.&quot; (note the dot at the end)
 
-<pre><code>'base-name' must be "com.example.1234." (note the dot at the end)
-</code></pre>
-
-<p>options:
+options:
   -h, --help
     show this help message and exit
-  -f, --fix<em>manifest
+  -f, --fix_manifest
     If set, the script will attempt to modify AndroidManifest.xml to set extractNativeLibs=true.
-    ATTENTION: it may cause problems like 'INSTALL</em>PARSE<em>FAILED</em>UNEXPECTED<em>EXCEPTION' on installation.
-  -c GADGET</em>CONFIG, --config GADGET<em>CONFIG
+    ATTENTION: it may cause problems like 'INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION' on installation.
+  -c GADGET_CONFIG, --config GADGET_CONFIG
     Path to a custom Gadget config ( https://frida.re/docs/gadget/ )
   -v, --verbose
     Increase the verbosity. Can be specified up to 3 times.
-  -l frida</em>script, --load frida<em>script
+  -l frida_script, --load frida_script
     The JS file to patch into the apk.
-  -a {armeabi-v7a,arm64-v8a,x86,x86</em>64}, --arch {armeabi-v7a,arm64-v8a,x86,x86<em>64}
+  -a {armeabi-v7a,arm64-v8a,x86,x86_64}, --arch {armeabi-v7a,arm64-v8a,x86,x86_64}
     Bypass the ABI detection and force the usage of a specific architecture for the injected Frida gadget.
-  -d DIR</em>LIB, --dir-lib DIR_LIB
-    Force the Frida gadget to be injected into a specific directory within the APK. For example: <code>-d 'lib/arm/' -a x86_64</code>.
+  -d DIR_LIB, --dir-lib DIR_LIB
+    Force the Frida gadget to be injected into a specific directory within the APK. For example: `-d 'lib/arm/' -a x86_64`.
     Requires --arch
-````
-</details></p>
-
-<p>Example. Integrating Frida into APK (test.apk)
-```</p>
-
-<h1>Attention: use your APK filename without extension + dot at the end "test.apk" =&gt; "test."</h1>
-
-<h1>For split APKs it's expected you have "%base%config.%lang%.apk", "%base%config.%arch%.apk", "%base%config.%dpi%.apk"</h1>
-
-<h1>For example: test.apk, test.config.en.apk, test.config.arm64_v8a.apk, test.config.xxhdpi.apk</h1>
-
-<p>jddlab apk-patcher ./test.
-```
+</code></pre>
+</details>
+<p>Example. Integrating Frida into APK (test.apk)</p>
+<pre><code># Attention: use your APK filename without extension + dot at the end &quot;test.apk&quot; =&gt; &quot;test.&quot;
+# For split APKs it's expected you have &quot;%base%config.%lang%.apk&quot;, &quot;%base%config.%arch%.apk&quot;, &quot;%base%config.%dpi%.apk&quot;
+# For example: test.apk, test.config.en.apk, test.config.arm64_v8a.apk, test.config.xxhdpi.apk
+jddlab apk-patcher ./test.
+</code></pre>
 <details>
-   <summary>Result</summary></p>
-
-<p><code>
-2025-01-28 21:05:15.291 | INFO     | Using /work/test.patched as working directory.
+   <summary>Result</summary>
+<pre><code>2025-01-28 21:05:15.291 | INFO     | Using /work/test.patched as working directory.
 2025-01-28 21:05:15.294 | INFO     | Found parts: ['test.apk']
 2025-01-28 21:05:15.323 | INFO     | Found entry point(s): ['com.mytest.MainActivity']
 2025-01-28 21:05:15.406 | INFO     | Parsing classes.dex...
@@ -1615,80 +2700,63 @@ shell> jddlab apk-patcher -h</p>
 [DEBUG][JAVA] Original Zip file: 131258290 Bytes // Aligned Zip file: 131348436 Bytes.
 [DEBUG][JAVA] Apk signed.
 2025-01-28 21:05:56.323 | SUCCESS  | [+] All done! The output APK can be found under /work/test.patched
-</code>
-</details></p>
-
-<h2>Troubleshooting</h2>
-
-<p><details>
-   <summary><b>Docker errors: <code>Cannot connect to the Docker daemon</code> / <code>docker: command not found</code></b></summary></p>
-
+</code></pre>
+</details>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<details>
+   <summary><b>Docker errors: <code>Cannot connect to the Docker daemon</code> / <code>docker: command not found</code></b></summary>
 <ul>
 <li>Make sure Docker is installed and the Docker engine/Desktop is <strong>running</strong>.</li>
 <li>On Windows, install and enable <a href="https://learn.microsoft.com/en-us/windows/wsl/install">WSL2</a>
 and enable WSL integration in Docker Desktop settings.</li>
 <li>On Linux, either add your user to the <code>docker</code> group (<code>sudo usermod -aG docker $USER</code>,
-then re-login) or run the command with <code>sudo</code>.
-</details></li>
+then re-login) or run the command with <code>sudo</code>.</li>
 </ul>
-
-<p><details>
-   <summary><b>Files created by jddlab are owned by <code>root</code> (Linux/macOS)</b></summary></p>
-
+</details>
+<details>
+   <summary><b>Files created by jddlab are owned by <code>root</code> (Linux/macOS)</b></summary>
 <p>Recent launcher versions run the container as your host user by default, so new
 files under <code>/work</code> are owned by you. If you still see root-owned files:</p>
-
 <ul>
 <li>Update the launcher (re-download <code>jddlab</code>) and run <code>jddlab update</code> to get an
 image that supports UID mapping.</li>
 <li>Make sure you did not set <code>JDDLAB_ROOT=1</code>.</li>
-<li>To fix already-created files: <code>sudo chown -R "$(id -u):$(id -g)" .</code></li>
+<li>To fix already-created files: <code>sudo chown -R &quot;$(id -u):$(id -g)&quot; .</code></li>
 <li>If you run the raw <code>docker run</code> command instead of the launcher, add
-<code>--user "$(id -u):$(id -g)" -e HOME=/root</code> yourself.
-</details></li>
+<code>--user &quot;$(id -u):$(id -g)&quot; -e HOME=/root</code> yourself.</li>
 </ul>
-
-<p><details>
-   <summary><b>A tool cannot see my file / <code>No such file or directory</code></b></summary></p>
-
+</details>
+<details>
+   <summary><b>A tool cannot see my file / <code>No such file or directory</code></b></summary>
 <p>Only the <strong>current directory and its subfolders</strong> are mounted into the container
 as <code>/work</code>. Files outside it are not visible. <code>cd</code> into the folder that contains
 your APK before running jddlab, and reference files by relative path
-(<code>./app.apk</code>) or as <code>/work/app.apk</code>.
-</details></p>
-
-<p><details>
-   <summary><b>ADB cannot find my device</b></summary></p>
-
+(<code>./app.apk</code>) or as <code>/work/app.apk</code>.</p>
+</details>
+<details>
+   <summary><b>ADB cannot find my device</b></summary>
 <ul>
 <li>Use wireless debugging as described in <a href="#how-to-use-adb-with-jddlab">How to use ADB with jddlab</a>.</li>
 <li>To forward the host ADB server into the container, run <code>adb start-server</code> on
 the host and uncomment the <code>--network=host</code> line in the <code>jddlab</code> launcher.</li>
 <li>See the <a href="#how-to-use-adb-with-jddlab">Security warning</a> about the preinstalled
-ADB keys and mounting your own <code>~/.android</code>.
-</details></li>
+ADB keys and mounting your own <code>~/.android</code>.</li>
 </ul>
-
-<p><details>
-   <summary><b><code>OutOfMemoryError</code> / a decompiler is killed on a large APK</b></summary></p>
-
-<p>Increase the JVM heap for the tool, e.g. <code>JAVA_OPTS="-Xmx6g"</code>, and make sure
-Docker has enough memory allotted (Docker Desktop → Settings → Resources).
-</details></p>
-
-<p><details>
-   <summary><b><code>jddlab update</code> says the image is up to date but a tool is outdated</b></summary></p>
-
+</details>
+<details>
+   <summary><b><code>OutOfMemoryError</code> / a decompiler is killed on a large APK</b></summary>
+<p>Increase the JVM heap for the tool, e.g. <code>JAVA_OPTS=&quot;-Xmx6g&quot;</code>, and make sure
+Docker has enough memory allotted (Docker Desktop → Settings → Resources).</p>
+</details>
+<details>
+   <summary><b><code>jddlab update</code> says the image is up to date but a tool is outdated</b></summary>
 <p><code>jddlab update</code> pulls <code>stanislavpovolotsky/jddlab:latest</code>. Run <code>jddlab versions</code>
 to see the exact bundled tool versions. If a tool is behind upstream, open an
-issue - the image is rebuilt to track upstream releases.
-</details></p>
-
-<h2>License</h2>
-
+issue - the image is rebuilt to track upstream releases.</p>
+</details>
+<h2 id="license">License</h2>
 <p>The original jddlab code in this repository (launcher scripts, <code>scripts/</code>,
-<code>mcp/</code>, and <code>skills/</code>) is released under the <a href="LICENSE">MIT License</a>.</p>
-
+<code>mcp/</code>, and <code>skills/</code>) is released under the <a href="LICENSE.html">MIT License</a>.</p>
 <p>jddlab is a <strong>pack</strong>: it bundles many independent third-party reverse-engineering
 tools into a Docker image, and <strong>each bundled tool keeps its own license</strong> and
 belongs to its respective authors. The MIT license above does not supersede
@@ -1697,3 +2765,8 @@ image at <code>/usr/local/jddlab/software-list.txt</code> (<code>jddlab versions
 <a href="https://github.com/Stanislav-Povolotsky/jddlab/releases">release</a>. Review each
 upstream project's license before redistribution or commercial use.</p>
 
+</article>
+<script src="hljs/highlight.min.js"></script>
+<script>document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('pre code[class*="language-"]').forEach(function(el){hljs.highlightElement(el);});});</script>
+</body>
+</html>

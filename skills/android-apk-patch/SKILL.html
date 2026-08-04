@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Android APK Patching &amp;amp; Repackaging - jddlab Edition</title>
+<link rel="stylesheet" href="../../hljs/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="../../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
+<style>
+.markdown-body {
+  --base-size-16: 1rem;
+  --base-size-24: 1.5rem;
+  --base-size-4: 0.25rem;
+  --base-size-40: 2.5rem;
+  --base-size-8: 0.5rem;
+  --base-text-weight-medium: 500;
+  --base-text-weight-normal: 400;
+  --base-text-weight-semibold: 600;
+  --fontStack-monospace: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+  --fontStack-sansSerif: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --fgColor-accent: Highlight;
+}
+@media (prefers-color-scheme: dark) {
+  .markdown-body, [data-theme="dark"] {
+    /*dark */
+    color-scheme: dark;
+    --fgColor-accent: #4493f8;
+    --bgColor-attention-muted: #bb800926;
+    --bgColor-default: #0d1117;
+    --bgColor-muted: #151b23;
+    --bgColor-neutral-muted: #656c7633;
+    --borderColor-accent-emphasis: #1f6feb;
+    --borderColor-attention-emphasis: #9e6a03;
+    --borderColor-danger-emphasis: #da3633;
+    --borderColor-default: #3d444d;
+    --borderColor-done-emphasis: #8957e5;
+    --borderColor-success-emphasis: #238636;
+    --color-prettylights-syntax-brackethighlighter-angle: #9198a1;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+    --color-prettylights-syntax-carriage-return-bg: #b62324;
+    --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+    --color-prettylights-syntax-comment: #9198a1;
+    --color-prettylights-syntax-constant: #79c0ff;
+    --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+    --color-prettylights-syntax-entity: #d2a8ff;
+    --color-prettylights-syntax-entity-tag: #7ee787;
+    --color-prettylights-syntax-keyword: #ff7b72;
+    --color-prettylights-syntax-markup-bold: #f0f6fc;
+    --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+    --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+    --color-prettylights-syntax-markup-deleted-bg: #67060c;
+    --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+    --color-prettylights-syntax-markup-heading: #1f6feb;
+    --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+    --color-prettylights-syntax-markup-ignored-text: #f0f6fc;
+    --color-prettylights-syntax-markup-inserted-bg: #033a16;
+    --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+    --color-prettylights-syntax-markup-italic: #f0f6fc;
+    --color-prettylights-syntax-markup-list: #f2cc60;
+    --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+    --color-prettylights-syntax-storage-modifier-import: #f0f6fc;
+    --color-prettylights-syntax-string: #a5d6ff;
+    --color-prettylights-syntax-string-regexp: #7ee787;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #3d444d;
+    --color-prettylights-syntax-variable: #ffa657;
+    --fgColor-attention: #d29922;
+    --fgColor-danger: #f85149;
+    --fgColor-default: #f0f6fc;
+    --fgColor-done: #ab7df8;
+    --fgColor-muted: #9198a1;
+    --fgColor-success: #3fb950;
+    --borderColor-muted: #3d444db3;
+    --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
+    --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
+    --focus-outlineColor: var(--borderColor-accent-emphasis);
+    --borderColor-neutral-muted: var(--borderColor-muted);
+  }
+}
+@media (prefers-color-scheme: light) {
+  .markdown-body, [data-theme="light"] {
+    /*light */
+    color-scheme: light;
+    --fgColor-danger: #d1242f;
+    --bgColor-attention-muted: #fff8c5;
+    --bgColor-muted: #f6f8fa;
+    --bgColor-neutral-muted: #818b981f;
+    --borderColor-accent-emphasis: #0969da;
+    --borderColor-attention-emphasis: #9a6700;
+    --borderColor-danger-emphasis: #cf222e;
+    --borderColor-default: #d1d9e0;
+    --borderColor-done-emphasis: #8250df;
+    --borderColor-success-emphasis: #1a7f37;
+    --color-prettylights-syntax-brackethighlighter-angle: #59636e;
+    --color-prettylights-syntax-brackethighlighter-unmatched: #82071e;
+    --color-prettylights-syntax-carriage-return-bg: #cf222e;
+    --color-prettylights-syntax-carriage-return-text: #f6f8fa;
+    --color-prettylights-syntax-comment: #59636e;
+    --color-prettylights-syntax-constant: #0550ae;
+    --color-prettylights-syntax-constant-other-reference-link: #0a3069;
+    --color-prettylights-syntax-entity: #6639ba;
+    --color-prettylights-syntax-entity-tag: #0550ae;
+    --color-prettylights-syntax-invalid-illegal-text: var(--fgColor-danger);
+    --color-prettylights-syntax-keyword: #cf222e;
+    --color-prettylights-syntax-markup-changed-bg: #ffd8b5;
+    --color-prettylights-syntax-markup-changed-text: #953800;
+    --color-prettylights-syntax-markup-deleted-bg: #ffebe9;
+    --color-prettylights-syntax-markup-deleted-text: #82071e;
+    --color-prettylights-syntax-markup-heading: #0550ae;
+    --color-prettylights-syntax-markup-ignored-bg: #0550ae;
+    --color-prettylights-syntax-markup-ignored-text: #d1d9e0;
+    --color-prettylights-syntax-markup-inserted-bg: #dafbe1;
+    --color-prettylights-syntax-markup-inserted-text: #116329;
+    --color-prettylights-syntax-markup-list: #3b2300;
+    --color-prettylights-syntax-meta-diff-range: #8250df;
+    --color-prettylights-syntax-string: #0a3069;
+    --color-prettylights-syntax-string-regexp: #116329;
+    --color-prettylights-syntax-sublimelinter-gutter-mark: #818b98;
+    --color-prettylights-syntax-variable: #953800;
+    --fgColor-accent: #0969da;
+    --fgColor-attention: #9a6700;
+    --fgColor-done: #8250df;
+    --fgColor-muted: #59636e;
+    --fgColor-success: #1a7f37;
+    --bgColor-default: #ffffff;
+    --borderColor-muted: #d1d9e0b3;
+    --color-prettylights-syntax-invalid-illegal-bg: var(--bgColor-danger-muted);
+    --color-prettylights-syntax-markup-bold: #1f2328;
+    --color-prettylights-syntax-markup-italic: #1f2328;
+    --color-prettylights-syntax-storage-modifier-import: #1f2328;
+    --fgColor-default: #1f2328;
+    --focus-outlineColor: var(--borderColor-accent-emphasis);
+    --borderColor-neutral-muted: var(--borderColor-muted);
+  }
+}
+
+.markdown-body {
+  /** CSS default easing. Use for hover state changes and micro-interactions. */
+  /** Accelerating motion. Use for elements exiting the viewport (moving off-screen). */
+  /** Smooth acceleration and deceleration. Use for elements moving or morphing within the viewport. */
+  /** Decelerating motion. Use for elements entering the viewport or appearing on screen. */
+  /** Constant motion with no acceleration. Use for continuous animations like progress bars or loaders. */
+  -ms-text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+  margin: 0;
+  font-weight: var(--base-text-weight-normal, 400);
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-default);
+  font-family: var(--fontStack-sansSerif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji");
+  font-size: 16px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.markdown-body a {
+  text-decoration: underline;
+  text-underline-offset: .2rem;
+}
+
+.markdown-body .octicon {
+  display: inline-block;
+  fill: currentColor;
+  vertical-align: text-bottom;
+}
+
+.markdown-body h1:hover .anchor .octicon-link:before,
+.markdown-body h2:hover .anchor .octicon-link:before,
+.markdown-body h3:hover .anchor .octicon-link:before,
+.markdown-body h4:hover .anchor .octicon-link:before,
+.markdown-body h5:hover .anchor .octicon-link:before,
+.markdown-body h6:hover .anchor .octicon-link:before {
+  width: 16px;
+  height: 16px;
+  content: ' ';
+  display: inline-block;
+  background-color: currentColor;
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' aria-hidden='true'><path fill-rule='evenodd' d='M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z'></path></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' version='1.1' aria-hidden='true'><path fill-rule='evenodd' d='M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-4.69 9.64a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z'></path></svg>");
+}
+
+.markdown-body details,
+.markdown-body figcaption,
+.markdown-body figure {
+  display: block;
+}
+
+.markdown-body summary {
+  display: list-item;
+}
+
+.markdown-body [hidden] {
+  display: none !important;
+}
+
+.markdown-body a {
+  background-color: rgba(0,0,0,0);
+  color: var(--fgColor-accent);
+  text-decoration: none;
+}
+
+.markdown-body abbr[title] {
+  border-bottom: none;
+  -webkit-text-decoration: underline dotted;
+  text-decoration: underline dotted;
+}
+
+.markdown-body b,
+.markdown-body strong {
+  font-weight: var(--base-text-weight-semibold, 600);
+}
+
+.markdown-body dfn {
+  font-style: italic;
+}
+
+.markdown-body h1 {
+  margin: .67em 0;
+  font-weight: var(--base-text-weight-semibold, 600);
+  padding-bottom: .3em;
+  font-size: 2em;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body mark {
+  background-color: var(--bgColor-attention-muted);
+  color: var(--fgColor-default);
+}
+
+.markdown-body small {
+  font-size: 90%;
+}
+
+.markdown-body sub,
+.markdown-body sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.markdown-body sub {
+  bottom: -0.25em;
+}
+
+.markdown-body sup {
+  top: -0.5em;
+}
+
+.markdown-body img {
+  border-style: none;
+  max-width: 100%;
+  box-sizing: content-box;
+}
+
+.markdown-body code,
+.markdown-body kbd,
+.markdown-body pre,
+.markdown-body samp {
+  font-family: monospace;
+  font-size: 1em;
+}
+
+.markdown-body figure {
+  margin: 1em var(--base-size-40);
+}
+
+.markdown-body hr {
+  box-sizing: content-box;
+  overflow: hidden;
+  background: rgba(0,0,0,0);
+  border-bottom: 1px solid var(--borderColor-muted);
+  height: .25em;
+  padding: 0;
+  margin: var(--base-size-24) 0;
+  background-color: var(--borderColor-default);
+  border: 0;
+}
+
+.markdown-body input {
+  font: inherit;
+  margin: 0;
+  overflow: visible;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.markdown-body [type=button],
+.markdown-body [type=reset],
+.markdown-body [type=submit] {
+  -webkit-appearance: button;
+  appearance: button;
+}
+
+.markdown-body [type=checkbox],
+.markdown-body [type=radio] {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+.markdown-body [type=number]::-webkit-inner-spin-button,
+.markdown-body [type=number]::-webkit-outer-spin-button {
+  height: auto;
+}
+
+.markdown-body [type=search]::-webkit-search-cancel-button,
+.markdown-body [type=search]::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.markdown-body ::-webkit-input-placeholder {
+  color: inherit;
+  opacity: .54;
+}
+
+.markdown-body ::-webkit-file-upload-button {
+  -webkit-appearance: button;
+  appearance: button;
+  font: inherit;
+}
+
+.markdown-body a:hover {
+  text-decoration: underline;
+}
+
+.markdown-body ::placeholder {
+  color: var(--fgColor-muted);
+  opacity: 1;
+}
+
+.markdown-body hr::before {
+  display: table;
+  content: "";
+}
+
+.markdown-body hr::after {
+  display: table;
+  clear: both;
+  content: "";
+}
+
+.markdown-body table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow: auto;
+  font-variant: tabular-nums;
+}
+
+.markdown-body td,
+.markdown-body th {
+  padding: 0;
+}
+
+.markdown-body details summary {
+  cursor: pointer;
+}
+
+.markdown-body a:focus,
+.markdown-body [role=button]:focus,
+.markdown-body input[type=radio]:focus,
+.markdown-body input[type=checkbox]:focus {
+  outline: 2px solid var(--focus-outlineColor);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+.markdown-body a:focus:not(:focus-visible),
+.markdown-body [role=button]:focus:not(:focus-visible),
+.markdown-body input[type=radio]:focus:not(:focus-visible),
+.markdown-body input[type=checkbox]:focus:not(:focus-visible) {
+  outline: solid 1px rgba(0,0,0,0);
+}
+
+.markdown-body a:focus-visible,
+.markdown-body [role=button]:focus-visible,
+.markdown-body input[type=radio]:focus-visible,
+.markdown-body input[type=checkbox]:focus-visible {
+  outline: 2px solid var(--focus-outlineColor);
+  outline-offset: -2px;
+  box-shadow: none;
+}
+
+.markdown-body a:not([class]):focus,
+.markdown-body a:not([class]):focus-visible,
+.markdown-body input[type=radio]:focus,
+.markdown-body input[type=radio]:focus-visible,
+.markdown-body input[type=checkbox]:focus,
+.markdown-body input[type=checkbox]:focus-visible {
+  outline-offset: 0;
+}
+
+.markdown-body kbd {
+  display: inline-block;
+  padding: var(--base-size-4);
+  font: 11px var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
+  line-height: 10px;
+  color: var(--fgColor-default);
+  vertical-align: middle;
+  background-color: var(--bgColor-muted);
+  border: solid 1px var(--borderColor-neutral-muted);
+  border-bottom-color: var(--borderColor-neutral-muted);
+  border-radius: 6px;
+  box-shadow: inset 0 -1px 0 var(--borderColor-neutral-muted);
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  margin-top: var(--base-size-24);
+  margin-bottom: var(--base-size-16);
+  font-weight: var(--base-text-weight-semibold, 600);
+  line-height: 1.25;
+}
+
+.markdown-body h2 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  padding-bottom: .3em;
+  font-size: 1.5em;
+  border-bottom: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body h3 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: 1.25em;
+}
+
+.markdown-body h4 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: 1em;
+}
+
+.markdown-body h5 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: .875em;
+}
+
+.markdown-body h6 {
+  font-weight: var(--base-text-weight-semibold, 600);
+  font-size: .85em;
+  color: var(--fgColor-muted);
+}
+
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.markdown-body blockquote {
+  margin: 0;
+  padding: 0 1em;
+  color: var(--fgColor-muted);
+  border-left: .25em solid var(--borderColor-default);
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 2em;
+}
+
+.markdown-body ol ol,
+.markdown-body ul ol {
+  list-style-type: lower-roman;
+}
+
+.markdown-body ul ul ol,
+.markdown-body ul ol ol,
+.markdown-body ol ul ol,
+.markdown-body ol ol ol {
+  list-style-type: lower-alpha;
+}
+
+.markdown-body dd {
+  margin-left: 0;
+}
+
+.markdown-body tt,
+.markdown-body code,
+.markdown-body samp {
+  font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
+  font-size: 12px;
+}
+
+.markdown-body pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-family: var(--fontStack-monospace, ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace);
+  font-size: 12px;
+  word-wrap: normal;
+}
+
+.markdown-body .octicon {
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-body input::-webkit-outer-spin-button,
+.markdown-body input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.markdown-body .mr-2 {
+  margin-right: var(--base-size-8, 8px) !important;
+}
+
+.markdown-body::before {
+  display: table;
+  content: "";
+}
+
+.markdown-body::after {
+  display: table;
+  clear: both;
+  content: "";
+}
+
+.markdown-body>*:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+.markdown-body a:not([href]) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.markdown-body .absent {
+  color: var(--fgColor-danger);
+}
+
+.markdown-body .anchor {
+  float: left;
+  padding-right: var(--base-size-4);
+  margin-left: -20px;
+  line-height: 1;
+}
+
+.markdown-body .anchor:focus {
+  outline: none;
+}
+
+.markdown-body p,
+.markdown-body blockquote,
+.markdown-body ul,
+.markdown-body ol,
+.markdown-body dl,
+.markdown-body table,
+.markdown-body pre,
+.markdown-body details {
+  margin-top: 0;
+  margin-bottom: var(--base-size-16);
+}
+
+.markdown-body blockquote>:first-child {
+  margin-top: 0;
+}
+
+.markdown-body blockquote>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body h1 .octicon-link,
+.markdown-body h2 .octicon-link,
+.markdown-body h3 .octicon-link,
+.markdown-body h4 .octicon-link,
+.markdown-body h5 .octicon-link,
+.markdown-body h6 .octicon-link {
+  color: var(--fgColor-default);
+  vertical-align: middle;
+  visibility: hidden;
+}
+
+.markdown-body h1:hover .anchor,
+.markdown-body h2:hover .anchor,
+.markdown-body h3:hover .anchor,
+.markdown-body h4:hover .anchor,
+.markdown-body h5:hover .anchor,
+.markdown-body h6:hover .anchor {
+  text-decoration: none;
+}
+
+.markdown-body h1:hover .anchor .octicon-link,
+.markdown-body h2:hover .anchor .octicon-link,
+.markdown-body h3:hover .anchor .octicon-link,
+.markdown-body h4:hover .anchor .octicon-link,
+.markdown-body h5:hover .anchor .octicon-link,
+.markdown-body h6:hover .anchor .octicon-link {
+  visibility: visible;
+}
+
+.markdown-body h1 tt,
+.markdown-body h1 code,
+.markdown-body h2 tt,
+.markdown-body h2 code,
+.markdown-body h3 tt,
+.markdown-body h3 code,
+.markdown-body h4 tt,
+.markdown-body h4 code,
+.markdown-body h5 tt,
+.markdown-body h5 code,
+.markdown-body h6 tt,
+.markdown-body h6 code {
+  padding: 0 .2em;
+  font-size: inherit;
+}
+
+.markdown-body summary h1,
+.markdown-body summary h2,
+.markdown-body summary h3,
+.markdown-body summary h4,
+.markdown-body summary h5,
+.markdown-body summary h6 {
+  display: inline-block;
+}
+
+.markdown-body summary h1 .anchor,
+.markdown-body summary h2 .anchor,
+.markdown-body summary h3 .anchor,
+.markdown-body summary h4 .anchor,
+.markdown-body summary h5 .anchor,
+.markdown-body summary h6 .anchor {
+  margin-left: -40px;
+}
+
+.markdown-body summary h1,
+.markdown-body summary h2 {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.markdown-body ul.no-list,
+.markdown-body ol.no-list {
+  padding: 0;
+  list-style-type: none;
+}
+
+.markdown-body ol[type="a s"] {
+  list-style-type: lower-alpha;
+}
+
+.markdown-body ol[type="A s"] {
+  list-style-type: upper-alpha;
+}
+
+.markdown-body ol[type="i s"] {
+  list-style-type: lower-roman;
+}
+
+.markdown-body ol[type="I s"] {
+  list-style-type: upper-roman;
+}
+
+.markdown-body ol[type="1"] {
+  list-style-type: decimal;
+}
+
+.markdown-body div>ol:not([type]) {
+  list-style-type: decimal;
+}
+
+.markdown-body ul ul,
+.markdown-body ul ol,
+.markdown-body ol ol,
+.markdown-body ol ul {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.markdown-body li>p {
+  margin-top: var(--base-size-16);
+}
+
+.markdown-body li+li {
+  margin-top: .25em;
+}
+
+.markdown-body dl {
+  padding: 0;
+}
+
+.markdown-body dl dt {
+  padding: 0;
+  margin-top: var(--base-size-16);
+  font-size: 1em;
+  font-style: italic;
+  font-weight: var(--base-text-weight-semibold, 600);
+}
+
+.markdown-body dl dd {
+  padding: 0 var(--base-size-16);
+  margin-bottom: var(--base-size-16);
+}
+
+.markdown-body table th {
+  font-weight: var(--base-text-weight-semibold, 600);
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid var(--borderColor-default);
+}
+
+.markdown-body table td>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body table tr {
+  background-color: var(--bgColor-default);
+  border-top: 1px solid var(--borderColor-muted);
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: var(--bgColor-muted);
+}
+
+.markdown-body table img {
+  background-color: rgba(0,0,0,0);
+}
+
+.markdown-body img[align=right] {
+  padding-left: 20px;
+}
+
+.markdown-body img[align=left] {
+  padding-right: 20px;
+}
+
+.markdown-body .emoji {
+  max-width: none;
+  vertical-align: text-top;
+  background-color: rgba(0,0,0,0);
+}
+
+.markdown-body span.frame {
+  display: block;
+  overflow: hidden;
+}
+
+.markdown-body span.frame>span {
+  display: block;
+  float: left;
+  width: auto;
+  padding: 7px;
+  margin: 13px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--borderColor-default);
+}
+
+.markdown-body span.frame span img {
+  display: block;
+  float: left;
+}
+
+.markdown-body span.frame span span {
+  display: block;
+  padding: 5px 0 0;
+  clear: both;
+  color: var(--fgColor-default);
+}
+
+.markdown-body span.align-center {
+  display: block;
+  overflow: hidden;
+  clear: both;
+}
+
+.markdown-body span.align-center>span {
+  display: block;
+  margin: 13px auto 0;
+  overflow: hidden;
+  text-align: center;
+}
+
+.markdown-body span.align-center span img {
+  margin: 0 auto;
+  text-align: center;
+}
+
+.markdown-body span.align-right {
+  display: block;
+  overflow: hidden;
+  clear: both;
+}
+
+.markdown-body span.align-right>span {
+  display: block;
+  margin: 13px 0 0;
+  overflow: hidden;
+  text-align: right;
+}
+
+.markdown-body span.align-right span img {
+  margin: 0;
+  text-align: right;
+}
+
+.markdown-body span.float-left {
+  display: block;
+  float: left;
+  margin-right: 13px;
+  overflow: hidden;
+}
+
+.markdown-body span.float-left span {
+  margin: 13px 0 0;
+}
+
+.markdown-body span.float-right {
+  display: block;
+  float: right;
+  margin-left: 13px;
+  overflow: hidden;
+}
+
+.markdown-body span.float-right>span {
+  display: block;
+  margin: 13px auto 0;
+  overflow: hidden;
+  text-align: right;
+}
+
+.markdown-body code,
+.markdown-body tt {
+  padding: .2em .4em;
+  margin: 0;
+  font-size: 85%;
+  white-space: break-spaces;
+  background-color: var(--bgColor-neutral-muted);
+  border-radius: 6px;
+}
+
+.markdown-body code br,
+.markdown-body tt br {
+  display: none;
+}
+
+.markdown-body del code {
+  text-decoration: inherit;
+}
+
+.markdown-body samp {
+  font-size: 85%;
+}
+
+.markdown-body pre code {
+  font-size: 100%;
+}
+
+.markdown-body pre>code {
+  padding: 0;
+  margin: 0;
+  word-break: normal;
+  white-space: pre;
+  background: rgba(0,0,0,0);
+  border: 0;
+}
+
+.markdown-body .highlight {
+  margin-bottom: var(--base-size-16);
+}
+
+.markdown-body .highlight pre {
+  margin-bottom: 0;
+  word-break: normal;
+}
+
+.markdown-body .highlight pre,
+.markdown-body pre {
+  padding: var(--base-size-16);
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  color: var(--fgColor-default);
+  background-color: var(--bgColor-muted);
+  border-radius: 6px;
+}
+
+.markdown-body pre code,
+.markdown-body pre tt {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  line-height: inherit;
+  word-wrap: normal;
+  background-color: rgba(0,0,0,0);
+  border: 0;
+}
+
+.markdown-body .csv-data td,
+.markdown-body .csv-data th {
+  padding: 5px;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.markdown-body .csv-data .blob-num {
+  padding: 10px var(--base-size-8) 9px;
+  text-align: right;
+  background: var(--bgColor-default);
+  border: 0;
+}
+
+.markdown-body .csv-data tr {
+  border-top: 0;
+}
+
+.markdown-body .csv-data th {
+  font-weight: var(--base-text-weight-semibold, 600);
+  background: var(--bgColor-muted);
+  border-top: 0;
+}
+
+.markdown-body [data-footnote-ref]::before {
+  content: "[";
+}
+
+.markdown-body [data-footnote-ref]::after {
+  content: "]";
+}
+
+.markdown-body .footnotes {
+  font-size: 12px;
+  color: var(--fgColor-muted);
+  border-top: 1px solid var(--borderColor-default);
+}
+
+.markdown-body .footnotes ol {
+  padding-left: var(--base-size-16);
+}
+
+.markdown-body .footnotes ol ul {
+  display: inline-block;
+  padding-left: var(--base-size-16);
+  margin-top: var(--base-size-16);
+}
+
+.markdown-body .footnotes li {
+  position: relative;
+}
+
+.markdown-body .footnotes li:target::before {
+  position: absolute;
+  top: calc(var(--base-size-8)*-1);
+  right: calc(var(--base-size-8)*-1);
+  bottom: calc(var(--base-size-8)*-1);
+  left: calc(var(--base-size-24)*-1);
+  pointer-events: none;
+  content: "";
+  border: 2px solid var(--borderColor-accent-emphasis);
+  border-radius: 6px;
+}
+
+.markdown-body .footnotes li:target {
+  color: var(--fgColor-default);
+}
+
+.markdown-body .footnotes .data-footnote-backref g-emoji {
+  font-family: monospace;
+}
+
+.markdown-body .pl-c {
+  color: var(--color-prettylights-syntax-comment);
+}
+
+.markdown-body .pl-c1,
+.markdown-body .pl-s .pl-v {
+  color: var(--color-prettylights-syntax-constant);
+}
+
+.markdown-body .pl-e,
+.markdown-body .pl-en {
+  color: var(--color-prettylights-syntax-entity);
+}
+
+.markdown-body .pl-smi,
+.markdown-body .pl-s .pl-s1 {
+  color: var(--color-prettylights-syntax-storage-modifier-import);
+}
+
+.markdown-body .pl-ent {
+  color: var(--color-prettylights-syntax-entity-tag);
+}
+
+.markdown-body .pl-k {
+  color: var(--color-prettylights-syntax-keyword);
+}
+
+.markdown-body .pl-s,
+.markdown-body .pl-pds,
+.markdown-body .pl-s .pl-pse .pl-s1,
+.markdown-body .pl-sr,
+.markdown-body .pl-sr .pl-cce,
+.markdown-body .pl-sr .pl-sre,
+.markdown-body .pl-sr .pl-sra {
+  color: var(--color-prettylights-syntax-string);
+}
+
+.markdown-body .pl-v,
+.markdown-body .pl-smw {
+  color: var(--color-prettylights-syntax-variable);
+}
+
+.markdown-body .pl-bu {
+  color: var(--color-prettylights-syntax-brackethighlighter-unmatched);
+}
+
+.markdown-body .pl-ii {
+  color: var(--color-prettylights-syntax-invalid-illegal-text);
+  background-color: var(--color-prettylights-syntax-invalid-illegal-bg);
+}
+
+.markdown-body .pl-c2 {
+  color: var(--color-prettylights-syntax-carriage-return-text);
+  background-color: var(--color-prettylights-syntax-carriage-return-bg);
+}
+
+.markdown-body .pl-sr .pl-cce {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-string-regexp);
+}
+
+.markdown-body .pl-ml {
+  color: var(--color-prettylights-syntax-markup-list);
+}
+
+.markdown-body .pl-mh,
+.markdown-body .pl-mh .pl-en,
+.markdown-body .pl-ms {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-markup-heading);
+}
+
+.markdown-body .pl-mi {
+  font-style: italic;
+  color: var(--color-prettylights-syntax-markup-italic);
+}
+
+.markdown-body .pl-mb {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-markup-bold);
+}
+
+.markdown-body .pl-md {
+  color: var(--color-prettylights-syntax-markup-deleted-text);
+  background-color: var(--color-prettylights-syntax-markup-deleted-bg);
+}
+
+.markdown-body .pl-mi1 {
+  color: var(--color-prettylights-syntax-markup-inserted-text);
+  background-color: var(--color-prettylights-syntax-markup-inserted-bg);
+}
+
+.markdown-body .pl-mc {
+  color: var(--color-prettylights-syntax-markup-changed-text);
+  background-color: var(--color-prettylights-syntax-markup-changed-bg);
+}
+
+.markdown-body .pl-mi2 {
+  color: var(--color-prettylights-syntax-markup-ignored-text);
+  background-color: var(--color-prettylights-syntax-markup-ignored-bg);
+}
+
+.markdown-body .pl-mdr {
+  font-weight: bold;
+  color: var(--color-prettylights-syntax-meta-diff-range);
+}
+
+.markdown-body .pl-ba {
+  color: var(--color-prettylights-syntax-brackethighlighter-angle);
+}
+
+.markdown-body .pl-sg {
+  color: var(--color-prettylights-syntax-sublimelinter-gutter-mark);
+}
+
+.markdown-body .pl-corl {
+  text-decoration: underline;
+  color: var(--color-prettylights-syntax-constant-other-reference-link);
+}
+
+.markdown-body [role=button]:focus:not(:focus-visible),
+.markdown-body [role=tabpanel][tabindex="0"]:focus:not(:focus-visible),
+.markdown-body button:focus:not(:focus-visible),
+.markdown-body summary:focus:not(:focus-visible),
+.markdown-body a:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+.markdown-body [tabindex="0"]:focus:not(:focus-visible),
+.markdown-body details-dialog:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.markdown-body g-emoji {
+  display: inline-block;
+  min-width: 1ch;
+  font-family: "Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";
+  font-size: 1em;
+  font-style: normal !important;
+  font-weight: var(--base-text-weight-normal, 400);
+  line-height: 1;
+  vertical-align: -0.075em;
+}
+
+.markdown-body g-emoji img {
+  width: 1em;
+  height: 1em;
+}
+
+.markdown-body a:has(>p,>div,>pre,>blockquote) {
+  display: block;
+}
+
+.markdown-body a:has(>p,>div,>pre,>blockquote):not(:has(.snippet-clipboard-content,>pre)) {
+  width: fit-content;
+}
+
+.markdown-body a:has(>p,>div,>pre,>blockquote):has(.snippet-clipboard-content,>pre):focus-visible {
+  outline: 2px solid var(--focus-outlineColor);
+  outline-offset: 2px;
+}
+
+.markdown-body .task-list-item {
+  list-style-type: none;
+}
+
+.markdown-body .task-list-item label {
+  font-weight: var(--base-text-weight-normal, 400);
+}
+
+.markdown-body .task-list-item.enabled label {
+  cursor: pointer;
+}
+
+.markdown-body .task-list-item+.task-list-item {
+  margin-top: var(--base-size-4);
+}
+
+.markdown-body .task-list-item .handle {
+  display: none;
+}
+
+.markdown-body .task-list-item-checkbox {
+  margin: 0 .2em .25em -1.4em;
+  vertical-align: middle;
+}
+
+.markdown-body ul:dir(rtl) .task-list-item-checkbox {
+  margin: 0 -1.6em .25em .2em;
+}
+
+.markdown-body ol:dir(rtl) .task-list-item-checkbox {
+  margin: 0 -1.6em .25em .2em;
+}
+
+.markdown-body .contains-task-list:hover .task-list-item-convert-container,
+.markdown-body .contains-task-list:focus-within .task-list-item-convert-container {
+  display: block;
+  width: auto;
+  height: 24px;
+  overflow: visible;
+  clip-path: none;
+}
+
+.markdown-body ::-webkit-calendar-picker-indicator {
+  filter: invert(50%);
+}
+
+.markdown-body .markdown-alert {
+  padding: var(--base-size-8) var(--base-size-16);
+  margin-bottom: var(--base-size-16);
+  color: inherit;
+  border-left: .25em solid var(--borderColor-default);
+}
+
+.markdown-body .markdown-alert>:first-child {
+  margin-top: 0;
+}
+
+.markdown-body .markdown-alert>:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body .markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: var(--base-text-weight-medium, 500);
+  align-items: center;
+  line-height: 1;
+}
+
+.markdown-body .markdown-alert.markdown-alert-note {
+  border-left-color: var(--borderColor-accent-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--fgColor-accent);
+}
+
+.markdown-body .markdown-alert.markdown-alert-important {
+  border-left-color: var(--borderColor-done-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--fgColor-done);
+}
+
+.markdown-body .markdown-alert.markdown-alert-warning {
+  border-left-color: var(--borderColor-attention-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--fgColor-attention);
+}
+
+.markdown-body .markdown-alert.markdown-alert-tip {
+  border-left-color: var(--borderColor-success-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--fgColor-success);
+}
+
+.markdown-body .markdown-alert.markdown-alert-caution {
+  border-left-color: var(--borderColor-danger-emphasis);
+}
+
+.markdown-body .markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--fgColor-danger);
+}
+
+.markdown-body>*:first-child>.heading-element:first-child {
+  margin-top: 0 !important;
+}
+
+.markdown-body .highlight pre:has(+.zeroclipboard-container) {
+  min-height: 52px;
+}
+
+
+:root { color-scheme: light dark; }
+body { margin: 0; background: #ffffff; }
+.page-nav { font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  max-width: 980px; margin: 0 auto; padding: 12px 45px 0; box-sizing: border-box; }
+.page-nav a { color: #0969da; text-decoration: none; }
+.page-nav a:hover { text-decoration: underline; }
+.markdown-body { box-sizing: border-box; max-width: 980px; margin: 0 auto; padding: 24px 45px 60px; }
+/* let the highlight.js theme own code-block colors */
+.markdown-body pre { padding: 0; }
+.markdown-body pre > code.hljs { display: block; padding: 16px; border-radius: 6px; overflow: auto; }
+@media (max-width: 767px) { .markdown-body, .page-nav { padding-left: 15px; padding-right: 15px; } }
+@media (prefers-color-scheme: dark) { body { background: #0d1117; } .page-nav a { color: #4493f8; } }
+</style>
+</head>
+<body>
+<div class="page-nav"><a href="../../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
+<article class="markdown-body">
+
+<h1 id="android-apk-patching--repackaging---jddlab-edition">Android APK Patching &amp; Repackaging - jddlab Edition</h1>
+<p><strong>Version</strong>: 1.0 | <strong>Last Updated</strong>: 2025-08 | <strong>Difficulty</strong>: Expert</p>
+<blockquote>
+<p>A complete reference for modifying Android APKs using <strong>jddlab</strong> - from analysis to
+smali editing, recompilation, signing, and testing. Every tool runs inside the
+<code>stanislavpovolotsky/jddlab</code> Docker container via the <strong>jddlab MCP server</strong> - no
+local tool installation required beyond Docker.</p>
+</blockquote>
+<hr />
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><a href="#1-jddlab-toolchain-overview">jddlab Toolchain Overview</a></li>
+<li><a href="#2-decompilation--recompilation-workflow">Decompilation &amp; Recompilation Workflow</a></li>
+<li><a href="#3-split-apk-handling">Split APK Handling (.apks / .apkm / .xapk)</a></li>
+<li><a href="#4-signing-align-then-sign">Signing: Align then Sign</a></li>
+<li><a href="#5-dependency-hell">Dependency Hell: Frameworks, AndroidX, OEM Resources</a></li>
+<li><a href="#6-gapps-dependent-apks">GApps-Dependent APKs: Patching &amp; Workarounds</a></li>
+<li><a href="#7-testing">Testing: ADB, Redroid, Waydroid</a></li>
+<li><a href="#8-advanced-patching">Advanced Patching: Frida, Obfuscation, Integrity Checks</a></li>
+<li><a href="#9-troubleshooting">Troubleshooting</a></li>
+<li><a href="#10-quick-reference-cheat-sheet">Quick Reference Cheat Sheet</a></li>
+</ol>
+<hr />
+<h2 id="1-jddlab-toolchain-overview">1. jddlab Toolchain Overview</h2>
+<p>jddlab bundles all required tools in a single Docker image.  Use the jddlab MCP server
+(<code>jddlab_*</code> tools) - the server handles Docker invocations, path rewriting, and mount
+inference automatically.</p>
+<h3 id="11-tool-mapping">1.1 Tool Mapping</h3>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>jddlab MCP tool</th>
+<th>Native command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Analyze / decompile to Java source</td>
+<td><code>jddlab_jadx</code></td>
+<td><code>jadx</code></td>
+</tr>
+<tr>
+<td>Decompile APK to smali + resources</td>
+<td><code>jddlab_apktool</code></td>
+<td><code>apktool d</code></td>
+</tr>
+<tr>
+<td>Rebuild smali + resources to APK</td>
+<td><code>jddlab_apktool</code></td>
+<td><code>apktool b</code></td>
+</tr>
+<tr>
+<td>Merge / split split-APK sets</td>
+<td><code>jddlab_APKEditor</code></td>
+<td><code>APKEditor m</code> / <code>APKEditor s</code></td>
+</tr>
+<tr>
+<td>Align APK (before signing)</td>
+<td><code>jddlab_zipalign</code></td>
+<td><code>zipalign</code></td>
+</tr>
+<tr>
+<td>Sign APK (v1/v2/v3)</td>
+<td><code>jddlab_apksigner</code></td>
+<td><code>apksigner sign</code></td>
+</tr>
+<tr>
+<td>Verify signature</td>
+<td><code>jddlab_apksigner</code></td>
+<td><code>apksigner verify</code></td>
+</tr>
+<tr>
+<td>Decompile to higher-level Java</td>
+<td><code>jddlab_vineflower</code> / <code>jddlab_fernflower</code> / <code>jddlab_procyon</code></td>
+<td><code>vineflower</code> / <code>fernflower</code> / <code>procyon</code></td>
+</tr>
+<tr>
+<td>Disassemble DEX to smali</td>
+<td><code>jddlab_baksmali</code></td>
+<td><code>baksmali</code></td>
+</tr>
+<tr>
+<td>Assemble smali to DEX</td>
+<td><code>jddlab_smali</code></td>
+<td><code>smali</code></td>
+</tr>
+<tr>
+<td>Convert DEX/APK → JAR</td>
+<td><code>jddlab_dex2jar</code></td>
+<td><code>dex2jar</code></td>
+</tr>
+<tr>
+<td>Certificate pinning bypass</td>
+<td><code>jddlab_android_unpinner</code></td>
+<td><code>android-unpinner</code></td>
+</tr>
+<tr>
+<td>Frida gadget injection</td>
+<td><code>jddlab_apk_patcher</code></td>
+<td><code>apk-patcher</code></td>
+</tr>
+<tr>
+<td>Runtime exploration (Frida CLI)</td>
+<td><code>jddlab_objection</code></td>
+<td><code>objection</code></td>
+</tr>
+<tr>
+<td>Deobfuscation</td>
+<td><code>jddlab_java_deobfuscator</code></td>
+<td><code>java-deobfuscator</code></td>
+</tr>
+<tr>
+<td>Deobfuscation detection</td>
+<td><code>jddlab_java_deobfuscator_detect</code></td>
+<td><code>java-deobfuscator-detect</code></td>
+</tr>
+<tr>
+<td>Native code analysis</td>
+<td><code>jddlab_ghidra_decompile</code></td>
+<td><code>ghidra-decompile</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="12-why-old-tool-versions-will-fail-you">1.2 Why Old Tool Versions Will Fail You</h3>
+<p>The Docker image is kept up to date.  Key minimum versions enforced inside the image:</p>
+<ul>
+<li><strong>Apktool ≥ 2.9.0</strong> - required for API 34+ resources (Android 14+).</li>
+<li><strong>smali ≥ 3.0.5</strong> - required for DEX format 038+ (Android 13+).</li>
+<li><strong>apksigner from build-tools ≥ 35</strong> - required for v2/v3/v4 signing.</li>
+<li><strong>Never use <code>jarsigner</code></strong> - it only produces v1 signatures; Android 7.0+ rejects them.</li>
+</ul>
+<h3 id="13-mcp-tool-call-structure">1.3 MCP Tool Call Structure</h3>
+<p>Every <code>jddlab_*</code> MCP tool accepts:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>args</code></td>
+<td><code>string[]</code></td>
+<td>Native command arguments, verbatim</td>
+</tr>
+<tr>
+<td><code>input_paths</code></td>
+<td><code>string[]</code></td>
+<td>Host input files/dirs - used for mount-root inference</td>
+</tr>
+<tr>
+<td><code>output_paths</code></td>
+<td><code>string[]</code></td>
+<td>Host output files/dirs - used for mount-root inference</td>
+</tr>
+<tr>
+<td><code>workdir</code></td>
+<td><code>string</code></td>
+<td>Optional explicit host directory to mount as <code>/work</code></td>
+</tr>
+<tr>
+<td><code>extra_mounts</code></td>
+<td><code>object[]</code></td>
+<td>Additional mounts <code>{host, container, mode}</code></td>
+</tr>
+<tr>
+<td><code>timeout_seconds</code></td>
+<td><code>number</code></td>
+<td>Override default 3600 s timeout</td>
+</tr>
+<tr>
+<td><code>docker_image</code></td>
+<td><code>string</code></td>
+<td>Override Docker image</td>
+</tr>
+</tbody>
+</table>
+<p>Paths in <code>args</code> that match a file/dir under the inferred mount root are rewritten to
+<code>/work/…</code> automatically.</p>
+<hr />
+<h2 id="2-decompilation--recompilation-workflow">2. Decompilation &amp; Recompilation Workflow</h2>
+<h3 id="21-standard-single-apk-workflow">2.1 Standard Single APK Workflow</h3>
+<p><strong>Step 1 - Analyze with jadx (read-only)</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_jadx&quot;,
+  &quot;args&quot;: [&quot;-d&quot;, &quot;analysis_output&quot;, &quot;target.apk&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;analysis_output&quot;]
+}
+</code></pre>
+<p><strong>Step 2 - Decompile with apktool</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_apktool&quot;,
+  &quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;decompiled&quot;, &quot;-f&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;decompiled&quot;]
+}
+</code></pre>
+<p><strong>Step 3 - Edit smali / resources / manifest</strong></p>
+<p>Edit files directly on the host inside <code>decompiled/</code>.  See §2.4 for smali patterns.</p>
+<p><strong>Step 4 - Recompile</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_apktool&quot;,
+  &quot;args&quot;: [&quot;b&quot;, &quot;decompiled&quot;, &quot;-o&quot;, &quot;rebuilt.apk&quot;],
+  &quot;input_paths&quot;: [&quot;decompiled&quot;],
+  &quot;output_paths&quot;: [&quot;rebuilt.apk&quot;]
+}
+</code></pre>
+<p><strong>Step 5 - Align (MUST be before signing)</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_zipalign&quot;,
+  &quot;args&quot;: [&quot;-v&quot;, &quot;-p&quot;, &quot;4&quot;, &quot;rebuilt.apk&quot;, &quot;rebuilt_aligned.apk&quot;],
+  &quot;input_paths&quot;: [&quot;rebuilt.apk&quot;],
+  &quot;output_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
+}
+</code></pre>
+<p><strong>Step 6 - Sign</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_apksigner&quot;,
+  &quot;args&quot;: [
+    &quot;sign&quot;,
+    &quot;--ks&quot;, &quot;~/.android/debug.keystore&quot;,
+    &quot;--ks-key-alias&quot;, &quot;androiddebugkey&quot;,
+    &quot;--ks-pass&quot;, &quot;pass:android&quot;,
+    &quot;--key-pass&quot;, &quot;pass:android&quot;,
+    &quot;rebuilt_aligned.apk&quot;
+  ],
+  &quot;input_paths&quot;: [&quot;rebuilt_aligned.apk&quot;],
+  &quot;output_paths&quot;: [&quot;rebuilt_aligned.apk&quot;],
+  &quot;extra_mounts&quot;: [{&quot;host&quot;: &quot;~/.android&quot;, &quot;container&quot;: &quot;/root/.android&quot;, &quot;mode&quot;: &quot;ro&quot;}]
+}
+</code></pre>
+<p><strong>Step 7 - Verify</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_apksigner&quot;,
+  &quot;args&quot;: [&quot;verify&quot;, &quot;--verbose&quot;, &quot;--print-certs&quot;, &quot;rebuilt_aligned.apk&quot;],
+  &quot;input_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
+}
+</code></pre>
+<p><strong>Step 8 - Install via ADB</strong> (run on host, not via jddlab)</p>
+<pre><code class="language-bash">adb install -r rebuilt_aligned.apk
+</code></pre>
+<h3 id="22-important-decompilation-flags">2.2 Important Decompilation Flags</h3>
+<pre><code class="language-json">// Force specific API level (fixes many resource resolution issues)
+{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--api&quot;, &quot;35&quot;], ...}
+
+// Ignore missing resources (new in apktool 2.11.x)
+{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--ignore-missing-resources&quot;], ...}
+
+// Keep original sources only (skip resources, faster)
+{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;-s&quot;], ...}
+
+// Decode only resources (skip smali, for resource-only mods)
+{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;-r&quot;], ...}
+
+// For Samsung/Android 15 framework JARs with DEX format 039
+{&quot;args&quot;: [&quot;d&quot;, &quot;framework.jar&quot;, &quot;-api&quot;, &quot;29&quot;, &quot;-o&quot;, &quot;out&quot;], ...}
+</code></pre>
+<h3 id="23-decompiled-directory-structure">2.3 Decompiled Directory Structure</h3>
+<pre><code>decompiled/
+├── AndroidManifest.xml        # App manifest (editable XML)
+├── apktool.yml                # Apktool metadata (do NOT manually edit version fields)
+├── assets/                    # Raw asset files
+├── lib/                       # Native libraries (.so) by architecture
+│   ├── arm64-v8a/
+│   ├── armeabi-v7a/
+│   └── x86_64/
+├── original/                  # Original META-INF files
+├── res/                       # Compiled resources decoded to editable XML
+│   ├── values/                # strings, styles, colors, dimensions
+│   ├── layout/                # layout XML files
+│   └── mipmap-*/              # app icons
+├── smali/                     # Disassembled DEX (MAIN CODE)
+└── smali_classes2/            # Additional DEX files (multi-dex apps)
+</code></pre>
+<h3 id="24-smali-editing-basics">2.4 Smali Editing Basics</h3>
+<pre><code class="language-smali"># 1. Force a boolean method to always return true (premium check bypass)
+.method public isPremium()Z
+    .registers 2
+    const/4 v0, 0x1        # true
+    return v0
+.end method
+
+# 2. NOP out a method call
+# Replace: invoke-virtual {v0}, Lcom/example/Payroll;-&gt;show()V
+# With:    nop
+
+# 3. Remove a permission check (always fall through)
+# Replace: if-eqz v0, :cond_deny
+# With:    nop
+
+# 4. Set a string field
+const-string v0, &quot;patched_value&quot;
+iput-object v0, p0, Lcom/example/app/MainActivity;-&gt;mStatus:Ljava/lang/String;
+
+# 5. Common signature check pattern to NOP
+# Search smali for: getPackageInfo, GET_SIGNATURES, MessageDigest, equals
+# Replace the comparison branch with: nop
+</code></pre>
+<h3 id="25-resource-editing">2.5 Resource Editing</h3>
+<pre><code class="language-xml">&lt;!-- res/values/strings.xml --&gt;
+&lt;string name=&quot;app_name&quot;&gt;My Patched App&lt;/string&gt;
+
+&lt;!-- AndroidManifest.xml - add permissions --&gt;
+&lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; /&gt;
+
+&lt;!-- AndroidManifest.xml - export a hidden activity --&gt;
+&lt;activity android:name=&quot;.HiddenActivity&quot; android:exported=&quot;true&quot;&gt;
+    &lt;intent-filter&gt;
+        &lt;action android:name=&quot;android.intent.action.MAIN&quot; /&gt;
+        &lt;category android:name=&quot;android.intent.category.LAUNCHER&quot; /&gt;
+    &lt;/intent-filter&gt;
+&lt;/activity&gt;
+</code></pre>
+<hr />
+<h2 id="3-split-apk-handling">3. Split APK Handling</h2>
+<h3 id="31-understanding-split-apk-formats">3.1 Understanding Split APK Formats</h3>
+<table>
+<thead>
+<tr>
+<th>Format</th>
+<th>Source</th>
+<th>Extension</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bundletool</td>
+<td>Google Play</td>
+<td><code>.apks</code></td>
+</tr>
+<tr>
+<td>APKMirror</td>
+<td>APKMirror</td>
+<td><code>.apkm</code></td>
+</tr>
+<tr>
+<td>APKPure</td>
+<td>APKPure</td>
+<td><code>.xapk</code></td>
+</tr>
+</tbody>
+</table>
+<p>All three are ZIP archives.  Extract with any unzip tool on the host.</p>
+<p><strong>Split types</strong>: <code>base.apk</code> (core code), <code>split_config.arm64_v8a.apk</code> (ARM64 libs),
+<code>split_config.xxhdpi.apk</code> (screen density resources), <code>split_config.en.apk</code> (language).</p>
+<h3 id="32-merge--decompile--rebuild-workflow">3.2 Merge → Decompile → Rebuild Workflow</h3>
+<p><strong>Step 1 - Extract splits on host</strong></p>
+<pre><code class="language-bash">mkdir splits &amp;&amp; cd splits
+unzip ../input.apks   # or .apkm / .xapk
+</code></pre>
+<p><strong>Step 2 - Merge into single fat APK</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_APKEditor&quot;,
+  &quot;args&quot;: [&quot;m&quot;, &quot;-i&quot;, &quot;splits/base.apk&quot;, &quot;splits/split_config.arm64_v8a.apk&quot;, &quot;splits/split_config.xxhdpi.apk&quot;, &quot;splits/split_config.en.apk&quot;, &quot;-o&quot;, &quot;merged.apk&quot;],
+  &quot;input_paths&quot;: [&quot;splits&quot;],
+  &quot;output_paths&quot;: [&quot;merged.apk&quot;]
+}
+</code></pre>
+<p><strong>Step 3 - Decompile merged APK</strong></p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_apktool&quot;,
+  &quot;args&quot;: [&quot;d&quot;, &quot;merged.apk&quot;, &quot;-o&quot;, &quot;decompiled&quot;, &quot;-f&quot;],
+  &quot;input_paths&quot;: [&quot;merged.apk&quot;],
+  &quot;output_paths&quot;: [&quot;decompiled&quot;]
+}
+</code></pre>
+<p><strong>Step 4 - Modify, recompile, align, sign</strong> (see §2.1 steps 3–7).</p>
+<p><strong>Step 5 - Install splits</strong></p>
+<pre><code class="language-bash"># If you only modified the base APK, keep original splits:
+adb uninstall com.example.app
+adb install-multiple modified_base_aligned.apk \
+    splits/split_config.arm64_v8a.apk \
+    splits/split_config.xxhdpi.apk \
+    splits/split_config.en.apk
+</code></pre>
+<p>If some splits embed signature checks, re-sign ALL with the same keystore:</p>
+<pre><code class="language-bash">for apk in splits/*.apk; do
+    # align then sign each one via jddlab_zipalign + jddlab_apksigner
+    ...
+done
+adb install-multiple modified_base_aligned.apk splits/*.apk
+</code></pre>
+<h3 id="33-split-apk-pitfalls">3.3 Split APK Pitfalls</h3>
+<table>
+<thead>
+<tr>
+<th>Pitfall</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Missing native libs after merge</td>
+<td>Manually copy missing <code>.so</code> files into merged APK <code>lib/</code> before decompiling</td>
+</tr>
+<tr>
+<td><code>toc.pb</code> metadata mismatch</td>
+<td>Use <code>adb install-multiple</code> - don't use bundletool for patched installs</td>
+</tr>
+<tr>
+<td><code>null</code> resources on base APK decompilation</td>
+<td>Merge with APKEditor first, or use <code>--ignore-missing-resources</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="4-signing-align-then-sign">4. Signing: Align then Sign</h2>
+<h3 id="41-apk-signature-schemes">4.1 APK Signature Schemes</h3>
+<table>
+<thead>
+<tr>
+<th>Scheme</th>
+<th>Since</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v1 (JAR)</td>
+<td>API 1</td>
+<td>Weak - modifiable. Required for backward compat.</td>
+</tr>
+<tr>
+<td>v2</td>
+<td>API 24 (Android 7.0)</td>
+<td>Whole-APK signature. <strong>Required for modern Android.</strong></td>
+</tr>
+<tr>
+<td>v3</td>
+<td>API 28 (Android 9.0)</td>
+<td>v2 + key rotation support</td>
+</tr>
+<tr>
+<td>v4</td>
+<td>API 30 (Android 11)</td>
+<td>Merkle hash tree - computed on-demand during install</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Critical rule</strong>: v2/v3 are whole-APK signatures. Always run <code>zipalign</code> BEFORE <code>apksigner</code>.</p>
+<p><strong>Never use <code>jarsigner</code></strong> - v1-only output is silently rejected by Android 7.0+.</p>
+<h3 id="42-create-a-custom-keystore-one-time-host">4.2 Create a Custom Keystore (one-time, host)</h3>
+<pre><code class="language-bash">keytool -genkey -v \
+    -keystore ~/apk-testing.keystore \
+    -alias testing \
+    -keyalg RSA -keysize 2048 -validity 10000
+</code></pre>
+<p>Debug keystore (Android SDK): <code>~/.android/debug.keystore</code>, password: <code>android</code>, alias: <code>androiddebugkey</code>.</p>
+<h3 id="43-full-signing-workflow-via-jddlab">4.3 Full Signing Workflow via jddlab</h3>
+<pre><code class="language-json">// 1. Align
+{
+  &quot;tool&quot;: &quot;jddlab_zipalign&quot;,
+  &quot;args&quot;: [&quot;-v&quot;, &quot;-p&quot;, &quot;4&quot;, &quot;rebuilt.apk&quot;, &quot;rebuilt_aligned.apk&quot;],
+  &quot;input_paths&quot;: [&quot;rebuilt.apk&quot;],
+  &quot;output_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
+}
+</code></pre>
+<pre><code class="language-json">// 2. Sign (custom keystore)
+{
+  &quot;tool&quot;: &quot;jddlab_apksigner&quot;,
+  &quot;args&quot;: [
+    &quot;sign&quot;,
+    &quot;--ks&quot;, &quot;apk-testing.keystore&quot;,
+    &quot;--ks-key-alias&quot;, &quot;testing&quot;,
+    &quot;--ks-pass&quot;, &quot;pass:your_password&quot;,
+    &quot;--key-pass&quot;, &quot;pass:your_password&quot;,
+    &quot;--v1-signing-enabled&quot;, &quot;true&quot;,
+    &quot;--v2-signing-enabled&quot;, &quot;true&quot;,
+    &quot;--v3-signing-enabled&quot;, &quot;true&quot;,
+    &quot;rebuilt_aligned.apk&quot;
+  ],
+  &quot;input_paths&quot;: [&quot;rebuilt_aligned.apk&quot;, &quot;apk-testing.keystore&quot;],
+  &quot;output_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
+}
+</code></pre>
+<pre><code class="language-json">// 3. Verify
+{
+  &quot;tool&quot;: &quot;jddlab_apksigner&quot;,
+  &quot;args&quot;: [&quot;verify&quot;, &quot;--verbose&quot;, &quot;--print-certs&quot;, &quot;rebuilt_aligned.apk&quot;],
+  &quot;input_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
+}
+</code></pre>
+<h3 id="44-signature-related-failures">4.4 Signature-Related Failures</h3>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code></td>
+<td>Different signing key from installed app</td>
+<td><code>adb uninstall com.example.app</code> then reinstall</td>
+</tr>
+<tr>
+<td><code>INSTALL_PARSE_FAILED_NO_CERTIFICATES</code></td>
+<td>APK not signed</td>
+<td>Sign with <code>jddlab_apksigner</code></td>
+</tr>
+<tr>
+<td>App installs but crashes immediately</td>
+<td>Runtime self-check via <code>getPackageInfo(GET_SIGNATURES)</code></td>
+<td>Patch smali signature check or use Frida bypass script</td>
+</tr>
+<tr>
+<td><code>INSTALL_FAILED_SESSION_INVALID</code></td>
+<td>Splits signed with different keys</td>
+<td>Sign ALL splits with the same keystore</td>
+</tr>
+<tr>
+<td>Signature broken after zipalign</td>
+<td>Used <code>apksigner</code> before <code>zipalign</code></td>
+<td>Always: zipalign → then sign</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="5-dependency-hell">5. Dependency Hell</h2>
+<h3 id="51-common-resource-errors">5.1 Common Resource Errors</h3>
+<pre><code>error: resource 'com.example:id/material_textinput' not found
+error: style attribute 'attr/layout_constraintBaseline_toBaselineOf' not found
+ERROR: AAPT2 aapt2(...) exited with code 1
+</code></pre>
+<h3 id="52-install-oem-frameworks-via-jddlab">5.2 Install OEM Frameworks via jddlab</h3>
+<p>For system or OEM apps that reference non-AOSP framework resources, install their
+framework files first:</p>
+<pre><code class="language-json">// Install Android framework (usually automatic)
+{
+  &quot;tool&quot;: &quot;jddlab_apktool&quot;,
+  &quot;args&quot;: [&quot;if&quot;, &quot;framework-res.apk&quot;],
+  &quot;input_paths&quot;: [&quot;framework-res.apk&quot;]
+}
+</code></pre>
+<pre><code class="language-json">// Samsung example
+{
+  &quot;tool&quot;: &quot;jddlab_apktool&quot;,
+  &quot;args&quot;: [&quot;if&quot;, &quot;sec_platform_library.jar&quot;],
+  &quot;input_paths&quot;: [&quot;sec_platform_library.jar&quot;]
+}
+</code></pre>
+<p>Pull framework files from a rooted device first:</p>
+<pre><code class="language-bash">adb pull /system/framework/ ./device_frameworks/
+</code></pre>
+<p>Then install via the MCP tool above.</p>
+<h3 id="53-force-api-level">5.3 Force API Level</h3>
+<pre><code class="language-json">{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--api&quot;, &quot;35&quot;], ...}
+// or for legacy:
+{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--api&quot;, &quot;29&quot;], ...}
+</code></pre>
+<h3 id="54-aapt2-error-reference">5.4 AAPT2 Error Reference</h3>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>resource has already been defined</code></td>
+<td>Duplicate resource</td>
+<td>Apktool 2.11.0+ handles most; search for dupes in <code>res/values/*.xml</code></td>
+</tr>
+<tr>
+<td><code>malformed compiled jar</code></td>
+<td>Samsung DEX 039 format in framework</td>
+<td>Use <code>--api 29</code></td>
+</tr>
+<tr>
+<td><code>no resource identifier found for attribute</code></td>
+<td>Missing library</td>
+<td>Install library APK as framework</td>
+</tr>
+<tr>
+<td><code>unmarshalling resource table</code></td>
+<td>Corrupted <code>resources.arsc</code></td>
+<td>Use <code>--ignore-missing-resources</code> or merge first with APKEditor</td>
+</tr>
+<tr>
+<td><code>BufferOverflowException</code></td>
+<td>Resource table &gt; 2 GB</td>
+<td>Increase Java heap via <code>jddlab_run</code> with <code>JAVA_OPTS=&quot;-Xmx4g&quot;</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="6-gapps-dependent-apks">6. GApps-Dependent APKs</h2>
+<h3 id="61-why-gapps-patching-is-hard">6.1 Why GApps Patching Is Hard</h3>
+<ul>
+<li>~100+ dynamic feature module splits</li>
+<li>Runtime signature verification by OS and other GApps</li>
+<li>DroidGuard/Play Integrity attestation baked in</li>
+<li>Automatic updates overwrite patches</li>
+</ul>
+<p><strong>Bottom line</strong>: Do not try to patch <code>com.google.android.gms</code> directly.</p>
+<h3 id="62-strategy-microg">6.2 Strategy: MicroG</h3>
+<p>MicroG is an open-source Google Play Services replacement.  Install <code>GmsCore.apk</code> from
+<a href="https://github.com/microg/GmsCore/releases">https://github.com/microg/GmsCore/releases</a> on your test device/emulator alongside your
+patched APK.</p>
+<h3 id="63-strategy-patch-individual-gapps-youtube-maps-etc">6.3 Strategy: Patch Individual GApps (YouTube, Maps, etc.)</h3>
+<p><strong>ReVanced</strong> provides battle-tested patches: <a href="https://github.com/ReVanced/revanced-patches">https://github.com/ReVanced/revanced-patches</a></p>
+<p>Manual patching - find the signature-check smali:</p>
+<pre><code class="language-json">// Decompile and search
+{
+  &quot;tool&quot;: &quot;jddlab_jadx&quot;,
+  &quot;args&quot;: [&quot;-d&quot;, &quot;analysis&quot;, &quot;google_app.apk&quot;],
+  &quot;input_paths&quot;: [&quot;google_app.apk&quot;],
+  &quot;output_paths&quot;: [&quot;analysis&quot;]
+}
+</code></pre>
+<p>Grep for: <code>getPackageInfo</code>, <code>GET_SIGNATURES</code>, <code>MessageDigest</code>, <code>equals</code>.
+Patch the comparison branch to always return valid.</p>
+<h3 id="64-certificate-pinning-bypass-automated">6.4 Certificate Pinning Bypass (automated)</h3>
+<p><code>android-unpinner</code> needs a sub-command. Use <code>patch-apk</code> to produce a patched APK
+(<code>target.unpinned.apk</code>) without a connected device (do not use <code>all</code>, which also
+installs + instruments over Frida and needs a USB device):</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_android_unpinner&quot;,
+  &quot;args&quot;: [&quot;patch-apk&quot;, &quot;target.apk&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;target.unpinned.apk&quot;]
+}
+</code></pre>
+<hr />
+<h2 id="7-testing">7. Testing</h2>
+<h3 id="71-adb-install-commands-host-not-via-jddlab">7.1 ADB Install Commands (host, not via jddlab)</h3>
+<pre><code class="language-bash">adb install -r app.apk              # Replace existing
+adb install -d app.apk              # Allow version downgrade
+adb install -g app.apk              # Grant all runtime permissions
+adb install-multiple base.apk s1.apk s2.apk   # Split APKs
+adb uninstall com.example.app       # Remove app + data
+adb shell am start -n com.example.app/.MainActivity
+adb logcat -s &quot;AndroidRuntime:E&quot; &quot;*:S&quot;
+</code></pre>
+<h3 id="72-frida-injection-via-jddlab">7.2 Frida Injection via jddlab</h3>
+<p>Inject a Frida gadget into an APK for dynamic analysis. <code>apk-patcher</code> takes the APK
+<strong>base name without the extension, with the trailing dot</strong> (<code>target.apk</code> -&gt; <code>./target.</code>)
+as a positional argument, and writes <code>target.patched</code>; flags are <code>-l &lt;script&gt;</code>,
+<code>-a &lt;arch&gt;</code>, <code>-d &lt;dir&gt;</code>, <code>-c &lt;config&gt;</code>, <code>-f</code>, <code>-v</code> (there is no <code>-o</code>):</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_apk_patcher&quot;,
+  &quot;args&quot;: [&quot;./target.&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;target.patched&quot;]
+}
+</code></pre>
+<p>Then re-sign the APK inside <code>target.patched</code> via <code>jddlab_zipalign</code> + <code>jddlab_apksigner</code>.</p>
+<h3 id="73-objection-runtime-exploration-via-frida">7.3 Objection (runtime exploration via Frida)</h3>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_objection&quot;,
+  &quot;args&quot;: [&quot;patchapk&quot;, &quot;-s&quot;, &quot;target.apk&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;target.objection.apk&quot;],
+  &quot;interactive&quot;: true
+}
+</code></pre>
+<p>Note: <code>objection explore</code> requires an interactive TTY - run it directly on host via
+<code>frida-tools</code> against a running device.</p>
+<h3 id="74-redroid-android-in-docker-headless">7.4 Redroid (Android in Docker, headless)</h3>
+<p>Redroid runs a full Android system in Docker for headless testing - perfect for CI/CD.</p>
+<pre><code class="language-bash"># Prerequisites (Linux host only)
+sudo modprobe binder_linux
+docker volume create redroid_data
+
+# Start Android 14 container
+docker run -d --privileged --name redroid14 -p 5555:5555 \
+    -v redroid_data:/data redroid/redroid:14.0.0-latest
+
+# Connect ADB
+adb connect localhost:5555
+
+# Install patched APK
+adb -s localhost:5555 install rebuilt_aligned.apk
+adb -s localhost:5555 shell am start -n com.example.app/.MainActivity
+
+# Mirror screen (optional)
+scrcpy -s localhost:5555
+</code></pre>
+<p>ARM translation + Magisk (optional):</p>
+<pre><code class="language-bash">git clone https://github.com/abing7k/redroid-script.git
+sudo python3 redroid-script/redroid-script.py redroid14 --magisk --libndk
+docker restart redroid14
+</code></pre>
+<p><strong>Redroid does NOT work on macOS</strong> (no binder support in Docker Desktop).</p>
+<h3 id="75-waydroid-android-in-lxc-linux-desktop">7.5 Waydroid (Android in LXC, Linux desktop)</h3>
+<pre><code class="language-bash">curl https://repo.waydro.id | sudo bash
+sudo apt install waydroid
+sudo waydroid init
+waydroid session start &amp;&amp; waydroid show-full-ui
+
+# Install patched APK
+waydroid app install rebuilt_aligned.apk
+waydroid app launch com.example.app
+
+# ARM translation (CPU must have SSE 4.2)
+git clone https://github.com/casualsnek/waydroid_script.git
+sudo python3 waydroid_script/waydroid_script.py -l
+</code></pre>
+<hr />
+<h2 id="8-advanced-patching">8. Advanced Patching</h2>
+<h3 id="81-deobfuscation-via-jddlab">8.1 Deobfuscation via jddlab</h3>
+<p>Detect the obfuscator:</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_java_deobfuscator_detect&quot;,
+  &quot;args&quot;: [&quot;target.jar&quot;],
+  &quot;input_paths&quot;: [&quot;target.jar&quot;]
+}
+</code></pre>
+<p>Run deobfuscation. <code>java-deobfuscator</code> is driven by a YAML config (via <code>--config</code>, two
+dashes); the input, output and transformers all live <strong>inside the YAML</strong>, not as CLI
+flags (see the java-deobfuscation skill for a config example):</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_java_deobfuscator&quot;,
+  &quot;args&quot;: [&quot;--config&quot;, &quot;deobf-config.yml&quot;],
+  &quot;input_paths&quot;: [&quot;target.jar&quot;, &quot;deobf-config.yml&quot;],
+  &quot;output_paths&quot;: [&quot;deobf.jar&quot;]
+}
+</code></pre>
+<p>Convert DEX to JAR first if needed:</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_dex2jar&quot;,
+  &quot;args&quot;: [&quot;target.apk&quot;, &quot;-o&quot;, &quot;target.jar&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;target.jar&quot;]
+}
+</code></pre>
+<h3 id="82-native-code-analysis-via-ghidra">8.2 Native Code Analysis via Ghidra</h3>
+<p><code>ghidra-decompile</code> takes <strong>positional</strong> args (<code>&lt;input-binary&gt; [&lt;output.c&gt;]</code>) and emits a
+single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_ghidra_decompile&quot;,
+  &quot;args&quot;: [&quot;lib/arm64-v8a/libnative.so&quot;, &quot;libnative.decompiled.c&quot;],
+  &quot;input_paths&quot;: [&quot;lib/arm64-v8a/libnative.so&quot;],
+  &quot;output_paths&quot;: [&quot;libnative.decompiled.c&quot;]
+}
+</code></pre>
+<h3 id="83-extract-jni-artifacts">8.3 Extract JNI Artifacts</h3>
+<p><code>extract_jni &lt;apk&gt; [-o &lt;file.json&gt;]</code> reports JNI method signatures as JSON (a file with
+<code>-o</code>, else stdout):</p>
+<pre><code class="language-json">{
+  &quot;tool&quot;: &quot;jddlab_extract_jni&quot;,
+  &quot;args&quot;: [&quot;target.apk&quot;, &quot;-o&quot;, &quot;jni_methods.json&quot;],
+  &quot;input_paths&quot;: [&quot;target.apk&quot;],
+  &quot;output_paths&quot;: [&quot;jni_methods.json&quot;]
+}
+</code></pre>
+<h3 id="84-smali-level-ssl-pinning-bypass">8.4 Smali-Level SSL Pinning Bypass</h3>
+<p>Search in jadx output or decompiled smali for:</p>
+<ul>
+<li><code>checkServerTrusted</code> / <code>checkClientTrusted</code></li>
+<li><code>OkHttpClient.Builder().certificatePinner</code></li>
+<li><code>SSLContext</code>, <code>TrustManager</code>, <code>HostnameVerifier</code></li>
+</ul>
+<p>Patch approach: find the <code>checkServerTrusted</code> smali method and make it return immediately
+(remove all code, add <code>return-void</code>).</p>
+<p>For automated pinning removal use <code>jddlab_android_unpinner</code> (see §6.4).</p>
+<h3 id="85-play-integrity--root-detection-bypass">8.5 Play Integrity / Root Detection Bypass</h3>
+<p>Software-only bypass options (2025):</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>How</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TrickyStore (Magisk)</td>
+<td>Spoofs device attestation key</td>
+</tr>
+<tr>
+<td>Play Integrity Fix</td>
+<td>Aims for valid attestation on rooted devices</td>
+</tr>
+</tbody>
+</table>
+<p><strong>CRITICAL</strong>: Play Integrity does NOT pass on any emulator - use a physical device.</p>
+<hr />
+<h2 id="9-troubleshooting">9. Troubleshooting</h2>
+<h3 id="91-decompilation-failures">9.1 Decompilation Failures</h3>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AAPT2 exited with code 1</code></td>
+<td>Missing resource or framework</td>
+<td>Install framework APK; use <code>--api 35</code> or <code>--ignore-missing-resources</code></td>
+</tr>
+<tr>
+<td><code>Unsupported DEX format</code></td>
+<td>Old baksmali / smali</td>
+<td>jddlab image is always up to date; ensure you're using <code>stanislavpovolotsky/jddlab:latest</code></td>
+</tr>
+<tr>
+<td><code>java.io.IOException: Was not able to decode XML</code></td>
+<td>Corrupted/encrypted APK</td>
+<td>Try APKEditor merge first, or check if APK is protected</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-recompilation-failures">9.2 Recompilation Failures</h3>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>brut.androlib.AndrolibException</code></td>
+<td>AAPT2 compilation error</td>
+<td>Check detailed error; usually a resource reference issue</td>
+</tr>
+<tr>
+<td><code>duplicate resource</code></td>
+<td>Two definitions of same resource ID</td>
+<td>Search for duplicate in <code>res/values/*.xml</code></td>
+</tr>
+<tr>
+<td><code>smali: syntax error</code></td>
+<td>Bad smali edit</td>
+<td>Check register count (<code>.registers N</code>), type descriptors, opcode spelling</td>
+</tr>
+<tr>
+<td>Recompiled APK size is wrong</td>
+<td>Resource table mismatch</td>
+<td>Decompile clean copy; test recompile without modifications first</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93-installation-failures">9.3 Installation Failures</h3>
+<table>
+<thead>
+<tr>
+<th>Error</th>
+<th>Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>INSTALL_FAILED_UPDATE_INCOMPATIBLE</code></td>
+<td>Signature mismatch</td>
+<td><code>adb uninstall com.example.app</code></td>
+</tr>
+<tr>
+<td><code>INSTALL_PARSE_FAILED_NO_CERTIFICATES</code></td>
+<td>Not signed</td>
+<td>Run <code>jddlab_zipalign</code> then <code>jddlab_apksigner</code></td>
+</tr>
+<tr>
+<td><code>INSTALL_FAILED_INVALID_APK</code></td>
+<td>Malformed APK</td>
+<td>Check AAPT2 build log; verify ZIP integrity</td>
+</tr>
+<tr>
+<td><code>INSTALL_FAILED_SESSION_INVALID</code></td>
+<td>Different keys across splits</td>
+<td>Re-sign ALL splits with same keystore</td>
+</tr>
+</tbody>
+</table>
+<h3 id="94-runtime-crashes">9.4 Runtime Crashes</h3>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely Cause</th>
+<th>Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Immediate crash on launch</td>
+<td>Register count wrong in smali</td>
+<td>Check <code>.registers N</code> matches actual usage</td>
+</tr>
+<tr>
+<td><code>ClassNotFoundException</code></td>
+<td>Smali class name / package mismatch</td>
+<td>Verify class descriptor matches directory path</td>
+</tr>
+<tr>
+<td><code>SecurityException: Signature not valid</code></td>
+<td>App explicitly checks own signature</td>
+<td>Patch smali signature check (see §2.4)</td>
+</tr>
+<tr>
+<td>Works on debug build but not release</td>
+<td>ProGuard removed a method you're calling</td>
+<td>Check if class/method is kept in <code>proguard-rules.pro</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-quick-reference-cheat-sheet">10. Quick Reference Cheat Sheet</h2>
+<h3 id="core-workflow-mcp-tool-calls">Core Workflow (MCP tool calls)</h3>
+<pre><code>1. Analyze     → jddlab_jadx       args: [&quot;-d&quot;, &quot;out&quot;, &quot;target.apk&quot;]
+2. Decompile   → jddlab_apktool    args: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;dec&quot;, &quot;-f&quot;]
+3. Edit smali / resources on host
+4. Rebuild     → jddlab_apktool    args: [&quot;b&quot;, &quot;dec&quot;, &quot;-o&quot;, &quot;rebuilt.apk&quot;]
+5. Align       → jddlab_zipalign   args: [&quot;-v&quot;, &quot;-p&quot;, &quot;4&quot;, &quot;rebuilt.apk&quot;, &quot;rebuilt_aligned.apk&quot;]
+6. Sign        → jddlab_apksigner  args: [&quot;sign&quot;, &quot;--ks&quot;, &quot;key.keystore&quot;, ...]
+7. Verify      → jddlab_apksigner  args: [&quot;verify&quot;, &quot;--verbose&quot;, &quot;rebuilt_aligned.apk&quot;]
+8. Install     → (host) adb install -r rebuilt_aligned.apk
+</code></pre>
+<h3 id="smali-quick-patterns">Smali Quick Patterns</h3>
+<pre><code class="language-smali"># Return true
+const/4 v0, 0x1
+return v0
+
+# Return false
+const/4 v0, 0x0
+return v0
+
+# Return null
+const/4 v0, 0x0
+return-object v0
+
+# NOP (remove a branch or call)
+nop
+
+# Set string
+const-string v0, &quot;value&quot;
+</code></pre>
+<h3 id="key-file-paths-in-decompiled-apk">Key File Paths in Decompiled APK</h3>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>AndroidManifest.xml</code></td>
+<td>Permissions, components, min/target SDK</td>
+</tr>
+<tr>
+<td><code>apktool.yml</code></td>
+<td>Apktool metadata - do NOT hand-edit version fields</td>
+</tr>
+<tr>
+<td><code>smali/com/example/app/</code></td>
+<td>Main app code (DEX 1)</td>
+</tr>
+<tr>
+<td><code>smali_classes2/</code></td>
+<td>Additional DEX files (multi-dex)</td>
+</tr>
+<tr>
+<td><code>res/values/strings.xml</code></td>
+<td>String resources</td>
+</tr>
+<tr>
+<td><code>res/values/styles.xml</code></td>
+<td>Theme/style definitions</td>
+</tr>
+<tr>
+<td><code>assets/</code></td>
+<td>Raw bundled files</td>
+</tr>
+<tr>
+<td><code>lib/arm64-v8a/</code></td>
+<td>64-bit ARM native libraries</td>
+</tr>
+</tbody>
+</table>
+<h3 id="common-smali-type-descriptors">Common Smali Type Descriptors</h3>
+<table>
+<thead>
+<tr>
+<th>Java type</th>
+<th>Smali</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>boolean</code></td>
+<td><code>Z</code></td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>I</code></td>
+</tr>
+<tr>
+<td><code>long</code></td>
+<td><code>J</code></td>
+</tr>
+<tr>
+<td><code>void</code></td>
+<td><code>V</code></td>
+</tr>
+<tr>
+<td><code>String</code></td>
+<td><code>Ljava/lang/String;</code></td>
+</tr>
+<tr>
+<td><code>Object</code></td>
+<td><code>Ljava/lang/Object;</code></td>
+</tr>
+<tr>
+<td><code>String[]</code></td>
+<td><code>[Ljava/lang/String;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="debug-keystore">Debug Keystore</h3>
+<pre><code>Path:     ~/.android/debug.keystore
+Alias:    androiddebugkey
+Password: android
+</code></pre>
+<p>Mount it in jddlab calls:</p>
+<pre><code class="language-json">&quot;extra_mounts&quot;: [{&quot;host&quot;: &quot;~/.android&quot;, &quot;container&quot;: &quot;/root/.android&quot;, &quot;mode&quot;: &quot;ro&quot;}]
+</code></pre>
+
+</article>
+<script src="../../hljs/highlight.min.js"></script>
+<script>document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('pre code[class*="language-"]').forEach(function(el){hljs.highlightElement(el);});});</script>
+</body>
+</html>
