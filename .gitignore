@@ -5,3 +5,6 @@ __pycache__
 .bash_history
 /temp
 /doc
+/public
+/github-markdown.css
+/hljs
