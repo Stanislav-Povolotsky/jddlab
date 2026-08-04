@@ -49,9 +49,15 @@ Supported platforms:
 
 ### Installation as a command-line tool (recommended)
 
-`jddlab` command-line tool is an alias for `docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest` command.  
+`jddlab` command-line tool is essentially an alias for `docker run -it --rm -v "$PWD:/work" stanislavpovolotsky/jddlab:latest` command.  
 It runs `jddlab` docker instance and maps current folder as a `/work` folder (rw) to make all files in the current folder and subfolders accessable for jddlab commands.  
 For example if you have `test.apk` in the current folder, it will be accessible as `./test.apk` or `/work/test.apk` inside the jddlab instance.  
+
+> The `jddlab` / `jddlab.cmd` you download is a **thin launcher**: its only job is to
+> copy the real launcher (plus the MCP server and AI skills) out of the Docker image
+> into `~/.jddlab/mcp/current` and hand over to it. This means the real logic ships
+> **inside the image** and is refreshed together with it by `jddlab update` — you
+> download the thin launcher once and rarely need to update it by hand.
    
 To install `jddlab` command-line tool:
 

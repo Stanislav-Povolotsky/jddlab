@@ -1,192 +1,53 @@
 #!/usr/bin/env sh
-folder_to_serve="$PWD"
-jddlab_docker_image="stanislavpovolotsky/jddlab:latest"
-jddlab_launcher_version="1.0"
+# jddlab - thin launcher.
+#
+# Its only job: make sure the REAL launcher (shipped inside the Docker image) is present
+# under ~/.jddlab/mcp/current, then hand over to it. Download this once - it rarely
+# changes. All real functionality (running tools, MCP, skills, help, ...) lives in the
+# image and is updated together with it via `jddlab update`.
+jddlab_image="stanislavpovolotsky/jddlab:latest"
+jddlab_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
+jddlab_real="$jddlab_home/current/jddlab"
 
-# Run a command inside the jddlab image without mounting /work (used by info sub-commands)
-jddlab_query_image() {
-  docker run --rm "$jddlab_docker_image" "$@"
-}
-
-jddlab_resolve_python() {
-  if command -v python3 >/dev/null 2>&1; then jddlab_python=python3
-  elif command -v python >/dev/null 2>&1; then jddlab_python=python
-  else jddlab_python=""; fi
-}
-
-# Copy the host-side helper tree (/usr/local/jddlab/host) out of the image into
-# ~/.jddlab/mcp/current, so the MCP server and skills installer run on the host from
-# files that always match the image. $1 = "1" forces re-extraction. Uses `docker cp`
-# (not a mount) so the extracted files are owned by the host user.
-jddlab_extract_host_bundle() {
-  _jddlab_force="$1"
-  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
-  if [ "$_jddlab_force" != "1" ] && [ -f "$jddlab_mcp_home/current/mcp/server.py" ]; then
+# Copy /usr/local/jddlab/host out of the image into ~/.jddlab/mcp/current with
+# `docker cp` (files owned by the host user). `docker create` auto-pulls the image if
+# it is not present locally. $1=1 forces re-extraction. Returns 0 on success.
+jddlab_extract() {
+  if [ "$1" != "1" ] && [ -f "$jddlab_real" ]; then
     return 0
   fi
-  echo "Extracting jddlab MCP/skills from the image..." >&2
-  _jddlab_cid=$(docker create "$jddlab_docker_image") || return 1
-  _jddlab_tmp="$jddlab_mcp_home/current.new"
-  rm -rf "$_jddlab_tmp"
-  mkdir -p "$_jddlab_tmp"
-  if docker cp "$_jddlab_cid:/usr/local/jddlab/host/." "$_jddlab_tmp"; then
-    docker rm "$_jddlab_cid" >/dev/null 2>&1
-    rm -rf "$jddlab_mcp_home/current"
-    mv "$_jddlab_tmp" "$jddlab_mcp_home/current"
+  echo "Fetching jddlab from the image..." >&2
+  jddlab_cid=$(docker create "$jddlab_image") || return 1
+  jddlab_tmp="$jddlab_home/current.new"
+  rm -rf "$jddlab_tmp"
+  mkdir -p "$jddlab_tmp"
+  if docker cp "$jddlab_cid:/usr/local/jddlab/host/." "$jddlab_tmp"; then
+    docker rm "$jddlab_cid" >/dev/null 2>&1
+    rm -rf "$jddlab_home/current"
+    mv "$jddlab_tmp" "$jddlab_home/current"
     return 0
   fi
-  docker rm "$_jddlab_cid" >/dev/null 2>&1
-  rm -rf "$_jddlab_tmp"
+  docker rm "$jddlab_cid" >/dev/null 2>&1
+  rm -rf "$jddlab_tmp"
   return 1
 }
 
-jddlab_print_help() {
-  cat <<EOF
-jddlab - Java Decompilation & Deobfuscation Lab (launcher $jddlab_launcher_version)
-
-Usage:
-  jddlab                       Enter an interactive shell inside the jddlab container
-  jddlab <command> [args...]   Run a bundled tool (e.g. 'jddlab apktool --version')
-
-Launcher sub-commands:
-  jddlab help | --help         Show this help
-  jddlab tools | --tools       List the tools/commands available in the image
-  jddlab version | --version   Show launcher and image build versions
-  jddlab versions | --versions Show versions of every bundled tool
-  jddlab update                Pull the latest image (and refresh installed MCP/skills)
-  jddlab mcp <args...>         Manage MCP connectors (add/remove/status/doctor/update)
-  jddlab skills <args...>      Manage AI skills (add/remove/list/update)
-
-Environment variables:
-  JDDLAB_ROOT=1                Run the container as root instead of your host user
-                               (Linux/macOS map your UID:GID by default so files
-                               written to /work are owned by you, not root)
-  JDDLAB_MCP_HOME              Directory for extracted MCP/skills (default ~/.jddlab/mcp)
-EOF
-}
-
-if [ "$#" -eq 1 ]; then
-  case "$1" in
-    update)
-      echo "Updating jddlab..."
-      docker pull "$jddlab_docker_image"
-      jddlab_update_rc=$?
-      # Refresh the extracted MCP/skills if they were installed under ~/.jddlab.
-      jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
-      if [ -d "$jddlab_mcp_home/current" ]; then
-        echo "Refreshing installed jddlab MCP/skills from the image..."
-        jddlab_extract_host_bundle 1 || echo "Refresh failed (image was still updated)." >&2
-      fi
-      exit $jddlab_update_rc
-      ;;
-    help|--help|-h)
-      jddlab_print_help
-      exit 0
-      ;;
-    tools|--tools)
-      echo "Tools/commands available in $jddlab_docker_image:"
-      jddlab_query_image sh -c 'ls /usr/local/bin 2>/dev/null | sort | pr -3 -t -w 80 2>/dev/null || ls /usr/local/bin'
-      exit $?
-      ;;
-    version|--version)
-      echo "jddlab launcher: $jddlab_launcher_version"
-      if ! jddlab_query_image cat /usr/local/jddlab/version.txt 2>/dev/null; then
-        echo "Image not available locally. Run 'jddlab update' to pull it."
-      fi
-      exit 0
-      ;;
-    versions|--versions)
-      jddlab_query_image cat /usr/local/jddlab/software-list.txt
-      exit $?
-      ;;
-  esac
+# `jddlab update`: pull the newest image and re-extract everything (launcher + MCP +
+# skills + tools). Owned by the thin launcher because it runs from a stable path and
+# can safely replace ~/.jddlab/mcp/current.
+if [ "$#" -eq 1 ] && [ "$1" = "update" ]; then
+  echo "Updating jddlab..."
+  docker pull "$jddlab_image"
+  jddlab_update_rc=$?
+  jddlab_extract 1 || echo "Could not re-extract jddlab from the image." >&2
+  exit $jddlab_update_rc
 fi
 
-if [ "$#" -ge 1 ] && [ "$1" = "mcp" ]; then
-  shift
-  jddlab_resolve_python
-  if [ -z "$jddlab_python" ]; then
-    echo "Python 3.10 or newer is required to install jddlab MCP connectors." >&2
+if [ ! -f "$jddlab_real" ]; then
+  if ! jddlab_extract 0; then
+    echo "jddlab: could not fetch the launcher from the image. Is Docker running? Try 'jddlab update'." >&2
     exit 1
   fi
-  # `jddlab mcp update` refreshes the extracted copy from the image.
-  if [ "$1" = "update" ]; then
-    jddlab_extract_host_bundle 1 && echo "jddlab MCP/skills refreshed from the image."
-    exit $?
-  fi
-  # From a repository checkout, run the local installer directly (dev-friendly).
-  script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
-  local_installer="$script_dir/mcp/install.py"
-  if [ -f "$local_installer" ]; then
-    exec "$jddlab_python" "$local_installer" "$@"
-  fi
-  # Standalone: run the installer copied out of the image.
-  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
-  if [ ! -f "$jddlab_mcp_home/current/mcp/install.py" ]; then
-    if ! jddlab_extract_host_bundle 0; then
-      echo "Failed to extract MCP files from the image. Is Docker running and the image pulled? Try 'jddlab update'." >&2
-      exit 1
-    fi
-  fi
-  exec "$jddlab_python" "$jddlab_mcp_home/current/mcp/install.py" "$@"
 fi
 
-if [ "$#" -ge 1 ] && [ "$1" = "skills" ]; then
-  shift
-  jddlab_resolve_python
-  if [ -z "$jddlab_python" ]; then
-    echo "Python 3.10 or newer is required to install jddlab skills." >&2
-    exit 1
-  fi
-  # `jddlab skills update` refreshes the extracted copy from the image.
-  if [ "$1" = "update" ]; then
-    jddlab_extract_host_bundle 1 && echo "jddlab MCP/skills refreshed from the image."
-    exit $?
-  fi
-  # From a repository checkout, install the local skills directly (dev-friendly).
-  script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd)
-  local_installer="$script_dir/skills/install.py"
-  if [ -f "$local_installer" ]; then
-    exec "$jddlab_python" "$local_installer" "$@"
-  fi
-  # Standalone: run the installer copied out of the image.
-  jddlab_mcp_home=${JDDLAB_MCP_HOME:-"$HOME/.jddlab/mcp"}
-  if [ ! -f "$jddlab_mcp_home/current/skills/install.py" ]; then
-    if ! jddlab_extract_host_bundle 0; then
-      echo "Failed to extract skills from the image. Is Docker running and the image pulled? Try 'jddlab update'." >&2
-      exit 1
-    fi
-  fi
-  exec "$jddlab_python" "$jddlab_mcp_home/current/skills/install.py" "$@"
-fi
-
-docker_args=""
-# Allow to access host network. It's usefull to forward adb to instance.
-# Just run "adb start-server" on host machine and adb inside the instance
-# will be able to connect to your device.
-# docker_args+=" --network=host"
-
-# By default (Linux/macOS) run the container as the current host user so that
-# files created in /work are owned by you instead of root. The image keeps a
-# shared, world-writable HOME at /root (frida/adb configs live there), which we
-# point HOME to explicitly since a mapped UID has no /etc/passwd entry.
-# Set JDDLAB_ROOT=1 to force running as root inside the container instead.
-docker_user_args=""
-if [ -z "$JDDLAB_ROOT" ] && command -v id >/dev/null 2>&1; then
-  jddlab_uid=$(id -u 2>/dev/null)
-  jddlab_gid=$(id -g 2>/dev/null)
-  if [ -n "$jddlab_uid" ] && [ "$jddlab_uid" != "0" ]; then
-    docker_user_args="--user $jddlab_uid:$jddlab_gid -e HOME=/root"
-  fi
-fi
-
-# Escape application args
-save () {
-    for i do printf %s\\n "$i" | sed "s/'/'\\\\''/g;1s/^/'/;\$s/\$/' \\\\/" ; done
-    echo " "
-}
-APP_ARGS=`save "$@"`
-
-eval set -- run -it --rm $docker_args $docker_user_args -v "$folder_to_serve:/work" "$jddlab_docker_image" "$APP_ARGS"
-exec "docker" "$@"
-exit $?
+exec sh "$jddlab_real" "$@"

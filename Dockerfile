@@ -49,3 +49,7 @@ COPY mcp     /usr/local/jddlab/host/mcp
 COPY skills  /usr/local/jddlab/host/skills
 COPY tools   /usr/local/jddlab/host/tools
 COPY VERSION /usr/local/jddlab/host/VERSION
+# The real (full) launcher lives in the image too, so the thin launcher a user
+# downloads once stays tiny and the real logic is refreshed by `docker pull`.
+COPY launcher/jddlab     /usr/local/jddlab/host/jddlab
+COPY launcher/jddlab.cmd /usr/local/jddlab/host/jddlab.cmd
