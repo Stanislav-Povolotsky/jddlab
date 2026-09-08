@@ -464,13 +464,17 @@ class McpServer:
             if method == "initialize":
                 result = {
                     "protocolVersion": "2024-11-05",
-                    "capabilities": {"tools": {}, "prompts": {}},
+                    "capabilities": {"tools": {}, "prompts": {}, "resources": {}},
                     "serverInfo": {"name": SERVER_NAME, "version": SERVER_VERSION},
                 }
             elif method == "notifications/initialized":
                 return None
             elif method == "tools/list":
                 result = {"tools": self.tools}
+            elif method == "resources/list":
+                result = {"resources": []}
+            elif method == "resources/templates/list":
+                result = {"resourceTemplates": []}
             elif method == "tools/call":
                 params = message.get("params", {})
                 result = self.call_tool(str(params.get("name", "")), params.get("arguments", {}) or {})
