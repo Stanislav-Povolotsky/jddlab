@@ -1279,6 +1279,18 @@ body { margin: 0; background: #ffffff; }
 <pre><code class="language-text">apk-patcher [options] &lt;apk-or-directory&gt;
 </code></pre>
 <p>Run <code>apk-patcher -h</code> for the complete version-specific option list.</p>
+<h2 id="frida-gadget-version">Frida gadget version</h2>
+<p>By default (jddlab patch) apk-patcher injects the Frida gadget <strong>baked into the
+image at build time</strong> — it does not reach out to GitHub on every run, so patching
+is offline and reproducible. The baked version is recorded in
+<code>/usr/local/jddlab/software-list.txt</code> and the gadgets live in
+<code>/usr/local/frida-gadgets</code>.</p>
+<p>To use a different gadget:</p>
+<ul>
+<li><code>--frida-version &lt;ver&gt;</code> — download and inject a specific Frida version from GitHub.</li>
+<li><code>--online</code> (or the <code>JDDLAB_FRIDA_ONLINE=1</code> env var) — download the latest version from GitHub.</li>
+<li><code>JDDLAB_FRIDA_GADGET_DIR=&lt;dir&gt;</code> — point the cache at a different directory.</li>
+</ul>
 <h2 id="example">Example</h2>
 <pre><code class="language-json">{&quot;args&quot;:[&quot;app.apk&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;],&quot;output_paths&quot;:[&quot;.&quot;]}
 </code></pre>
