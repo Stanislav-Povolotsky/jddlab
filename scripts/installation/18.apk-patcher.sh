@@ -25,6 +25,10 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     mkdir -p "$pkg_path/Java/APK patcher/app/build/libs/"
     mv "Java/APK patcher/app/build/libs/app.jar" "$pkg_path/Java/APK patcher/app/build/libs/"
     popd
+
+    # jddlab: use the Frida gadget baked into the image (17.frida-gadgets.sh) by
+    # default instead of downloading the latest one from GitHub on every run.
+    python3 "$SCRIPT_DIR/helpers/patch-apk-patcher.py" "$pkg_path/apk-patcher.py"
 else
     $SCRIPT_DIR/helpers/get-git-branch-info.sh remote $BRANCH $REPO >/tmp/$pkg/info.txt
 fi
