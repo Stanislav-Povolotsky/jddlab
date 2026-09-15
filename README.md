@@ -56,7 +56,7 @@ For example if you have `test.apk` in the current folder, it will be accessible 
 > The `jddlab` / `jddlab.cmd` you download is a **thin launcher**: its only job is to
 > copy the real launcher (plus the MCP server and AI skills) out of the Docker image
 > into `~/.jddlab/mcp/current` and hand over to it. This means the real logic ships
-> **inside the image** and is refreshed together with it by `jddlab update` — you
+> **inside the image** and is refreshed together with it by `jddlab update` - you
 > download the thin launcher once and rarely need to update it by hand.
    
 To install `jddlab` command-line tool:
@@ -223,7 +223,7 @@ python mcp/server.py --list-commands
 
 ### Install MCP connectors with jddlab
 
-The standalone `jddlab` and `jddlab.cmd` launchers include an `mcp` subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) **out of the Docker image** — which ships them at `/usr/local/jddlab/host` — into `~/.jddlab/mcp/current` using `docker cp`, and then runs the installer from there. No separate download is involved, so the host files always match the image, and `docker cp` writes them owned by your user.
+The standalone `jddlab` and `jddlab.cmd` launchers include an `mcp` subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) **out of the Docker image** - which ships them at `/usr/local/jddlab/host` - into `~/.jddlab/mcp/current` using `docker cp`, and then runs the installer from there. No separate download is involved, so the host files always match the image, and `docker cp` writes them owned by your user.
 
 > The same files back `jddlab skills ...` (see below). Running `jddlab update`
 > re-extracts them from the freshly pulled image; `jddlab mcp update` /
@@ -413,6 +413,8 @@ After pairing and connecting, you can use ADB commands wirelessly.
 ```
 docker run -it --rm -v "$HOME/.android:/root/.android" -v "$PWD:/work" stanislavpovolotsky/jddlab:latest apktool --version
 ```
+
+**Security warning:** The image also ships a built-in `debug.keystore` (alias `androiddebugkey`, password `android`) so APKs can be signed without any host setup. Since this key is public, APKs signed with it offer no authenticity guarantee. For anything beyond local testing, generate your own keystore with `jddlab keytool` and mount or pass it explicitly.
 
 ## Tools
 

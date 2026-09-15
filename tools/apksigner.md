@@ -30,19 +30,29 @@ Part of the Android SDK Build Tools. Available in the jddlab Docker image at
 - `--print-certs`: Print certificates used to sign the APK.
 - `-v`: Short for `--verbose`.
 
+## Built-in debug keystore
+
+The jddlab image ships `/root/.android/debug.keystore` - the standard Android debug
+keystore baked into the image. No `extra_mounts` required. When the user mounts their
+own `~/.android` via `extra_mounts`, that overrides the built-in one automatically.
+
+- **Path**: `/root/.android/debug.keystore`
+- **Alias**: `androiddebugkey`
+- **Keystore / key password**: `android`
+- **Algorithm**: RSA 2048, validity 10000 days
+
 ## Examples
 
-Sign an APK with the debug keystore:
+Sign with the built-in debug keystore (no `extra_mounts` needed):
 ```json
 {
   "args": ["sign", "--ks", "/root/.android/debug.keystore", "--ks-key-alias", "androiddebugkey", "--ks-pass", "pass:android", "--key-pass", "pass:android", "app.apk"],
   "input_paths": ["app.apk"],
-  "output_paths": ["app.apk"],
-  "extra_mounts": [{"host": "~/.android", "container": "/root/.android", "mode": "ro"}]
+  "output_paths": ["app.apk"]
 }
 ```
 
-Sign with a custom keystore enabling all schemes:
+Sign with a custom host keystore enabling all schemes:
 ```json
 {
   "args": ["sign", "--ks", "release.keystore", "--ks-key-alias", "myapp", "--ks-pass", "pass:changeit", "--key-pass", "pass:changeit", "--v1-signing-enabled", "true", "--v2-signing-enabled", "true", "--v3-signing-enabled", "true", "app_aligned.apk"],

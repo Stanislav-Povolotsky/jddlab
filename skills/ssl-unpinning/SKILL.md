@@ -195,7 +195,7 @@ Any modified/patched APK must be aligned, signed, and verified before install:
 {"tool":"jddlab_zipalign","args":["-v","-p","4","rebuilt.apk","aligned.apk"],"input_paths":["rebuilt.apk"],"output_paths":["aligned.apk"]}
 ```
 ```json
-{"tool":"jddlab_apksigner","args":["sign","--ks","~/.android/debug.keystore","--ks-key-alias","androiddebugkey","--ks-pass","pass:android","--key-pass","pass:android","aligned.apk"],"input_paths":["aligned.apk"],"output_paths":["aligned.apk"],"extra_mounts":[{"host":"~/.android","container":"/root/.android","mode":"ro"}]}
+{"tool":"jddlab_apksigner","args":["sign","--ks","/root/.android/debug.keystore","--ks-key-alias","androiddebugkey","--ks-pass","pass:android","--key-pass","pass:android","aligned.apk"],"input_paths":["aligned.apk"],"output_paths":["aligned.apk"]}
 ```
 ```json
 {"tool":"jddlab_apksigner","args":["verify","--print-certs","aligned.apk"],"input_paths":["aligned.apk"]}

@@ -143,17 +143,19 @@ Edit files directly on the host inside `decompiled/`.  See §2.4 for smali patte
   "tool": "jddlab_apksigner",
   "args": [
     "sign",
-    "--ks", "~/.android/debug.keystore",
+    "--ks", "/root/.android/debug.keystore",
     "--ks-key-alias", "androiddebugkey",
     "--ks-pass", "pass:android",
     "--key-pass", "pass:android",
     "rebuilt_aligned.apk"
   ],
   "input_paths": ["rebuilt_aligned.apk"],
-  "output_paths": ["rebuilt_aligned.apk"],
-  "extra_mounts": [{"host": "~/.android", "container": "/root/.android", "mode": "ro"}]
+  "output_paths": ["rebuilt_aligned.apk"]
 }
 ```
+
+The debug keystore is built into the image - no `extra_mounts` needed. To use your
+own host key instead, add `"extra_mounts": [{"host": "~/.android", "container": "/root/.android", "mode": "ro"}]`.
 
 **Step 7 - Verify**
 
@@ -351,16 +353,32 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 
 **Never use `jarsigner`** - v1-only output is silently rejected by Android 7.0+.
 
-### 4.2 Create a Custom Keystore (one-time, host)
+### 4.2 Available Keystores
 
-```bash
-keytool -genkey -v \
-    -keystore ~/apk-testing.keystore \
-    -alias testing \
-    -keyalg RSA -keysize 2048 -validity 10000
+| Keystore | Location | Alias | Password | Notes |
+|---|---|---|---|---|
+| Built-in debug key | `/root/.android/debug.keystore` (inside image) | `androiddebugkey` | `android` | **Preferred** - built into image, no `extra_mounts` needed |
+| Host debug key | `~/.android/debug.keystore` (host mount) | `androiddebugkey` | `android` | Overrides built-in when mounted via `extra_mounts` |
+| Custom | generate with `jddlab_keytool` (see below) | your choice | your choice | For release or reproducible builds |
+
+Create a custom keystore via jddlab (no local JDK needed):
+
+```json
+{
+  "tool": "jddlab_keytool",
+  "args": ["-genkeypair", "-v",
+    "-keystore", "my-key.jks",
+    "-alias", "myapp",
+    "-keyalg", "RSA", "-keysize", "2048",
+    "-validity", "10000",
+    "-storepass", "changeit",
+    "-keypass", "changeit",
+    "-dname", "CN=My App, OU=Dev, O=My Org, L=City, ST=State, C=US",
+    "-storetype", "PKCS12",
+    "-noprompt"],
+  "output_paths": ["my-key.jks"]
+}
 ```
-
-Debug keystore (Android SDK): `~/.android/debug.keystore`, password: `android`, alias: `androiddebugkey`.
 
 ### 4.3 Full Signing Workflow via jddlab
 
@@ -375,21 +393,41 @@ Debug keystore (Android SDK): `~/.android/debug.keystore`, password: `android`, 
 ```
 
 ```json
-// 2. Sign (custom keystore)
+// 2a. Sign with built-in debug keystore (no extra_mounts needed)
 {
   "tool": "jddlab_apksigner",
   "args": [
     "sign",
-    "--ks", "apk-testing.keystore",
-    "--ks-key-alias", "testing",
-    "--ks-pass", "pass:your_password",
-    "--key-pass", "pass:your_password",
+    "--ks", "/root/.android/debug.keystore",
+    "--ks-key-alias", "androiddebugkey",
+    "--ks-pass", "pass:android",
+    "--key-pass", "pass:android",
     "--v1-signing-enabled", "true",
     "--v2-signing-enabled", "true",
     "--v3-signing-enabled", "true",
     "rebuilt_aligned.apk"
   ],
-  "input_paths": ["rebuilt_aligned.apk", "apk-testing.keystore"],
+  "input_paths": ["rebuilt_aligned.apk"],
+  "output_paths": ["rebuilt_aligned.apk"]
+}
+```
+
+```json
+// 2b. Sign with a custom host keystore
+{
+  "tool": "jddlab_apksigner",
+  "args": [
+    "sign",
+    "--ks", "my-key.jks",
+    "--ks-key-alias", "myapp",
+    "--ks-pass", "pass:changeit",
+    "--key-pass", "pass:changeit",
+    "--v1-signing-enabled", "true",
+    "--v2-signing-enabled", "true",
+    "--v3-signing-enabled", "true",
+    "rebuilt_aligned.apk"
+  ],
+  "input_paths": ["rebuilt_aligned.apk", "my-key.jks"],
   "output_paths": ["rebuilt_aligned.apk"]
 }
 ```
@@ -824,12 +862,19 @@ const-string v0, "value"
 ### Debug Keystore
 
 ```
-Path:     ~/.android/debug.keystore
+Path:     /root/.android/debug.keystore  (built into the image)
 Alias:    androiddebugkey
 Password: android
 ```
 
-Mount it in jddlab calls:
+No `extra_mounts` needed - use directly:
+```json
+"args": ["sign", "--ks", "/root/.android/debug.keystore",
+         "--ks-key-alias", "androiddebugkey",
+         "--ks-pass", "pass:android", "--key-pass", "pass:android", ...]
+```
+
+To use your own host key, add `extra_mounts` and it will override the built-in one:
 ```json
 "extra_mounts": [{"host": "~/.android", "container": "/root/.android", "mode": "ro"}]
 ```

@@ -73,7 +73,8 @@
     {"command": "std-apk", "mcp_tool": "jddlab_std_apk", "docs": "tools/std-apk.md"},
     {"command": "vineflower", "mcp_tool": "jddlab_vineflower", "docs": "tools/vineflower.md"},
     {"command": "apksigner", "mcp_tool": "jddlab_apksigner", "docs": "tools/apksigner.md"},
-    {"command": "zipalign", "mcp_tool": "jddlab_zipalign", "docs": "tools/zipalign.md"}
+    {"command": "zipalign", "mcp_tool": "jddlab_zipalign", "docs": "tools/zipalign.md"},
+    {"command": "keytool", "mcp_tool": "jddlab_keytool", "docs": "tools/keytool.md"}
   ]
 }
 

@@ -82,6 +82,7 @@ COMMANDS = [
     "vineflower",
     "apksigner",
     "zipalign",
+    "keytool",
 ]
 
 DESCRIPTIONS = {
@@ -113,6 +114,7 @@ DESCRIPTIONS = {
     "extract_jni": "Extract JNI/native library artifacts from Android packages.",
     "apksigner": "Sign and verify Android APK files using v1/v2/v3/v4 signing schemes (Android SDK Build Tools).",
     "zipalign": "Align uncompressed data in an Android APK to 4-byte boundaries (Android SDK Build Tools).",
+    "keytool": "Java KeyStore management tool: generate RSA key pairs and self-signed certificates for APK signing keystores.",
 }
 
 DEX2JAR_DESCRIPTIONS = {
