@@ -1482,7 +1482,7 @@ return-void. Also check <code>res/xml/network_security_config.xml</code> and rem
 <p>Any modified/patched APK must be aligned, signed, and verified before install:</p>
 <pre><code class="language-json">{&quot;tool&quot;:&quot;jddlab_zipalign&quot;,&quot;args&quot;:[&quot;-v&quot;,&quot;-p&quot;,&quot;4&quot;,&quot;rebuilt.apk&quot;,&quot;aligned.apk&quot;],&quot;input_paths&quot;:[&quot;rebuilt.apk&quot;],&quot;output_paths&quot;:[&quot;aligned.apk&quot;]}
 </code></pre>
-<pre><code class="language-json">{&quot;tool&quot;:&quot;jddlab_apksigner&quot;,&quot;args&quot;:[&quot;sign&quot;,&quot;--ks&quot;,&quot;~/.android/debug.keystore&quot;,&quot;--ks-key-alias&quot;,&quot;androiddebugkey&quot;,&quot;--ks-pass&quot;,&quot;pass:android&quot;,&quot;--key-pass&quot;,&quot;pass:android&quot;,&quot;aligned.apk&quot;],&quot;input_paths&quot;:[&quot;aligned.apk&quot;],&quot;output_paths&quot;:[&quot;aligned.apk&quot;],&quot;extra_mounts&quot;:[{&quot;host&quot;:&quot;~/.android&quot;,&quot;container&quot;:&quot;/root/.android&quot;,&quot;mode&quot;:&quot;ro&quot;}]}
+<pre><code class="language-json">{&quot;tool&quot;:&quot;jddlab_apksigner&quot;,&quot;args&quot;:[&quot;sign&quot;,&quot;--ks&quot;,&quot;/root/.android/debug.keystore&quot;,&quot;--ks-key-alias&quot;,&quot;androiddebugkey&quot;,&quot;--ks-pass&quot;,&quot;pass:android&quot;,&quot;--key-pass&quot;,&quot;pass:android&quot;,&quot;aligned.apk&quot;],&quot;input_paths&quot;:[&quot;aligned.apk&quot;],&quot;output_paths&quot;:[&quot;aligned.apk&quot;]}
 </code></pre>
 <pre><code class="language-json">{&quot;tool&quot;:&quot;jddlab_apksigner&quot;,&quot;args&quot;:[&quot;verify&quot;,&quot;--print-certs&quot;,&quot;aligned.apk&quot;],&quot;input_paths&quot;:[&quot;aligned.apk&quot;]}
 </code></pre>

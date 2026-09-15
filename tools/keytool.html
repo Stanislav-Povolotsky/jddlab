@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>apk-patcher</title>
+<title>keytool</title>
 <link rel="stylesheet" href="../hljs/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
 <style>
@@ -1273,26 +1273,78 @@ body { margin: 0; background: #ffffff; }
 <body>
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
-<h1 id="apk-patcher">apk-patcher</h1>
-<p>Patch Android APKs, commonly to inject Frida gadget while touching as little of the package as possible.</p>
-<h2 id="usage">Usage</h2>
-<pre><code class="language-text">apk-patcher [options] &lt;apk-or-directory&gt;
-</code></pre>
-<p>Run <code>apk-patcher -h</code> for the complete version-specific option list.</p>
-<h2 id="frida-gadget-version">Frida gadget version</h2>
-<p>By default (jddlab patch) apk-patcher injects the Frida gadget <strong>baked into the
-image at build time</strong> - it does not reach out to GitHub on every run, so patching
-is offline and reproducible. The baked version is recorded in
-<code>/usr/local/jddlab/software-list.txt</code> and the gadgets live in
-<code>/usr/local/frida-gadgets</code>.</p>
-<p>To use a different gadget:</p>
+<h1 id="keytool">keytool</h1>
+<p>Java KeyStore management tool for generating key pairs, certificates, and managing
+keystores. Part of the JDK (available as <code>keytool</code> in the jddlab Docker image).</p>
+<h2 id="main-modes">Main modes</h2>
 <ul>
-<li><code>--frida-version &lt;ver&gt;</code> - download and inject a specific Frida version from GitHub.</li>
-<li><code>--online</code> (or the <code>JDDLAB_FRIDA_ONLINE=1</code> env var) - download the latest version from GitHub.</li>
-<li><code>JDDLAB_FRIDA_GADGET_DIR=&lt;dir&gt;</code> - point the cache at a different directory.</li>
+<li><code>keytool -genkeypair [options]</code>: Generate a key pair and a self-signed certificate.</li>
+<li><code>keytool -list [options]</code>: List keystore contents.</li>
+<li><code>keytool -exportcert [options]</code>: Export a certificate.</li>
+<li><code>keytool -importcert [options]</code>: Import a certificate.</li>
+<li><code>keytool -printcert [options]</code>: Print certificate details.</li>
+<li><code>keytool -delete [options]</code>: Delete a keystore entry.</li>
+<li><code>keytool -help</code>: Print command summary.</li>
 </ul>
-<h2 id="example">Example</h2>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;app.apk&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;],&quot;output_paths&quot;:[&quot;.&quot;]}
+<h2 id="common-genkeypair-options">Common genkeypair options</h2>
+<ul>
+<li><code>-keystore &lt;file&gt;</code>: Keystore file to create or update. Use <code>.jks</code> (JKS) or <code>.p12</code>/<code>.pfx</code> (PKCS12).</li>
+<li><code>-alias &lt;name&gt;</code>: Alias name for the new key entry.</li>
+<li><code>-keyalg RSA</code>: Key algorithm. RSA is required for Android APK signing.</li>
+<li><code>-keysize 2048</code>: Key size in bits. 2048 or 4096 for RSA.</li>
+<li><code>-validity &lt;days&gt;</code>: Certificate validity period in days (e.g. <code>10000</code> ≈ 27 years).</li>
+<li><code>-storepass &lt;password&gt;</code>: Keystore password.</li>
+<li><code>-keypass &lt;password&gt;</code>: Key password (can match storepass).</li>
+<li><code>-dname &lt;dn&gt;</code>: Distinguished name, e.g. <code>&quot;CN=Test, OU=Dev, O=Test, L=City, ST=State, C=US&quot;</code>.</li>
+<li><code>-storetype PKCS12</code>: Force PKCS12 format (recommended over JKS for new keystores).</li>
+<li><code>-noprompt</code>: Do not prompt for confirmation.</li>
+<li><code>-v</code>: Verbose output.</li>
+</ul>
+<h2 id="common-list-options">Common list options</h2>
+<ul>
+<li><code>-keystore &lt;file&gt;</code>: Keystore to list.</li>
+<li><code>-storepass &lt;password&gt;</code>: Keystore password.</li>
+<li><code>-v</code>: Verbose (show full certificate chain).</li>
+<li><code>-alias &lt;name&gt;</code>: List only this alias.</li>
+</ul>
+<h2 id="built-in-debug-keystore">Built-in debug keystore</h2>
+<p>The jddlab image ships the standard Android debug keystore at
+<code>/root/.android/debug.keystore</code> - no host files or <code>extra_mounts</code> needed:</p>
+<ul>
+<li><strong>Path</strong>: <code>/root/.android/debug.keystore</code></li>
+<li><strong>Alias</strong>: <code>androiddebugkey</code></li>
+<li><strong>Keystore / key password</strong>: <code>android</code></li>
+<li><strong>Algorithm</strong>: RSA 2048, validity 10000 days</li>
+<li><strong>Supports</strong>: v1 + v2 + v3 signing schemes</li>
+</ul>
+<p>When the user mounts their own <code>~/.android</code> via <code>extra_mounts</code>, it overrides this
+built-in keystore automatically.</p>
+<h2 id="examples">Examples</h2>
+<h3 id="generate-a-new-keystore-output-to-work">Generate a new keystore (output to /work)</h3>
+<pre><code class="language-json">{
+  &quot;args&quot;: [&quot;-genkeypair&quot;, &quot;-v&quot;,
+    &quot;-keystore&quot;, &quot;my-release-key.jks&quot;,
+    &quot;-alias&quot;, &quot;myapp&quot;,
+    &quot;-keyalg&quot;, &quot;RSA&quot;, &quot;-keysize&quot;, &quot;2048&quot;,
+    &quot;-validity&quot;, &quot;10000&quot;,
+    &quot;-storepass&quot;, &quot;changeit&quot;,
+    &quot;-keypass&quot;, &quot;changeit&quot;,
+    &quot;-dname&quot;, &quot;CN=My App, OU=Dev, O=My Org, L=City, ST=State, C=US&quot;,
+    &quot;-storetype&quot;, &quot;PKCS12&quot;,
+    &quot;-noprompt&quot;],
+  &quot;output_paths&quot;: [&quot;my-release-key.jks&quot;]
+}
+</code></pre>
+<h3 id="list-contents-of-an-existing-keystore">List contents of an existing keystore</h3>
+<pre><code class="language-json">{
+  &quot;args&quot;: [&quot;-list&quot;, &quot;-v&quot;, &quot;-keystore&quot;, &quot;my-release-key.jks&quot;, &quot;-storepass&quot;, &quot;changeit&quot;],
+  &quot;input_paths&quot;: [&quot;my-release-key.jks&quot;]
+}
+</code></pre>
+<h3 id="list-the-built-in-debug-keystore-no-mount-needed">List the built-in debug keystore (no mount needed)</h3>
+<pre><code class="language-json">{
+  &quot;args&quot;: [&quot;-list&quot;, &quot;-v&quot;, &quot;-keystore&quot;, &quot;/root/.android/debug.keystore&quot;, &quot;-storepass&quot;, &quot;android&quot;]
+}
 </code></pre>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>
@@ -1301,13 +1353,13 @@ is offline and reproducible. The baked version is recorded in
 <li><code>workdir</code>: optional host directory to mount as <code>/work</code>.</li>
 <li><code>input_paths</code>: host input files/directories used for mount-root inference and path rewriting.</li>
 <li><code>output_paths</code>: host output files/directories used for mount-root inference and path rewriting.</li>
-<li><code>extra_mounts</code>: additional Docker mounts such as Android keys or persistent state.</li>
+<li><code>extra_mounts</code>: additional Docker mounts.</li>
 <li><code>timeout_seconds</code>: command timeout.</li>
 <li><code>docker_image</code>: override the default <code>stanislavpovolotsky/jddlab:latest</code> image.</li>
 <li><code>interactive</code>: add Docker <code>-it</code>; keep this false for most MCP clients.</li>
 </ul>
 <p>The server runs:</p>
-<pre><code class="language-text">docker run --rm -v &quot;&lt;host-mount-root&gt;:/work&quot; stanislavpovolotsky/jddlab:latest apk-patcher &lt;args&gt;
+<pre><code class="language-text">docker run --rm -v &quot;&lt;host-mount-root&gt;:/work&quot; stanislavpovolotsky/jddlab:latest keytool &lt;args&gt;
 </code></pre>
 
 </article>

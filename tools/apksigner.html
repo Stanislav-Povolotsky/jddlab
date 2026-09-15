@@ -1302,16 +1302,25 @@ body { margin: 0; background: #ffffff; }
 <li><code>--print-certs</code>: Print certificates used to sign the APK.</li>
 <li><code>-v</code>: Short for <code>--verbose</code>.</li>
 </ul>
+<h2 id="built-in-debug-keystore">Built-in debug keystore</h2>
+<p>The jddlab image ships <code>/root/.android/debug.keystore</code> - the standard Android debug
+keystore baked into the image. No <code>extra_mounts</code> required. When the user mounts their
+own <code>~/.android</code> via <code>extra_mounts</code>, that overrides the built-in one automatically.</p>
+<ul>
+<li><strong>Path</strong>: <code>/root/.android/debug.keystore</code></li>
+<li><strong>Alias</strong>: <code>androiddebugkey</code></li>
+<li><strong>Keystore / key password</strong>: <code>android</code></li>
+<li><strong>Algorithm</strong>: RSA 2048, validity 10000 days</li>
+</ul>
 <h2 id="examples">Examples</h2>
-<p>Sign an APK with the debug keystore:</p>
+<p>Sign with the built-in debug keystore (no <code>extra_mounts</code> needed):</p>
 <pre><code class="language-json">{
   &quot;args&quot;: [&quot;sign&quot;, &quot;--ks&quot;, &quot;/root/.android/debug.keystore&quot;, &quot;--ks-key-alias&quot;, &quot;androiddebugkey&quot;, &quot;--ks-pass&quot;, &quot;pass:android&quot;, &quot;--key-pass&quot;, &quot;pass:android&quot;, &quot;app.apk&quot;],
   &quot;input_paths&quot;: [&quot;app.apk&quot;],
-  &quot;output_paths&quot;: [&quot;app.apk&quot;],
-  &quot;extra_mounts&quot;: [{&quot;host&quot;: &quot;~/.android&quot;, &quot;container&quot;: &quot;/root/.android&quot;, &quot;mode&quot;: &quot;ro&quot;}]
+  &quot;output_paths&quot;: [&quot;app.apk&quot;]
 }
 </code></pre>
-<p>Sign with a custom keystore enabling all schemes:</p>
+<p>Sign with a custom host keystore enabling all schemes:</p>
 <pre><code class="language-json">{
   &quot;args&quot;: [&quot;sign&quot;, &quot;--ks&quot;, &quot;release.keystore&quot;, &quot;--ks-key-alias&quot;, &quot;myapp&quot;, &quot;--ks-pass&quot;, &quot;pass:changeit&quot;, &quot;--key-pass&quot;, &quot;pass:changeit&quot;, &quot;--v1-signing-enabled&quot;, &quot;true&quot;, &quot;--v2-signing-enabled&quot;, &quot;true&quot;, &quot;--v3-signing-enabled&quot;, &quot;true&quot;, &quot;app_aligned.apk&quot;],
   &quot;input_paths&quot;: [&quot;app_aligned.apk&quot;, &quot;release.keystore&quot;],
