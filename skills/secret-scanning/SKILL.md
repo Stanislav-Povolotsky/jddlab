@@ -3,30 +3,29 @@ name: secret-scanning
 description: Find hardcoded secrets, API keys, tokens and endpoints in Android apps with jddlab - APKscan plus manual jadx/resource review. Use to audit an APK for leaked credentials or other sensitive data.
 ---
 
-# Android Secret & Endpoint Scanning - jddlab Edition
-**Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Intermediate
+# Android secret and endpoint scanning with jddlab
 
-> How to find hardcoded secrets (API keys, tokens, credentials), endpoints, and other
-> sensitive data inside Android apps using **jddlab**. Centered on **APKscan**, which
-> decompiles + deobfuscates + scans in one pass, with manual follow-up techniques.
-> Every tool runs inside the `stanislavpovolotsky/jddlab` Docker container via the
-> **jddlab MCP server**.
+Version 1.0, 2026-08.
 
----
+How to find hardcoded secrets (API keys, tokens, credentials), endpoints and other
+sensitive data in Android apps with jddlab. The main tool is APKscan, which
+decompiles, deobfuscates and scans in one pass; manual checks follow. Every tool runs
+inside the `stanislavpovolotsky/jddlab` Docker container through the jddlab MCP
+server.
 
-## Table of Contents
 
-1. [Toolchain Overview](#1-toolchain-overview)
-2. [Quick Scan with APKscan](#2-quick-scan-with-apkscan)
-3. [Tuning Rules & Output](#3-tuning-rules--output)
-4. [Scanning Obfuscated Apps](#4-scanning-obfuscated-apps)
-5. [Manual Follow-up (jadx grep, resources, native)](#5-manual-follow-up)
-6. [Triage: Which Findings Matter](#6-triage-which-findings-matter)
+## Table of contents
+
+1. [Toolchain overview](#1-toolchain-overview)
+2. [Quick scan with APKscan](#2-quick-scan-with-apkscan)
+3. [Tuning rules & output](#3-tuning-rules--output)
+4. [Scanning obfuscated apps](#4-scanning-obfuscated-apps)
+5. [Manual follow-up (jadx grep, resources, native)](#5-manual-follow-up)
+6. [Triage: which findings matter](#6-triage-which-findings-matter)
 7. [Troubleshooting](#7-troubleshooting)
 
----
 
-## 1. Toolchain Overview
+## 1. Toolchain overview
 
 | Task | jddlab MCP tool | Native command |
 |---|---|---|
@@ -40,9 +39,8 @@ APKscan accepts `.apk`, `.xapk`, `.dex`, `.jar`, `.class`, `.smali`, `.zip`, `.a
 `.arsc`, `.aab`. It runs a decompiler itself (JADX by default), so you can point it
 straight at an APK.
 
----
 
-## 2. Quick Scan with APKscan
+## 2. Quick scan with APKscan
 
 ```json
 {
@@ -54,22 +52,21 @@ straight at an APK.
 }
 ```
 
-- `-f {text,json,yaml}` - output format (`json` is best for further processing).
-- `-o <file>` - write results to a file.
-- `-g {file,locator,both}` - group findings by input file, by rule, or both.
+- `-f {text,json,yaml}`: output format (`json` is easiest to process further).
+- `-o <file>`: write results to a file.
+- `-g {file,locator,both}`: group findings by input file, by rule, or both.
 
-Large APKs take a while (decompilation dominates). Raise `timeout_seconds`.
+Large APKs take a while, mostly in decompilation; raise `timeout_seconds`.
 
----
 
-## 3. Tuning Rules & Output
+## 3. Tuning rules & output
 
-APKscan ships several built-in **locator sets**. Select them with `-r`/`--rules`:
+APKscan has several built-in locator sets. Select them with `-r`/`--rules`:
 
 `aws`, `azure`, `gcp`, `cloud`, `endpoints`, `generic`, `gitleaks`, `nuclei-regexes`,
 `high-confidence`, `curated`, `default`, `all_secret_locators`.
 
-Scan for cloud creds + endpoints only, high signal:
+Scan only for cloud credentials and endpoints, with high-confidence rules:
 
 ```json
 {
@@ -95,9 +92,8 @@ by passing their file paths to `-r`:
 Use `-c`/`--cleanup` to delete the (large) decompiled output after scanning, or
 `-w <dir>` to keep it somewhere you can inspect (see §5).
 
----
 
-## 4. Scanning Obfuscated Apps
+## 4. Scanning obfuscated apps
 
 Obfuscation hides secrets from a plain scan. APKscan can deobfuscate first
 (`-d`/`--deobfuscate` is on by default) and can use alternate decompilers:
@@ -112,25 +108,23 @@ Obfuscation hides secrets from a plain scan. APKscan can deobfuscate first
 }
 ```
 
-If strings are encrypted at runtime, a static scan will miss them. Decrypt first using
-the **java-deobfuscation** skill (`d2j-decrypt-string` / `simplify`), then scan the
+A static scan misses strings that are decrypted at runtime. Decrypt them first with
+the java-deobfuscation skill (`d2j-decrypt-string` / `simplify`), then scan the
 cleaned JAR/DEX with APKscan.
 
----
 
-## 5. Manual Follow-up
+## 5. Manual follow-up
 
-APKscan is pattern-based; always confirm and hunt beyond it.
+APKscan is pattern-based: confirm what it finds and look further yourself.
 
-**Keep the decompiled sources** (`-w decompiled`) and grep for high-value markers on the
-host:
+Keep the decompiled sources (`-w decompiled`) and grep them on the host:
 
 ```
 grep -rEn "api[_-]?key|secret|token|password|bearer|BEGIN (RSA|EC|PRIVATE)" decompiled/
 grep -rEn "https?://[a-zA-Z0-9._~:/?#@!$&'()*+,;=%-]+" decompiled/   # endpoints
 ```
 
-**Do not forget non-code locations** - decode resources and check them too:
+Secrets also hide outside the code, so decode the resources and check them too:
 
 ```json
 {
@@ -143,12 +137,11 @@ grep -rEn "https?://[a-zA-Z0-9._~:/?#@!$&'()*+,;=%-]+" decompiled/   # endpoints
 
 Then inspect: `dec/res/values/strings.xml`, `dec/assets/`, `dec/res/raw/`,
 `AndroidManifest.xml` (`<meta-data>` API keys, e.g. Google Maps), `.properties`/`.json`
-config files, and any bundled `.env`. Secrets baked into native libraries need the
-**native-jni-analysis** skill.
+config files, and any bundled `.env`. For secrets in native libraries, use the
+native-jni-analysis skill.
 
----
 
-## 6. Triage: Which Findings Matter
+## 6. Triage: which findings matter
 
 | Finding | Risk | Notes |
 |---|---|---|
@@ -161,7 +154,6 @@ config files, and any bundled `.env`. Secrets baked into native libraries need t
 Deduplicate across `smali`/`java`/resource copies of the same string, and verify a
 finding is reachable (not dead test data) before reporting it.
 
----
 
 ## 7. Troubleshooting
 

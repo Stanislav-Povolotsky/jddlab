@@ -11,29 +11,39 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
+import socket
 import subprocess
 import sys
 import threading
+import uuid
 from pathlib import Path
 from typing import Any
 
 
 SERVER_NAME = "jddlab-mcp"
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = "0.2.0"
 DEFAULT_IMAGE = "stanislavpovolotsky/jddlab:latest"
 DEFAULT_TIMEOUT_SECONDS = 3600
+# Persistent docker volume for tool caches (e.g. blutter's per-Dart-version builds)
+CACHE_VOLUME = "jddlab-cache:/var/cache/jddlab"
+ADB_SERVER_PORT = 5037
 
 COMMANDS = [
     "APKEditor",
+    "adb",
     "androguard",
     "android-unpinner",
     "apk-patcher",
     "apk-sign",
     "apkeditor",
+    "apkid",
     "apkscan",
     "apktool",
     "asm-verify",
     "baksmali",
+    "blutter",
+    "cfr",
     "class-version-switch",
     "d2j-apk-sign",
     "d2j-asm-verify",
@@ -59,8 +69,17 @@ COMMANDS = [
     "enjarify",
     "extract_jni",
     "fernflower",
+    "frida",
+    "frida-compile",
+    "frida-kill",
+    "frida-ps",
+    "frida-trace",
     "ghidra",
     "ghidra-decompile",
+    "hbc-decompiler",
+    "hbc-disassembler",
+    "hbc-file-parser",
+    "ilspycmd",
     "jadx",
     "jar-access",
     "jar-weaver",
@@ -73,9 +92,12 @@ COMMANDS = [
     "krakatau-assemble",
     "krakatau-disassemble",
     "krakatau2",
+    "mobsfscan",
     "objection",
     "procyon",
     "procyon-decompiler",
+    "pyxamstore",
+    "quark",
     "simplify",
     "smali",
     "std-apk",
@@ -95,10 +117,26 @@ DESCRIPTIONS = {
     "vineflower": "Modern FernFlower fork for Java bytecode decompilation.",
     "procyon": "Procyon Java decompiler and bytecode analysis tool.",
     "procyon-decompiler": "Procyon decompiler command alias.",
+    "cfr": "CFR Java decompiler: JAR/class files to Java sources (strong on modern Java constructs).",
     "krakatau-disassemble": "Disassemble Java class files to Krakatau assembly.",
     "krakatau-assemble": "Assemble Krakatau assembly back to Java class files or jars.",
-    "krakatau2": "Krakatau v2 command-line interface.",
+    "krakatau2": "Krakatau v2 Java bytecode assembler/disassembler (dis/asm subcommands).",
     "krak2": "Krakatau v2 short command alias.",
+    "apkid": "Identify packers, protectors, obfuscators and compilers used to build an APK/DEX. Run first on an unknown APK.",
+    "hbc-file-parser": "Print the header of a React Native Hermes bytecode file (assets/index.android.bundle).",
+    "hbc-disassembler": "Disassemble React Native Hermes bytecode (index.android.bundle) to Hermes assembly.",
+    "hbc-decompiler": "Decompile React Native Hermes bytecode (index.android.bundle) to pseudo-JavaScript.",
+    "blutter": "Flutter reverse engineering: recover Dart classes, functions, object pool and a Frida script from an arm64 libapp.so (first run per Dart version compiles an analyzer and is slow).",
+    "pyxamstore": "Unpack/repack Xamarin and .NET MAUI assembly stores (assemblies.blob, libassemblies.<abi>.blob.so) to .NET DLLs.",
+    "ilspycmd": "ILSpy command-line .NET decompiler: DLL/EXE (e.g. Xamarin/MAUI assemblies) to C# sources.",
+    "mobsfscan": "Static analysis (SAST) of Android/iOS source code, e.g. jadx output, for insecure code patterns.",
+    "quark": "Quark-Engine: score Android malware behaviour of an APK/DEX with a built-in rule set.",
+    "adb": "Android Debug Bridge. Uses the host ADB server (and its USB/Wi-Fi devices) when one is running.",
+    "frida": "Frida CLI. Non-interactive use: -q (quiet) with -l script.js / -e code and -t <seconds>.",
+    "frida-ps": "List processes/applications on a device (-U for the ADB device, -a apps, -i installed).",
+    "frida-trace": "Trace function calls on a device (use a timeout; handlers are written to ./__handlers__).",
+    "frida-kill": "Kill a process on a device.",
+    "frida-compile": "Compile a Frida TypeScript/ES module agent into a single script.",
     "androguard": "Android reverse engineering toolkit for APK, DEX, analysis, and signing commands.",
     "objection": "Runtime mobile exploration and APK patching toolkit.",
     "ghidra": "Ghidra headless analyzer.",
@@ -111,6 +149,8 @@ DESCRIPTIONS = {
     "java-deobfuscator-detect": "Detect java-deobfuscator transformers for a jar.",
     "smali": "Assemble smali files into DEX bytecode.",
     "baksmali": "Disassemble DEX bytecode into smali files.",
+    "d2j-smali": "dex2jar's smali assembler: smali files to DEX.",
+    "d2j-baksmali": "dex2jar's baksmali disassembler: DEX to smali files.",
     "extract_jni": "Extract JNI/native library artifacts from Android packages.",
     "apksigner": "Sign and verify Android APK files using v1/v2/v3/v4 signing schemes (Android SDK Build Tools).",
     "zipalign": "Align uncompressed data in an Android APK to 4-byte boundaries (Android SDK Build Tools).",
@@ -203,6 +243,43 @@ def to_container_arg(arg: str, mount_root: Path, path_map: dict[str, str], base_
     return to_container_path(maybe_path, mount_root)
 
 
+def host_adb_server_running() -> bool:
+    try:
+        with socket.create_connection(("127.0.0.1", ADB_SERVER_PORT), timeout=0.3):
+            return True
+    except OSError:
+        return False
+
+
+def adb_docker_args() -> list[str]:
+    """Docker arguments that connect the container to the host ADB server.
+
+    Every MCP call is a separate `docker run --rm`, so an ADB server started inside
+    the container (and its `adb connect`) is lost after each call. Using the host
+    ADB server keeps devices (USB or Wi-Fi) connected across calls, which is what
+    makes adb/frida/objection usable through MCP. Controlled by environment
+    variables of the MCP server process:
+      JDDLAB_ADB=auto (default: use the host server if it is running) | host | container
+      JDDLAB_ADB_SERVER=<host>:<port>  an explicit ADB server to use
+    """
+    mode = os.environ.get("JDDLAB_ADB", "auto").strip().lower()
+    explicit = os.environ.get("JDDLAB_ADB_SERVER", "").strip()
+    is_linux = platform.system() == "Linux"
+    if mode in ("container", "off", "none", "0"):
+        return []
+    if explicit:
+        args = ["-e", f"JDDLAB_ADB_SERVER={explicit}"]
+        return args + (["--add-host=host.docker.internal:host-gateway"] if is_linux else [])
+    if mode != "host" and not host_adb_server_running():
+        return []
+    if is_linux:
+        # Native Docker: the host server listens on the host's loopback only, which
+        # the container can reach with host networking.
+        return ["--network=host"]
+    # Docker Desktop (Windows/macOS) proxies host.docker.internal to the host's loopback.
+    return ["-e", f"JDDLAB_ADB_SERVER=host.docker.internal:{ADB_SERVER_PORT}"]
+
+
 def build_docker_command(
     command: str,
     args: list[str],
@@ -212,6 +289,7 @@ def build_docker_command(
     extra_mounts: list[dict[str, str]],
     docker_image: str,
     interactive: bool,
+    container_name: str | None = None,
 ) -> tuple[list[str], Path, list[str]]:
     paths = [path for path in (normalize_path(value) for value in [workdir, *input_paths, *output_paths]) if path]
     mount_root = common_path(paths) if paths else Path.cwd().resolve()
@@ -229,7 +307,10 @@ def build_docker_command(
     docker_cmd = ["docker", "run"]
     if interactive:
         docker_cmd.append("-it")
-    docker_cmd.extend(["--rm", "-v", f"{mount_root}:/work"])
+    if container_name:
+        docker_cmd.extend(["--name", container_name])
+    docker_cmd.extend(["--rm", "-v", f"{mount_root}:/work", "-v", CACHE_VOLUME])
+    docker_cmd.extend(adb_docker_args())
     for mount in extra_mounts:
         host = normalize_path(mount.get("host"))
         container = mount.get("container")
@@ -264,6 +345,9 @@ def run_jddlab(arguments: dict[str, Any], forced_command: str | None = None) -> 
     docker_image = str(arguments.get("docker_image", DEFAULT_IMAGE))
     interactive = bool(arguments.get("interactive", False))
     workdir = arguments.get("workdir")
+    # Named, so that the container can be killed on timeout: killing the `docker`
+    # client alone leaves the container (e.g. a frida-trace session) running.
+    container_name = f"jddlab-mcp-{uuid.uuid4().hex[:12]}"
 
     docker_cmd, mount_root, container_args = build_docker_command(
         command=command,
@@ -274,6 +358,7 @@ def run_jddlab(arguments: dict[str, Any], forced_command: str | None = None) -> 
         extra_mounts=extra_mounts,
         docker_image=docker_image,
         interactive=interactive,
+        container_name=container_name,
     )
 
     try:
@@ -295,6 +380,7 @@ def run_jddlab(arguments: dict[str, Any], forced_command: str | None = None) -> 
             "stderr": completed.stderr,
         }
     except subprocess.TimeoutExpired as exc:
+        subprocess.run(["docker", "rm", "-f", container_name], capture_output=True, check=False)
         return {
             "command": command,
             "args": container_args,

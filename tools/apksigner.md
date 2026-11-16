@@ -32,14 +32,14 @@ Part of the Android SDK Build Tools. Available in the jddlab Docker image at
 
 ## Built-in debug keystore
 
-The jddlab image ships `/root/.android/debug.keystore` - the standard Android debug
-keystore baked into the image. No `extra_mounts` required. When the user mounts their
-own `~/.android` via `extra_mounts`, that overrides the built-in one automatically.
+The image includes the standard Android debug keystore at
+`/root/.android/debug.keystore`, so no `extra_mounts` are needed. If the user mounts
+their own `~/.android` with `extra_mounts`, that one is used instead.
 
-- **Path**: `/root/.android/debug.keystore`
-- **Alias**: `androiddebugkey`
-- **Keystore / key password**: `android`
-- **Algorithm**: RSA 2048, validity 10000 days
+- Path: `/root/.android/debug.keystore`
+- Alias: `androiddebugkey`
+- Keystore and key password: `android`
+- Algorithm: RSA 2048, valid for 10000 days
 
 ## Examples
 
@@ -69,12 +69,10 @@ Verify and print certificates:
 }
 ```
 
-## CRITICAL: Sign AFTER zipalign
+## Align before signing
 
-APK signing with v2/v3 schemes covers the entire APK binary. Running `zipalign`
-after signing invalidates the signature. Always:
-1. Run `zipalign` first.
-2. Run `apksigner` second.
+v2/v3 signatures cover the whole APK file, so running `zipalign` after signing
+invalidates them. Run `zipalign` first, then `apksigner`.
 
 ## MCP wrapper arguments
 

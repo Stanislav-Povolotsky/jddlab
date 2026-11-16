@@ -3,19 +3,19 @@ set -ex
 
 # Deduplicate Frida gadgets across tools: point android-unpinner's bundled
 # gadgets at the shared build-time cache (17.frida-gadgets.sh), so the image does
-# not store the same gadgets twice. This also upgrades android-unpinner from its
-# vendored (pinned) gadget to the latest one baked into the image.
+# not store the same gadgets twice. android-unpinner gets the frida 16.x gadget:
+# its unpinning scripts (httptoolkit-unpinner.js, ...) are plain scripts that use
+# the global `Java` object, which frida 17 no longer provides to such scripts - with
+# a 17.x gadget they fail silently and nothing is unpinned (verified on a device).
 #
-# objection is intentionally NOT touched here: objection@16 needs its own frida
-# 16.x gadget for old Android devices and downloads it at runtime, and the latest
-# objection downloads the latest gadget at runtime into the (writable) HOME - so
-# there is nothing to deduplicate in the image for it.
+# objection doesn't store gadgets in the image: its patchapk copies the baked one
+# into ~/.objection at runtime (see helpers/patch-objection.py, 98.apply-patches.sh).
 
 # Nothing is installed in version-collection-only builds.
 [[ "$versions_collect_mode" == "0" ]] || return 0
 
 cache_dir=$target_install_path/usr/local/frida-gadgets
-frida_version=$(cat $cache_dir/VERSION)
+frida_version=$(cat $cache_dir/VERSION-16)
 
 # android-unpinner is installed into the main venv; its vendored gadgets live at
 # .../android_unpinner/vendor/frida/frida-gadget-<ver>-android-<arch>.so

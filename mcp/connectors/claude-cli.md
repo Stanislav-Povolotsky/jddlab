@@ -1,4 +1,4 @@
-# Claude CLI Connector
+# Claude CLI connector
 
 Replace `<REPO_PATH>` with the absolute path to this repository.
 

@@ -8,7 +8,8 @@ New behaviour:
   * default            -> use the build-time cache (FRIDA_GADGET_CACHE_DIR,
                           default /usr/local/frida-gadgets, override with the
                           JDDLAB_FRIDA_GADGET_DIR environment variable)
-  * --frida-version X  -> download version X from GitHub
+  * --frida-version X  -> the cached gadget if version X is baked in, else
+                          download version X from GitHub
   * --online           -> download the latest version from GitHub
                           (also enabled via JDDLAB_FRIDA_ONLINE=1)
 
@@ -36,8 +37,8 @@ NEW_ARGS = (
     "            type = str,\n"
     "            default = None,\n"
     "            help = (\"Frida gadget version to inject. By default (jddlab) the version baked\\n\"\n"
-    "                \"into the image at build time is used (offline). Passing a version\\n\"\n"
-    "                \"downloads it from GitHub instead.\")\n"
+    "                \"into the image at build time is used (offline). Other versions are\\n\"\n"
+    "                \"taken from the image when baked in (16.x), else downloaded from GitHub.\")\n"
     "        )\n"
     "\n"
     "    parser.add_argument (\n"
@@ -120,10 +121,12 @@ def add_native_lib_to_apk (apk_path, out_path, frida_script = None, gadget_confi
     `frida_version`, or `online` (--online / JDDLAB_FRIDA_ONLINE=1), fetches the
     gadget from GitHub instead.
     """
-    architectures = [ forced_arch ] if forced_arch else get_arch_from_filename (apk_path)
+    # --arch takes an Android ABI name (arm64-v8a); gadgets are named by Frida arch (arm64)
+    architectures = [ ABI_MAPPING.get (forced_arch, forced_arch) ] if forced_arch else get_arch_from_filename (apk_path)
 
-    # Explicitly requesting a version, or --online, forces a GitHub download.
-    use_online = online or (frida_version is not None)
+    # --online forces a GitHub download. An explicitly requested version is taken
+    # from the cache when it is baked in (e.g. the 16.x gadgets), else downloaded.
+    use_online = online
 
     with (
         zipfile.ZipFile (apk_path, "r") as in_apk,
@@ -145,7 +148,7 @@ def add_native_lib_to_apk (apk_path, out_path, frida_script = None, gadget_confi
                 lib, resolved_version = _load_cached_gadget (arch, frida_version)
                 if lib is None:
                     logger.warning (
-                        f"No cached Frida gadget for {arch} under {FRIDA_GADGET_CACHE_DIR}; "
+                        f"No cached Frida gadget {resolved_version or ''} for {arch} under {FRIDA_GADGET_CACHE_DIR}; "
                         "downloading from GitHub. Use --online to silence this warning."
                     )
 
@@ -220,6 +223,7 @@ def main():
         "                    forced_arch = args.arch,\n"
         "                    forced_dir = args.dir_lib\n"
         "                )",
+        "                    gadget_config = gadget_config,\n"
         "                    forced_arch = args.arch,\n"
         "                    forced_dir = args.dir_lib,\n"
         "                    frida_version = args.frida_version,\n"
@@ -232,12 +236,47 @@ def main():
         "                forced_arch = args.arch,\n"
         "                forced_dir = args.dir_lib\n"
         "            )",
+        "                gadget_config = gadget_config,\n"
         "                forced_arch = args.arch,\n"
         "                forced_dir = args.dir_lib,\n"
         "                frida_version = args.frida_version,\n"
         "                online = args.online\n"
         "            )",
         "the single-apk call site",
+    )
+
+    # 6) upstream bugs around the gadget config (-c): it is opened in text mode but
+    # then .decode()d (crash), and it is never passed to add_native_lib_to_apk.
+    src = replace_once(
+        src,
+        "            dest = \"gadget_config\",\n"
+        "            type = argparse.FileType (\"r\"),\n",
+        "            dest = \"gadget_config\",\n"
+        "            type = argparse.FileType (\"rb\"),\n",
+        "the --config argument type",
+    )
+    # 7) default gadget config. A gadget loaded straight from the APK (native libs
+    # not extracted - the default for modern apps, extractNativeLibs=false) refuses
+    # to start without a config ("Unable to locate .../libgadget.config.so inside
+    # APK"). Use the gadget's own defaults explicitly: listen and wait for a client,
+    # or run the script given with -l.
+    src = replace_once(
+        src,
+        "        logger.debug (f\"Using the following Gadget config:\\n{gadget_config.decode ('utf-8')}\\n\")\n",
+        "        logger.debug (f\"Using the following Gadget config:\\n{gadget_config.decode ('utf-8')}\\n\")\n"
+        "    elif frida_script:\n"
+        "        gadget_config = b'{\"interaction\": {\"type\": \"script\", \"path\": \"libgadget.js.so\"}}'\n"
+        "    else:\n"
+        "        gadget_config = b'{\"interaction\": {\"type\": \"listen\", \"on_load\": \"wait\"}}'\n",
+        "the gadget config read",
+    )
+    # 8) -f/--fix_manifest: pyaxml >= 0.1 no longer exposes the `pyaxml.axml` submodule
+    # as an attribute (crash: module 'pyaxml' has no attribute 'axml'); same class.
+    src = replace_once(
+        src,
+        "reencoded_axml = pyaxml.axml.AXML ()",
+        "reencoded_axml = pyaxml.AXML ()",
+        "the pyaxml.axml.AXML reference",
     )
 
     path.write_text(src)

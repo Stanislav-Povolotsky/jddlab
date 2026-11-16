@@ -7,6 +7,7 @@ package com.example.simple;
  *  - Java-side hardcoded credentials  -> found by the secret-scanning skill (APKscan).
  *  - A call into native code          -> the real secret lives in native-lib.cpp and
  *                                        is recovered with the native-jni-analysis skill.
+ *  - A runtime-decrypted string        -> see StringVault (simplify / Frida).
  *
  * This class is package-private and NOT kept, so R8 renames it and its members in the
  * release build - useful for the java-deobfuscation skill.
@@ -31,6 +32,7 @@ final class SecretManager {
                 + "awsKeyId = " + AWS_ACCESS_KEY_ID + "\n"
                 + "apiToken = " + API_TOKEN + "\n"
                 + "nativeSecret = " + nativeSecret + "\n"
-                + "verifyPin(nativeSecret) = " + pinOk;
+                + "verifyPin(nativeSecret) = " + pinOk + "\n"
+                + "hiddenEndpoint = " + StringVault.d(StringVault.HIDDEN_ENDPOINT);
     }
 }

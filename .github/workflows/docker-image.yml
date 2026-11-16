@@ -222,6 +222,23 @@ jobs:
           python scripts/workflow/create-software-list-diff.py ./prev-software-list.txt ./software-list.txt >software.changelog.txt
           cat software.changelog.txt
 
+      # Smoke tests: minimal functional checks of every bundled tool (tests/smoke.sh),
+      # run only when the image is going to be released, on the runner's architecture
+      # (amd64). A failure stops the release, so a tool update that breaks the tool
+      # never reaches 'latest'. Both images (incl. arm64 under QEMU) can be tested on
+      # demand with the "Smoke tests" workflow (smoke-tests.yml).
+      - name: Smoke tests
+        if: env.CONTINUE_BUILD != 'false'
+        run: |
+          docker run --rm ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp \
+            bash /usr/local/jddlab/tests/smoke.sh
+
+      # The MCP server (mcp/server.py, runs on the host) driving the new image
+      - name: MCP smoke test
+        if: env.CONTINUE_BUILD != 'false'
+        run: |
+          python scripts/workflow/mcp-smoke-test.py --image ${{ vars.DOCKER_IMAGE }}:${{ env.NEW_VERSION }}-temp
+
       # Install gettext to use envsubst
       - name: Install gettext for envsubst
         if: env.CONTINUE_BUILD != 'false'
@@ -287,7 +304,7 @@ jobs:
 
       # Remove image which is not required anymore
       - name: Removing temp image
-        if: env.TEMP_DOCKER_IMAGE_PREPARED == 'true'
+        if: always() && env.TEMP_DOCKER_IMAGE_PREPARED == 'true'
         continue-on-error: true  # This ensures the workflow continues even if this step fails
         run: |
           echo "Removing temp image (${{ env.NEW_VERSION }}-temp)"

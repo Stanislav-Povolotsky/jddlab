@@ -1,4 +1,5 @@
-FROM saschpe/android-sdk:35-jdk21.0.4_7 as android-sdk
+# check=skip=FromPlatformFlagConstDisallowed
+FROM saschpe/android-sdk:35-jdk21.0.4_7 AS android-sdk
 ARG ANDROID_BUILD_TOOLS_VERSION=36.1.0
 RUN ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION sdkmanager --install "build-tools;$ANDROID_BUILD_TOOLS_VERSION"
 RUN ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION && \
@@ -9,7 +10,27 @@ RUN ANDROID_BUILD_TOOLS_VERSION=$ANDROID_BUILD_TOOLS_VERSION && \
     cp -r  $SRCDIR/build-tools/$ANDROID_BUILD_TOOLS_VERSION $DSTDIR/build-tools/ && \
     ln -s $ANDROID_BUILD_TOOLS_VERSION $DSTDIR/build-tools/current
 
-FROM ubuntu:24.04 as builder
+# Binary fixtures for the smoke tests (tests/smoke.sh). Platform-independent, so
+# they are built once, on amd64 (hermesc is an x86_64 binary).
+FROM --platform=linux/amd64 ubuntu:24.04 AS test-fixtures
+ARG HERMES_COMPILER_VERSION=0.17.0
+ARG DOTNET_FIXTURE_PACKAGE=system.runtime.compilerservices.unsafe/6.0.0
+RUN apt-get update && apt-get install -y curl unzip ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY tests/fixtures/src /fixtures/src
+# React Native Hermes bytecode bundle
+RUN mkdir -p /tmp/hermes && cd /tmp/hermes && \
+    curl -fsSL -o hermes.tgz https://registry.npmjs.org/hermes-compiler/-/hermes-compiler-$HERMES_COMPILER_VERSION.tgz && \
+    tar xzf hermes.tgz && \
+    package/hermesc/linux64-bin/hermesc -emit-binary -O -out /fixtures/index.android.bundle /fixtures/src/hermes/index.android.js && \
+    rm -rf /tmp/hermes
+# A small real .NET assembly (MIT, from NuGet)
+RUN mkdir -p /fixtures/dotnet /tmp/nupkg && cd /tmp/nupkg && \
+    curl -fsSL -o p.nupkg "https://api.nuget.org/v3-flatcontainer/$(echo $DOTNET_FIXTURE_PACKAGE | cut -d/ -f1)/$(echo $DOTNET_FIXTURE_PACKAGE | cut -d/ -f2)/$(echo $DOTNET_FIXTURE_PACKAGE | tr / .).nupkg" && \
+    unzip -q p.nupkg 'lib/netstandard2.0/*.dll' && \
+    cp lib/netstandard2.0/*.dll /fixtures/dotnet/Fixture.dll && \
+    rm -rf /tmp/nupkg
+
+FROM ubuntu:24.04 AS builder
 
 COPY scripts/installation/prepare.sh /root/scripts/installation/
 RUN /root/scripts/installation/prepare.sh
@@ -30,7 +51,7 @@ ENV PATH="/usr/local/python-venvs/bin:/usr/local/python-venv/bin:$PATH:/usr/loca
 
 WORKDIR /work
 COPY scripts/run/ /
-RUN /root/scripts/run/prepare.sh && rm -rf /root/scripts
+RUN /root/scripts/run/prepare.sh && rm -rf /root/scripts && chmod +x /usr/local/jddlab/entrypoint.sh
 
 COPY --from=builder /root/scripts/installation/installed /
 
@@ -40,6 +61,18 @@ COPY --from=builder /root/scripts/installation/installed /
 # written to /work are owned by the user instead of root. A mapped UID has no
 # /etc/passwd entry, so HOME=/root must be world read/write to work for everyone.
 RUN chmod -R a+rwX /root
+
+# Optional ADB forwarding to the host ADB server (JDDLAB_ADB_SERVER), see entrypoint.sh
+ENTRYPOINT ["/usr/local/jddlab/entrypoint.sh"]
+CMD ["bash"]
+
+# Smoke tests (run by CI on every image build; can be run by users too):
+#   docker run --rm stanislavpovolotsky/jddlab bash /usr/local/jddlab/tests/smoke.sh
+COPY tests/smoke.sh /usr/local/jddlab/tests/smoke.sh
+COPY example/simple.apk /usr/local/jddlab/tests/fixtures/simple.apk
+COPY tests/fixtures/src/mobsfscan /usr/local/jddlab/tests/fixtures/src/mobsfscan
+COPY --from=test-fixtures /fixtures/index.android.bundle /usr/local/jddlab/tests/fixtures/index.android.bundle
+COPY --from=test-fixtures /fixtures/dotnet /usr/local/jddlab/tests/fixtures/dotnet
 
 # Host-side helpers shipped INSIDE the image. The jddlab launcher copies this tree out
 # of the image into ~/.jddlab/mcp/current (via `docker cp`) to run the MCP server and

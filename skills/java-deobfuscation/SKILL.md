@@ -3,31 +3,30 @@ name: java-deobfuscation
 description: Detect and reverse Java/Android obfuscation with jddlab - ProGuard/R8 renaming, string encryption, control-flow flattening and commercial protectors, using java-deobfuscator, simplify and dex2jar. Use when decompiled code is obfuscated or strings are encrypted.
 ---
 
-# Java & Android Deobfuscation - jddlab Edition
-**Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Advanced
+# Java and Android deobfuscation with jddlab
 
-> How to identify and reverse common Java/Android obfuscation (ProGuard/R8, string
-> encryption, control-flow tricks, commercial protectors) using **jddlab** tools.
-> Every tool runs inside the `stanislavpovolotsky/jddlab` Docker container via the
-> **jddlab MCP server** - no local installation required beyond Docker.
+Version 1.0, 2026-08.
 
----
+How to identify and reverse common Java/Android obfuscation (ProGuard/R8, string
+encryption, control-flow tricks, commercial protectors) with jddlab tools. Every tool
+runs inside the `stanislavpovolotsky/jddlab` Docker container through the jddlab MCP
+server, so Docker is the only local requirement.
 
-## Table of Contents
 
-1. [Toolchain Overview](#1-toolchain-overview)
-2. [Step 0: Get Bytecode into a JAR](#2-step-0-get-bytecode-into-a-jar)
-3. [Step 1: Detect the Obfuscator](#3-step-1-detect-the-obfuscator)
-4. [Step 2: Transform with java-deobfuscator](#4-step-2-transform-with-java-deobfuscator)
-5. [Step 3: String Decryption](#5-step-3-string-decryption)
-6. [Step 4: Simplify (Android VM Deobfuscator)](#6-step-4-simplify-android-vm-deobfuscator)
-7. [Step 5: Read the Result](#7-step-5-read-the-result)
-8. [Recompiling Back to DEX/APK](#8-recompiling-back-to-dexapk)
+## Table of contents
+
+1. [Toolchain overview](#1-toolchain-overview)
+2. [Step 0: get bytecode into a JAR](#2-step-0-get-bytecode-into-a-jar)
+3. [Step 1: detect the obfuscator](#3-step-1-detect-the-obfuscator)
+4. [Step 2: transform with java-deobfuscator](#4-step-2-transform-with-java-deobfuscator)
+5. [Step 3: string decryption](#5-step-3-string-decryption)
+6. [Step 4: Simplify (Android VM deobfuscator)](#6-step-4-simplify-android-vm-deobfuscator)
+7. [Step 5: read the result](#7-step-5-read-the-result)
+8. [Recompiling back to DEX/APK](#8-recompiling-back-to-dexapk)
 9. [Troubleshooting](#9-troubleshooting)
 
----
 
-## 1. Toolchain Overview
+## 1. Toolchain overview
 
 | Task | jddlab MCP tool | Native command |
 |---|---|---|
@@ -39,14 +38,13 @@ description: Detect and reverse Java/Android obfuscation with jddlab - ProGuard/
 | JAR → DEX (recompile) | `jddlab_jar2dex` / `jddlab_d2j_jar2dex` | `jar2dex` / `d2j-jar2dex` |
 | Read result as Java | `jddlab_jadx` / `jddlab_vineflower` / `jddlab_procyon` | `jadx` / `vineflower` / `procyon` |
 
-**Rule of thumb:** `simplify` targets **Dalvik/Android** (DEX) and virtualized/reflection
-obfuscation. `java-deobfuscator` targets **JVM bytecode** (JAR) and commercial Java
-protectors (Zelix, Allatori, Stringer, DashO, Skidfuscator, etc.). Convert with
-`dex2jar` when you need to move between the two worlds.
+`simplify` works on Dalvik bytecode (DEX) and handles virtualized and reflection-based
+obfuscation. `java-deobfuscator` works on JVM bytecode (JAR) and knows commercial Java
+protectors (Zelix, Allatori, Stringer, DashO, Skidfuscator and others). Use `dex2jar`
+to convert between the two.
 
----
 
-## 2. Step 0: Get Bytecode into a JAR
+## 2. Step 0: get bytecode into a JAR
 
 `java-deobfuscator` works on JVM `.jar`/`.class`. Convert an APK/DEX first:
 
@@ -59,15 +57,14 @@ protectors (Zelix, Allatori, Stringer, DashO, Skidfuscator, etc.). Convert with
 }
 ```
 
-Keep the original DEX too - some Android-specific obfuscation (see §6) is easier to
-handle with `simplify` directly on the DEX.
+Keep the original DEX as well: some Android-specific obfuscation (see §6) is easier
+to handle with `simplify` directly on the DEX.
 
----
 
-## 3. Step 1: Detect the Obfuscator
+## 3. Step 1: detect the obfuscator
 
-Before transforming, identify which transformers apply. Guessing wastes time and can
-corrupt the jar.
+Find out which transformers apply before transforming anything. Enabling the wrong
+ones wastes time and can corrupt the jar.
 
 ```json
 {
@@ -77,9 +74,9 @@ corrupt the jar.
 }
 ```
 
-The output lists detected obfuscators / applicable transformers. Note them - you will
-enable exactly those in the config in the next step. Also look at `jadx` output for
-tell-tale signs:
+The output lists the detected obfuscators and the transformers that apply; enable
+exactly those in the config in the next step. The `jadx` output also shows typical
+signs:
 
 - Meaningless single-letter/`Il1I` class & method names → name obfuscation (usually
   cosmetic; decompilers handle it).
@@ -87,9 +84,8 @@ tell-tale signs:
 - Huge `switch` on an int with `goto`-like flow → control-flow flattening.
 - Classes loaded via `Class.forName` / reflection only → reflection obfuscation.
 
----
 
-## 4. Step 2: Transform with java-deobfuscator
+## 4. Step 2: transform with java-deobfuscator
 
 `java-deobfuscator` is config-driven (YAML). A minimal config:
 
@@ -119,23 +115,22 @@ Run it:
 ```
 
 > The flag is `--config` (two dashes). Many transformers also need the Android
-> framework classes on the classpath - add a `path:` section to the YAML pointing at
+> framework classes on the classpath: add a `path:` section to the YAML pointing at
 > `/usr/local/android-sdk-linux/platforms/android-*/android.jar` if a transformer
 > complains about missing classes.
 
-Iterate: enable one transformer family at a time, re-decompile, and check the diff.
-Enabling everything at once often fails on the first incompatible class.
+Enable one transformer family at a time, re-decompile and check the diff. With
+everything enabled at once the run often fails on the first incompatible class.
 
----
 
-## 5. Step 3: String Decryption
+## 5. Step 3: string decryption
 
-Two independent approaches - try both:
+There are two independent approaches; try both.
 
-**A) java-deobfuscator string transformer** (JVM): add the matching
+A) java-deobfuscator string transformer (JVM): add the matching
 `*.StringEncryptionTransformer` for the detected protector to the config above.
 
-**B) dex2jar string decryption** (works from the DEX side, no config needed):
+B) dex2jar string decryption, which works on the DEX side and needs no config:
 
 ```json
 {
@@ -150,13 +145,12 @@ Two independent approaches - try both:
 `jddlab d2j-decrypt-string --help` (or `tools/d2j-decrypt-string.md`) for the
 `--decrypt-method`/`--decrypt-classes` selectors when auto-detection misses.
 
----
 
-## 6. Step 4: Simplify (Android VM Deobfuscator)
+## 6. Step 4: Simplify (Android VM deobfuscator)
 
 `simplify` executes the app's Dalvik code in a virtual machine and constant-folds the
-result - excellent against reflection, string decryption routines, and dead-code
-padding on **Android**. It works on a smali directory or a DEX.
+result. It works well against reflection, string decryption routines and dead-code
+padding, on a smali directory or a DEX.
 
 Disassemble to smali first (if needed):
 
@@ -169,8 +163,8 @@ Disassemble to smali first (if needed):
 }
 ```
 
-Run simplify. Its input is a **positional** argument (`simplify <input> [options]`),
-with `-o` for the output - do NOT use `-i`:
+Run simplify. The input is a positional argument (`simplify <input> [options]`) and
+`-o` is the output; there is no `-i`:
 
 ```json
 {
@@ -182,12 +176,11 @@ with `-o` for the output - do NOT use `-i`:
 }
 ```
 
-Simplify can be slow and memory-hungry on large apps - scope it to the obfuscated
+On large apps simplify is slow and needs a lot of memory: limit it to the obfuscated
 classes (pass a smaller smali subtree) and raise `timeout_seconds` / `JAVA_OPTS`.
 
----
 
-## 7. Step 5: Read the Result
+## 7. Step 5: read the result
 
 Decompile the cleaned artifact and compare against the original:
 
@@ -200,13 +193,12 @@ Decompile the cleaned artifact and compare against the original:
 }
 ```
 
-If jadx output is still messy on specific classes, cross-check with a second
-decompiler - `jddlab_vineflower` and `jddlab_procyon` often recover different
-constructs (loops, ternaries, switch-on-string).
+If jadx output is still messy for some classes, try a second decompiler:
+`jddlab_cfr`, `jddlab_vineflower` and `jddlab_procyon` often recover loops, ternaries
+and string switches differently.
 
----
 
-## 8. Recompiling Back to DEX/APK
+## 8. Recompiling back to DEX/APK
 
 If you deobfuscated a JAR and want to run it on-device again:
 
@@ -219,11 +211,10 @@ If you deobfuscated a JAR and want to run it on-device again:
 }
 ```
 
-Then rebuild/repackage the APK and re-sign it - see the **android-apk-patch** skill
-(align → sign → verify). Note: deobfuscation changes bytecode, so the app must be
-re-signed and any self-integrity checks may need patching.
+Then repackage the APK and re-sign it (align, sign, verify; see the android-apk-patch
+skill). Deobfuscation changes the bytecode, so the app must be re-signed, and its own
+integrity checks may need patching.
 
----
 
 ## 9. Troubleshooting
 

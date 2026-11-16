@@ -1,15 +1,22 @@
 # extract_jni
 
-Extract JNI/native library artifacts from Android packages or unpacked APK contents.
+Lists the JNI methods of an APK as JSON: Java `native` method declarations and the
+JNI symbols exported by its native libraries. It doesn't extract the `.so` files
+(use `apktool d` or `unzip` for that).
 
 ## Usage
 
-Run `extract_jni --help` for the exact version-specific argument list. Pass the APK or directory input and any output option accepted by the tool.
+```text
+extract_jni <apk> [-o <file.json>]
+```
+
+With `-o` the JSON goes to a file, otherwise to stdout. Run `extract_jni --help` for
+all options.
 
 ## Example
 
 ```json
-{"args":["app.apk","jni-out"],"input_paths":["app.apk"],"output_paths":["jni-out"]}
+{"args":["app.apk","-o","jni.json"],"input_paths":["app.apk"],"output_paths":["jni.json"]}
 ```
 
 

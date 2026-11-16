@@ -28,9 +28,26 @@ if "%~2"=="" (
 if "%~1"=="mcp" goto mcp
 if "%~1"=="skills" goto skills
 
-set docker_args=
-rem Allow to access host network. It's usefull to forward adb to instance.
-rem set docker_args=%docker_args% --network="host"
+rem Persistent cache for tools that build things on first use (e.g. blutter)
+set docker_args=-v jddlab-cache:/var/cache/jddlab
+
+rem ADB: use the host ADB server when it is running, so adb/frida/objection in the
+rem container see the devices attached to the host (USB or Wi-Fi) and connections
+rem survive between jddlab runs. Otherwise the container starts its own server.
+rem JDDLAB_ADB=auto (default) / host / container, JDDLAB_ADB_SERVER=host:port.
+if /i "%JDDLAB_ADB%"=="container" goto adb_done
+if not "%JDDLAB_ADB_SERVER%"=="" (
+  set docker_args=%docker_args% -e JDDLAB_ADB_SERVER=%JDDLAB_ADB_SERVER%
+  goto adb_done
+)
+set "jddlab_use_host_adb="
+if /i "%JDDLAB_ADB%"=="host" set "jddlab_use_host_adb=1"
+if not defined jddlab_use_host_adb (
+  netstat -an -p TCP 2>nul | findstr /r /c:"127\.0\.0\.1:5037 .*LISTENING" >nul 2>nul && set "jddlab_use_host_adb=1"
+)
+rem Docker Desktop proxies host.docker.internal to the host loopback
+if defined jddlab_use_host_adb set docker_args=%docker_args% -e JDDLAB_ADB_SERVER=host.docker.internal:5037
+:adb_done
 
 set "args="
 :loop
@@ -96,6 +113,13 @@ echo   jddlab versions ^| --versions  Show versions of every bundled tool
 echo   jddlab update                 Pull the latest image and refresh launcher/MCP/skills
 echo   jddlab mcp ^<args...^>          Manage MCP connectors (add/remove/status/doctor)
 echo   jddlab skills ^<args...^>       Manage AI skills (add/remove/list)
+echo.
+echo Environment variables:
+echo   JDDLAB_ADB=auto^|host^|container  Which ADB server tools in the container use. auto
+echo                                  (default): the host ADB server if one is running
+echo                                  (its USB and Wi-Fi devices), otherwise a private
+echo                                  server inside the container
+echo   JDDLAB_ADB_SERVER=host:port     Use this ADB server explicitly
 exit /b 0
 
 :tools

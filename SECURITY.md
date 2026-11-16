@@ -3,15 +3,15 @@
 ## Scope
 
 jddlab is a Docker image and launcher that bundles third-party reverse-engineering
-tools. This policy covers the **original jddlab code** in this repository (the
-`jddlab` / `jddlab.cmd` launchers, the `scripts/` build tooling, the `mcp/` server,
-and the `skills/`). Vulnerabilities in the **bundled third-party tools** (Apktool,
-jadx, Ghidra, dex2jar, etc.) should be reported to their respective upstream
-projects - see `/usr/local/jddlab/software-list.txt` (`jddlab versions`) for links.
+tools. This policy covers the original jddlab code in this repository: the
+`jddlab` / `jddlab.cmd` launchers, the `scripts/` build tooling, the `mcp/` server
+and the `skills/`. Report vulnerabilities in the bundled third-party tools (Apktool,
+jadx, Ghidra, dex2jar and others) to their upstream projects; the links are in
+`/usr/local/jddlab/software-list.txt` (`jddlab versions`).
 
 ## Reporting a vulnerability
 
-Please report security issues **privately**, not via public GitHub issues:
+Report security issues privately, not in public GitHub issues:
 
 - Preferred: open a [GitHub private security advisory](https://github.com/Stanislav-Povolotsky/jddlab/security/advisories/new).
 - Alternatively, contact the maintainer through the profile on
@@ -23,36 +23,37 @@ few days.
 
 ## Security model & things to be aware of
 
-jddlab is a toolkit for analyzing **untrusted** and potentially malicious binaries
-(APKs, DEX/JARs, native `.so` libraries). Keep the following in mind:
+jddlab is used to analyze untrusted and possibly malicious binaries (APKs,
+DEX/JARs, native `.so` libraries).
 
-- **Run untrusted samples inside the container, not on the host.** The container
-  boundary is the primary isolation layer. Do not extract and execute malware on
-  your host.
-- **`/work` is mounted read-write.** The launcher maps your current directory into
-  the container as `/work`. Anything the tools (or a malicious sample that achieves
-  code execution) write goes to your real filesystem. Run jddlab from a dedicated
-  working directory, not from your home or a source-tree root.
-- **Preinstalled ADB keys.** The image ships with a default ADB key pair so that
-  wireless debugging works out of the box. This means **anyone with network access
-  to a device you have connected can authenticate to it.** For anything beyond
-  throwaway lab devices, mount your own keys:
+- Run untrusted samples inside the container, not on the host. The container is
+  the main isolation layer; do not extract and execute malware on your host.
+- `/work` is mounted read-write. The launcher maps your current directory into the
+  container as `/work`, so whatever the tools write (or a malicious sample that
+  gets code execution) lands on your real filesystem. Run jddlab from a dedicated
+  working directory, not from your home directory or the root of a source tree.
+- The image ships a default ADB key pair so that wireless debugging from inside the
+  container works without setup. The key is the same in every copy of the public
+  image, so anyone with network access to a device that authorized it can connect
+  to that device. For anything beyond throwaway lab devices, use the host ADB
+  server (the launcher and the MCP server pick it up automatically, and it uses your
+  own key) or mount your own keys:
   ```
   docker run -it --rm -v "$HOME/.android:/root/.android" -v "$PWD:/work" \
       stanislavpovolotsky/jddlab:latest
   ```
-- **Some tools reach the network.** For example `apk-patcher` downloads Frida
-  gadgets and `objection` may fetch releases. Review a tool's behavior before
-  running it in an isolated/offline environment.
-- **The MCP server executes Docker commands on your behalf.** When you expose the
-  MCP server to an AI client, that client can run any bundled jddlab command
-  against paths you make available. Only connect it to clients you trust and scope
-  the mounted directories.
-- **Do not run the container with `--privileged` or the host Docker socket** unless
-  you fully understand the consequences; jddlab does not require them.
+- Some tools use the network. The Frida gadgets are baked into the image, but
+  `objection` checks for updates, `blutter` downloads Dart SDK sources the first
+  time it sees a Dart version, and `apk-patcher --online` downloads gadgets. Check
+  what a tool does before relying on it in an offline environment.
+- The MCP server runs Docker commands for the AI client connected to it: the client
+  can run any bundled jddlab command against the paths it is given. Connect only
+  clients you trust and limit the directories they work with.
+- jddlab does not need `--privileged` or the host Docker socket. Don't add them
+  unless you know what they expose.
 
 ## Supported versions
 
 Only the latest published image (`stanislavpovolotsky/jddlab:latest`) and the
-latest launcher/MCP release receive fixes. Please update (`jddlab update`) before
-reporting an issue.
+latest launcher/MCP release receive fixes. Run `jddlab update` before reporting
+an issue.

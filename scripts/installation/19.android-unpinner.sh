@@ -21,6 +21,13 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     git clone -b $BRANCH --single-branch "https://github.com/$REPO" .
     $SCRIPT_DIR/helpers/get-git-branch-info.sh local $BRANCH >/tmp/$pkg/info.txt
     rm -rf *.apk .git
+    # `adb forward` opens the port where the ADB server runs. With the host ADB
+    # server (JDDLAB_ADB_SERVER, see entrypoint.sh) that is the host, not the
+    # container's 127.0.0.1: connect to JDDLAB_ADB_FORWARD_HOST (set by the entrypoint).
+    for f in android_unpinner/__main__.py android_unpinner/jdwplib.py; do
+        grep -q 'JDWPClient("127.0.0.1", local_port)' $f
+        sed -i 's/JDWPClient("127.0.0.1", local_port)/JDWPClient(__import__("os").environ.get("JDDLAB_ADB_FORWARD_HOST", "127.0.0.1"), local_port)/' $f
+    done
     python3 -m pip install .
     popd
 else

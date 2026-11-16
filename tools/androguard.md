@@ -1,6 +1,6 @@
 # androguard
 
-Android reverse engineering toolkit.
+Android reverse engineering toolkit (Python).
 
 ## Usage
 
@@ -10,12 +10,20 @@ androguard [OPTIONS] COMMAND [ARGS]...
 
 ## Main modes
 
-Run `androguard --help` for the complete command list. Common workflows include APK analysis, DEX inspection, decompilation helpers, signing helpers, and CLI analysis utilities.
+- `axml <apk>`: print the decoded `AndroidManifest.xml`.
+- `apkid <apk>`: package name, version code and version name.
+- `sign <apk>`: signing scheme versions and certificate fingerprints.
+- `arsc`: decode `resources.arsc`.
+- `decompile`, `disassemble`, `cg`: decompile, disassemble, build a call graph.
+- `analyze`: interactive IPython session (needs `interactive`).
+- `trace`, `dtrace`, `dump`: dynamic analysis on a connected device.
+
+Run `androguard --help` or `androguard <command> --help` for options.
 
 ## Example
 
 ```json
-{"args":["--help"]}
+{"args":["axml","app.apk"],"input_paths":["app.apk"]}
 ```
 
 

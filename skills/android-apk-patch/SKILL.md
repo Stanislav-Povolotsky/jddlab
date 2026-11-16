@@ -3,45 +3,42 @@ name: android-apk-patch
 description: Patch, rebuild, re-sign and install Android APKs with jddlab - edit smali/resources/manifest, decompile with apktool/jadx, handle split APKs, align and sign. Use for APK modding, repackaging, or injecting changes into an app.
 ---
 
-# Android APK Patching & Repackaging - jddlab Edition
-**Version**: 1.0 | **Last Updated**: 2025-08 | **Difficulty**: Expert
+# Android APK patching and repackaging with jddlab
 
-> A complete reference for modifying Android APKs using **jddlab** - from analysis to
-> smali editing, recompilation, signing, and testing. Every tool runs inside the
-> `stanislavpovolotsky/jddlab` Docker container via the **jddlab MCP server** - no
-> local tool installation required beyond Docker.
+Version 1.0, 2025-08.
 
----
+How to modify Android APKs with jddlab: analysis, smali editing, recompilation,
+signing and testing. Every tool runs inside the `stanislavpovolotsky/jddlab` Docker
+container through the jddlab MCP server, so Docker is the only local requirement.
 
-## Table of Contents
 
-1. [jddlab Toolchain Overview](#1-jddlab-toolchain-overview)
-2. [Decompilation & Recompilation Workflow](#2-decompilation--recompilation-workflow)
-3. [Split APK Handling (.apks / .apkm / .xapk)](#3-split-apk-handling)
-4. [Signing: Align then Sign](#4-signing-align-then-sign)
-5. [Dependency Hell: Frameworks, AndroidX, OEM Resources](#5-dependency-hell)
-6. [GApps-Dependent APKs: Patching & Workarounds](#6-gapps-dependent-apks)
+## Table of contents
+
+1. [jddlab toolchain overview](#1-jddlab-toolchain-overview)
+2. [Decompilation & recompilation workflow](#2-decompilation--recompilation-workflow)
+3. [Split APK handling (.apks / .apkm / .xapk)](#3-split-apk-handling)
+4. [Signing: align then sign](#4-signing-align-then-sign)
+5. [Dependency hell: frameworks, AndroidX, OEM resources](#5-dependency-hell)
+6. [GApps-dependent APKs: patching & workarounds](#6-gapps-dependent-apks)
 7. [Testing: ADB, Redroid, Waydroid](#7-testing)
-8. [Advanced Patching: Frida, Obfuscation, Integrity Checks](#8-advanced-patching)
+8. [Advanced patching: Frida, obfuscation, integrity checks](#8-advanced-patching)
 9. [Troubleshooting](#9-troubleshooting)
-10. [Quick Reference Cheat Sheet](#10-quick-reference-cheat-sheet)
+10. [Quick reference cheat sheet](#10-quick-reference-cheat-sheet)
 
----
 
-## 1. jddlab Toolchain Overview
+## 1. jddlab toolchain overview
 
-jddlab bundles all required tools in a single Docker image.  Use the jddlab MCP server
-(`jddlab_*` tools) - the server handles Docker invocations, path rewriting, and mount
-inference automatically.
+jddlab bundles the tools in one Docker image. Use them through the jddlab MCP server
+(`jddlab_*` tools); the server runs Docker, picks the mount root and rewrites paths.
 
-### 1.1 Tool Mapping
+### 1.1 Tool mapping
 
 | Task | jddlab MCP tool | Native command |
 |---|---|---|
 | Analyze / decompile to Java source | `jddlab_jadx` | `jadx` |
 | Decompile APK to smali + resources | `jddlab_apktool` | `apktool d` |
 | Rebuild smali + resources to APK | `jddlab_apktool` | `apktool b` |
-| Merge / split split-APK sets | `jddlab_APKEditor` | `APKEditor m` / `APKEditor s` |
+| Merge a split-APK set into one APK | `jddlab_APKEditor` | `APKEditor m` |
 | Align APK (before signing) | `jddlab_zipalign` | `zipalign` |
 | Sign APK (v1/v2/v3) | `jddlab_apksigner` | `apksigner sign` |
 | Verify signature | `jddlab_apksigner` | `apksigner verify` |
@@ -56,24 +53,27 @@ inference automatically.
 | Deobfuscation detection | `jddlab_java_deobfuscator_detect` | `java-deobfuscator-detect` |
 | Native code analysis | `jddlab_ghidra_decompile` | `ghidra-decompile` |
 
-### 1.2 Why Old Tool Versions Will Fail You
+### 1.2 Tool versions
 
-The Docker image is kept up to date.  Key minimum versions enforced inside the image:
+Old tool versions fail on current apps. The image is rebuilt when tools update, and
+has at least:
 
-- **Apktool ≥ 2.9.0** - required for API 34+ resources (Android 14+).
-- **smali ≥ 3.0.5** - required for DEX format 038+ (Android 13+).
-- **apksigner from build-tools ≥ 35** - required for v2/v3/v4 signing.
-- **Never use `jarsigner`** - it only produces v1 signatures; Android 7.0+ rejects them.
+- Apktool 2.9.0, needed for API 34+ resources (Android 14+);
+- smali 3.0.5, needed for DEX format 038+ (Android 13+);
+- apksigner from build-tools 35, for v2/v3/v4 signing.
 
-### 1.3 MCP Tool Call Structure
+Don't use `jarsigner`: it produces only v1 signatures, and apps targeting Android 11
+(API 30) or newer must have a v2 signature.
+
+### 1.3 MCP tool call structure
 
 Every `jddlab_*` MCP tool accepts:
 
 | Field | Type | Purpose |
 |---|---|---|
 | `args` | `string[]` | Native command arguments, verbatim |
-| `input_paths` | `string[]` | Host input files/dirs - used for mount-root inference |
-| `output_paths` | `string[]` | Host output files/dirs - used for mount-root inference |
+| `input_paths` | `string[]` | Host input files/dirs, used to pick the mount root |
+| `output_paths` | `string[]` | Host output files/dirs, used to pick the mount root |
 | `workdir` | `string` | Optional explicit host directory to mount as `/work` |
 | `extra_mounts` | `object[]` | Additional mounts `{host, container, mode}` |
 | `timeout_seconds` | `number` | Override default 3600 s timeout |
@@ -82,13 +82,12 @@ Every `jddlab_*` MCP tool accepts:
 Paths in `args` that match a file/dir under the inferred mount root are rewritten to
 `/work/…` automatically.
 
----
 
-## 2. Decompilation & Recompilation Workflow
+## 2. Decompilation & recompilation workflow
 
-### 2.1 Standard Single APK Workflow
+### 2.1 Standard single APK workflow
 
-**Step 1 - Analyze with jadx (read-only)**
+**Step 1: analyze with jadx (read-only)**
 
 ```json
 {
@@ -99,7 +98,7 @@ Paths in `args` that match a file/dir under the inferred mount root are rewritte
 }
 ```
 
-**Step 2 - Decompile with apktool**
+**Step 2: decompile with apktool**
 
 ```json
 {
@@ -110,11 +109,11 @@ Paths in `args` that match a file/dir under the inferred mount root are rewritte
 }
 ```
 
-**Step 3 - Edit smali / resources / manifest**
+**Step 3: edit smali, resources, manifest**
 
-Edit files directly on the host inside `decompiled/`.  See §2.4 for smali patterns.
+Edit the files in `decompiled/` on the host. §2.4 has smali patterns.
 
-**Step 4 - Recompile**
+**Step 4: recompile**
 
 ```json
 {
@@ -125,7 +124,7 @@ Edit files directly on the host inside `decompiled/`.  See §2.4 for smali patte
 }
 ```
 
-**Step 5 - Align (MUST be before signing)**
+**Step 5: align (before signing)**
 
 ```json
 {
@@ -136,7 +135,7 @@ Edit files directly on the host inside `decompiled/`.  See §2.4 for smali patte
 }
 ```
 
-**Step 6 - Sign**
+**Step 6: sign**
 
 ```json
 {
@@ -154,10 +153,10 @@ Edit files directly on the host inside `decompiled/`.  See §2.4 for smali patte
 }
 ```
 
-The debug keystore is built into the image - no `extra_mounts` needed. To use your
-own host key instead, add `"extra_mounts": [{"host": "~/.android", "container": "/root/.android", "mode": "ro"}]`.
+The debug keystore is built into the image, so no `extra_mounts` are needed. To use
+your own host key instead, add `"extra_mounts": [{"host": "~/.android", "container": "/root/.android", "mode": "ro"}]`.
 
-**Step 7 - Verify**
+**Step 7: verify**
 
 ```json
 {
@@ -167,13 +166,16 @@ own host key instead, add `"extra_mounts": [{"host": "~/.android", "container": 
 }
 ```
 
-**Step 8 - Install via ADB** (run on host, not via jddlab)
+**Step 8: install**
+
+With `jddlab_adb` (`["install", "-r", "rebuilt_aligned.apk"]`; it uses the host ADB
+server, see §7.1) or on the host:
 
 ```bash
 adb install -r rebuilt_aligned.apk
 ```
 
-### 2.2 Important Decompilation Flags
+### 2.2 Important decompilation flags
 
 ```json
 // Force specific API level (fixes many resource resolution issues)
@@ -182,17 +184,17 @@ adb install -r rebuilt_aligned.apk
 // Ignore missing resources (new in apktool 2.11.x)
 {"args": ["d", "target.apk", "-o", "out", "-f", "--ignore-missing-resources"], ...}
 
-// Keep original sources only (skip resources, faster)
+// Don't decode sources: keep classes.dex as is, decode resources (resource-only mods)
 {"args": ["d", "target.apk", "-o", "out", "-f", "-s"], ...}
 
-// Decode only resources (skip smali, for resource-only mods)
+// Don't decode resources: keep resources.arsc as is, decode smali (code-only mods, faster)
 {"args": ["d", "target.apk", "-o", "out", "-f", "-r"], ...}
 
 // For Samsung/Android 15 framework JARs with DEX format 039
 {"args": ["d", "framework.jar", "-api", "29", "-o", "out"], ...}
 ```
 
-### 2.3 Decompiled Directory Structure
+### 2.3 Decompiled directory structure
 
 ```
 decompiled/
@@ -212,7 +214,7 @@ decompiled/
 └── smali_classes2/            # Additional DEX files (multi-dex apps)
 ```
 
-### 2.4 Smali Editing Basics
+### 2.4 Smali editing basics
 
 ```smali
 # 1. Force a boolean method to always return true (premium check bypass)
@@ -239,7 +241,7 @@ iput-object v0, p0, Lcom/example/app/MainActivity;->mStatus:Ljava/lang/String;
 # Replace the comparison branch with: nop
 ```
 
-### 2.5 Resource Editing
+### 2.5 Resource editing
 
 ```xml
 <!-- res/values/strings.xml -->
@@ -257,11 +259,10 @@ iput-object v0, p0, Lcom/example/app/MainActivity;->mStatus:Ljava/lang/String;
 </activity>
 ```
 
----
 
-## 3. Split APK Handling
+## 3. Split APK handling
 
-### 3.1 Understanding Split APK Formats
+### 3.1 Understanding split APK formats
 
 | Format | Source | Extension |
 |---|---|---|
@@ -269,21 +270,21 @@ iput-object v0, p0, Lcom/example/app/MainActivity;->mStatus:Ljava/lang/String;
 | APKMirror | APKMirror | `.apkm` |
 | APKPure | APKPure | `.xapk` |
 
-All three are ZIP archives.  Extract with any unzip tool on the host.
+All three are ZIP archives; extract them with any unzip tool on the host.
 
-**Split types**: `base.apk` (core code), `split_config.arm64_v8a.apk` (ARM64 libs),
+Split types: `base.apk` (core code), `split_config.arm64_v8a.apk` (ARM64 libs),
 `split_config.xxhdpi.apk` (screen density resources), `split_config.en.apk` (language).
 
-### 3.2 Merge → Decompile → Rebuild Workflow
+### 3.2 Merge → decompile → rebuild workflow
 
-**Step 1 - Extract splits on host**
+**Step 1: extract the splits on the host**
 
 ```bash
 mkdir splits && cd splits
 unzip ../input.apks   # or .apkm / .xapk
 ```
 
-**Step 2 - Merge into single fat APK**
+**Step 2: merge them into one APK**
 
 ```json
 {
@@ -294,7 +295,7 @@ unzip ../input.apks   # or .apkm / .xapk
 }
 ```
 
-**Step 3 - Decompile merged APK**
+**Step 3: decompile the merged APK**
 
 ```json
 {
@@ -305,9 +306,9 @@ unzip ../input.apks   # or .apkm / .xapk
 }
 ```
 
-**Step 4 - Modify, recompile, align, sign** (see §2.1 steps 3–7).
+**Step 4: modify, recompile, align, sign** (§2.1, steps 3 to 7).
 
-**Step 5 - Install splits**
+**Step 5: install the splits**
 
 ```bash
 # If you only modified the base APK, keep original splits:
@@ -318,7 +319,8 @@ adb install-multiple modified_base_aligned.apk \
     splits/split_config.en.apk
 ```
 
-If some splits embed signature checks, re-sign ALL with the same keystore:
+All splits of an app must be signed with the same key. If you re-signed the base APK,
+re-sign every split with the same keystore:
 
 ```bash
 for apk in splits/*.apk; do
@@ -328,36 +330,34 @@ done
 adb install-multiple modified_base_aligned.apk splits/*.apk
 ```
 
-### 3.3 Split APK Pitfalls
+### 3.3 Split APK pitfalls
 
 | Pitfall | Fix |
 |---|---|
 | Missing native libs after merge | Manually copy missing `.so` files into merged APK `lib/` before decompiling |
-| `toc.pb` metadata mismatch | Use `adb install-multiple` - don't use bundletool for patched installs |
+| `toc.pb` metadata mismatch | Use `adb install-multiple`, not bundletool, for patched installs |
 | `null` resources on base APK decompilation | Merge with APKEditor first, or use `--ignore-missing-resources` |
 
----
 
-## 4. Signing: Align then Sign
+## 4. Signing: align then sign
 
-### 4.1 APK Signature Schemes
+### 4.1 APK signature schemes
 
 | Scheme | Since | Notes |
 |---|---|---|
-| v1 (JAR) | API 1 | Weak - modifiable. Required for backward compat. |
-| v2 | API 24 (Android 7.0) | Whole-APK signature. **Required for modern Android.** |
+| v1 (JAR) | API 1 | Weak (files can be modified). Needed for Android < 7.0. |
+| v2 | API 24 (Android 7.0) | Whole-APK signature. Required for apps targeting API 30+. |
 | v3 | API 28 (Android 9.0) | v2 + key rotation support |
-| v4 | API 30 (Android 11) | Merkle hash tree - computed on-demand during install |
+| v4 | API 30 (Android 11) | Merkle hash tree, computed on demand during install |
 
-**Critical rule**: v2/v3 are whole-APK signatures. Always run `zipalign` BEFORE `apksigner`.
+v2/v3 sign the whole APK, so any change after signing breaks them: run `zipalign`
+before `apksigner`, never after. Don't use `jarsigner` (v1 only, see §1.2).
 
-**Never use `jarsigner`** - v1-only output is silently rejected by Android 7.0+.
-
-### 4.2 Available Keystores
+### 4.2 Available keystores
 
 | Keystore | Location | Alias | Password | Notes |
 |---|---|---|---|---|
-| Built-in debug key | `/root/.android/debug.keystore` (inside image) | `androiddebugkey` | `android` | **Preferred** - built into image, no `extra_mounts` needed |
+| Built-in debug key | `/root/.android/debug.keystore` (inside image) | `androiddebugkey` | `android` | Default: built into the image, no `extra_mounts` needed |
 | Host debug key | `~/.android/debug.keystore` (host mount) | `androiddebugkey` | `android` | Overrides built-in when mounted via `extra_mounts` |
 | Custom | generate with `jddlab_keytool` (see below) | your choice | your choice | For release or reproducible builds |
 
@@ -380,7 +380,7 @@ Create a custom keystore via jddlab (no local JDK needed):
 }
 ```
 
-### 4.3 Full Signing Workflow via jddlab
+### 4.3 Full signing workflow via jddlab
 
 ```json
 // 1. Align
@@ -441,7 +441,7 @@ Create a custom keystore via jddlab (no local JDK needed):
 }
 ```
 
-### 4.4 Signature-Related Failures
+### 4.4 Signature-related failures
 
 | Error | Cause | Fix |
 |---|---|---|
@@ -451,11 +451,10 @@ Create a custom keystore via jddlab (no local JDK needed):
 | `INSTALL_FAILED_SESSION_INVALID` | Splits signed with different keys | Sign ALL splits with the same keystore |
 | Signature broken after zipalign | Used `apksigner` before `zipalign` | Always: zipalign → then sign |
 
----
 
-## 5. Dependency Hell
+## 5. Dependency hell
 
-### 5.1 Common Resource Errors
+### 5.1 Common resource errors
 
 ```
 error: resource 'com.example:id/material_textinput' not found
@@ -463,7 +462,7 @@ error: style attribute 'attr/layout_constraintBaseline_toBaselineOf' not found
 ERROR: AAPT2 aapt2(...) exited with code 1
 ```
 
-### 5.2 Install OEM Frameworks via jddlab
+### 5.2 Install OEM frameworks via jddlab
 
 For system or OEM apps that reference non-AOSP framework resources, install their
 framework files first:
@@ -494,7 +493,7 @@ adb pull /system/framework/ ./device_frameworks/
 
 Then install via the MCP tool above.
 
-### 5.3 Force API Level
+### 5.3 Force API level
 
 ```json
 {"args": ["d", "target.apk", "-o", "out", "-f", "--api", "35"], ...}
@@ -502,7 +501,7 @@ Then install via the MCP tool above.
 {"args": ["d", "target.apk", "-o", "out", "-f", "--api", "29"], ...}
 ```
 
-### 5.4 AAPT2 Error Reference
+### 5.4 AAPT2 error reference
 
 | Error | Cause | Fix |
 |---|---|---|
@@ -512,30 +511,29 @@ Then install via the MCP tool above.
 | `unmarshalling resource table` | Corrupted `resources.arsc` | Use `--ignore-missing-resources` or merge first with APKEditor |
 | `BufferOverflowException` | Resource table > 2 GB | Increase Java heap via `jddlab_run` with `JAVA_OPTS="-Xmx4g"` |
 
----
 
-## 6. GApps-Dependent APKs
+## 6. GApps-dependent APKs
 
-### 6.1 Why GApps Patching Is Hard
+### 6.1 Why GApps patching is hard
 
 - ~100+ dynamic feature module splits
 - Runtime signature verification by OS and other GApps
 - DroidGuard/Play Integrity attestation baked in
 - Automatic updates overwrite patches
 
-**Bottom line**: Do not try to patch `com.google.android.gms` directly.
+Don't try to patch `com.google.android.gms` itself.
 
 ### 6.2 Strategy: MicroG
 
-MicroG is an open-source Google Play Services replacement.  Install `GmsCore.apk` from
+MicroG is an open-source replacement for Google Play Services. Install `GmsCore.apk` from
 https://github.com/microg/GmsCore/releases on your test device/emulator alongside your
 patched APK.
 
-### 6.3 Strategy: Patch Individual GApps (YouTube, Maps, etc.)
+### 6.3 Strategy: patch individual GApps (YouTube, Maps, etc.)
 
-**ReVanced** provides battle-tested patches: https://github.com/ReVanced/revanced-patches
+ReVanced maintains patches for many Google apps: https://github.com/ReVanced/revanced-patches
 
-Manual patching - find the signature-check smali:
+To patch by hand, find the signature check in the smali:
 
 ```json
 // Decompile and search
@@ -550,26 +548,32 @@ Manual patching - find the signature-check smali:
 Grep for: `getPackageInfo`, `GET_SIGNATURES`, `MessageDigest`, `equals`.
 Patch the comparison branch to always return valid.
 
-### 6.4 Certificate Pinning Bypass (automated)
+### 6.4 Certificate pinning bypass (automated)
 
-`android-unpinner` needs a sub-command. Use `patch-apk` to produce a patched APK
-(`target.unpinned.apk`) without a connected device (do not use `all`, which also
-installs + instruments over Frida and needs a USB device):
+`android-unpinner patch-apks` makes the APK debuggable and re-signs it
+(`target.unpinned.apk`, no device needed). The pinning bypass itself is applied at
+runtime: `start-app` (or `all`, which also installs the APK) starts the app on a
+connected device and injects the Frida gadget with the unpinning scripts. See the
+ssl-unpinning skill.
 
 ```json
 {
   "tool": "jddlab_android_unpinner",
-  "args": ["patch-apk", "target.apk"],
+  "args": ["patch-apks", "target.apk"],
   "input_paths": ["target.apk"],
   "output_paths": ["target.unpinned.apk"]
 }
 ```
 
----
 
 ## 7. Testing
 
-### 7.1 ADB Install Commands (host, not via jddlab)
+### 7.1 ADB install commands (host, or `jddlab_adb`)
+
+`jddlab_adb` (and `jddlab_frida*`, `jddlab_objection`) use the host ADB server when
+one is running, so the device connected on the host (USB or Wi-Fi) is visible in every
+MCP call. If `jddlab_adb ["devices"]` lists nothing, ask the user to run
+`adb start-server` and connect the device on the host.
 
 ```bash
 adb install -r app.apk              # Replace existing
@@ -581,11 +585,12 @@ adb shell am start -n com.example.app/.MainActivity
 adb logcat -s "AndroidRuntime:E" "*:S"
 ```
 
-### 7.2 Frida Injection via jddlab
+### 7.2 Frida injection via jddlab
 
-Inject a Frida gadget into an APK for dynamic analysis. `apk-patcher` takes the APK
-**base name without the extension, with the trailing dot** (`target.apk` -> `./target.`)
-as a positional argument, and writes `target.patched`; flags are `-l <script>`,
+Inject a Frida gadget into an APK for dynamic analysis (the gadget baked into the
+image, no download). `apk-patcher` takes the APK base name without the extension but
+with the trailing dot (`target.apk` -> `./target.`) as a positional argument and writes
+`target.patched`. Flags are `-l <script>`,
 `-a <arch>`, `-d <dir>`, `-c <config>`, `-f`, `-v` (there is no `-o`):
 
 ```json
@@ -597,26 +602,30 @@ as a positional argument, and writes `target.patched`; flags are `-l <script>`,
 }
 ```
 
-Then re-sign the APK inside `target.patched` via `jddlab_zipalign` + `jddlab_apksigner`.
+Then re-sign the APK in `target.patched` with `jddlab_zipalign` and `jddlab_apksigner`.
 
 ### 7.3 Objection (runtime exploration via Frida)
 
 ```json
 {
   "tool": "jddlab_objection",
-  "args": ["patchapk", "-s", "target.apk"],
+  "args": ["patchapk", "-s", "target.apk", "-a", "arm64-v8a"],
   "input_paths": ["target.apk"],
-  "output_paths": ["target.objection.apk"],
-  "interactive": true
+  "output_paths": ["target.objection.apk"]
 }
 ```
 
-Note: `objection explore` requires an interactive TTY - run it directly on host via
-`frida-tools` against a running device.
+`patchapk` injects the gadget baked into the image and adds the INTERNET permission
+the gadget needs to listen; without `-a` it asks the device for its ABI over ADB.
+`objection explore` needs an interactive TTY. Through MCP, `objection -n Gadget run
+"<command>"` works for one-shot commands (e.g. `android hooking list activities`), but
+the agent is unloaded right after, so hooks such as `android sslpinning disable` don't
+stay active; for those use `jddlab_frida` with a script and `-t`
+(`["-U", "-n", "Gadget", "-l", "hook.js", "-q", "-t", "30"]`).
 
 ### 7.4 Redroid (Android in Docker, headless)
 
-Redroid runs a full Android system in Docker for headless testing - perfect for CI/CD.
+Redroid runs a full Android system in Docker without a display, which also works in CI.
 
 ```bash
 # Prerequisites (Linux host only)
@@ -646,7 +655,7 @@ sudo python3 redroid-script/redroid-script.py redroid14 --magisk --libndk
 docker restart redroid14
 ```
 
-**Redroid does NOT work on macOS** (no binder support in Docker Desktop).
+Redroid doesn't work on macOS: Docker Desktop has no binder support.
 
 ### 7.5 Waydroid (Android in LXC, Linux desktop)
 
@@ -665,9 +674,8 @@ git clone https://github.com/casualsnek/waydroid_script.git
 sudo python3 waydroid_script/waydroid_script.py -l
 ```
 
----
 
-## 8. Advanced Patching
+## 8. Advanced patching
 
 ### 8.1 Deobfuscation via jddlab
 
@@ -681,9 +689,9 @@ Detect the obfuscator:
 }
 ```
 
-Run deobfuscation. `java-deobfuscator` is driven by a YAML config (via `--config`, two
-dashes); the input, output and transformers all live **inside the YAML**, not as CLI
-flags (see the java-deobfuscation skill for a config example):
+Run the deobfuscation. `java-deobfuscator` reads a YAML config (`--config`, two
+dashes); the input, output and transformers are set in the YAML, not as CLI flags (the
+java-deobfuscation skill has a config example):
 
 ```json
 {
@@ -705,10 +713,10 @@ Convert DEX to JAR first if needed:
 }
 ```
 
-### 8.2 Native Code Analysis via Ghidra
+### 8.2 Native code analysis via Ghidra
 
-`ghidra-decompile` takes **positional** args (`<input-binary> [<output.c>]`) and emits a
-single `.c` file - no `-i`/`-o` flags:
+`ghidra-decompile` takes positional arguments (`<input-binary> [<output.c>]`) and
+writes a single `.c` file; there are no `-i`/`-o` flags:
 
 ```json
 {
@@ -719,7 +727,7 @@ single `.c` file - no `-i`/`-o` flags:
 }
 ```
 
-### 8.3 Extract JNI Artifacts
+### 8.3 Extract JNI artifacts
 
 `extract_jni <apk> [-o <file.json>]` reports JNI method signatures as JSON (a file with
 `-o`, else stdout):
@@ -733,19 +741,19 @@ single `.c` file - no `-i`/`-o` flags:
 }
 ```
 
-### 8.4 Smali-Level SSL Pinning Bypass
+### 8.4 Smali-Level SSL pinning bypass
 
 Search in jadx output or decompiled smali for:
 - `checkServerTrusted` / `checkClientTrusted`
 - `OkHttpClient.Builder().certificatePinner`
 - `SSLContext`, `TrustManager`, `HostnameVerifier`
 
-Patch approach: find the `checkServerTrusted` smali method and make it return immediately
-(remove all code, add `return-void`).
+Find the `checkServerTrusted` smali method and make it return immediately (replace the
+body with `return-void`).
 
 For automated pinning removal use `jddlab_android_unpinner` (see §6.4).
 
-### 8.5 Play Integrity / Root Detection Bypass
+### 8.5 Play Integrity / root detection bypass
 
 Software-only bypass options (2025):
 
@@ -754,21 +762,20 @@ Software-only bypass options (2025):
 | TrickyStore (Magisk) | Spoofs device attestation key |
 | Play Integrity Fix | Aims for valid attestation on rooted devices |
 
-**CRITICAL**: Play Integrity does NOT pass on any emulator - use a physical device.
+Play Integrity checks don't pass on emulators; use a physical device.
 
----
 
 ## 9. Troubleshooting
 
-### 9.1 Decompilation Failures
+### 9.1 Decompilation failures
 
 | Error | Cause | Fix |
 |---|---|---|
 | `AAPT2 exited with code 1` | Missing resource or framework | Install framework APK; use `--api 35` or `--ignore-missing-resources` |
-| `Unsupported DEX format` | Old baksmali / smali | jddlab image is always up to date; ensure you're using `stanislavpovolotsky/jddlab:latest` |
+| `Unsupported DEX format` | Old baksmali / smali | Update the image (`jddlab update`, `stanislavpovolotsky/jddlab:latest`) |
 | `java.io.IOException: Was not able to decode XML` | Corrupted/encrypted APK | Try APKEditor merge first, or check if APK is protected |
 
-### 9.2 Recompilation Failures
+### 9.2 Recompilation failures
 
 | Error | Cause | Fix |
 |---|---|---|
@@ -777,7 +784,7 @@ Software-only bypass options (2025):
 | `smali: syntax error` | Bad smali edit | Check register count (`.registers N`), type descriptors, opcode spelling |
 | Recompiled APK size is wrong | Resource table mismatch | Decompile clean copy; test recompile without modifications first |
 
-### 9.3 Installation Failures
+### 9.3 Installation failures
 
 | Error | Cause | Fix |
 |---|---|---|
@@ -786,7 +793,7 @@ Software-only bypass options (2025):
 | `INSTALL_FAILED_INVALID_APK` | Malformed APK | Check AAPT2 build log; verify ZIP integrity |
 | `INSTALL_FAILED_SESSION_INVALID` | Different keys across splits | Re-sign ALL splits with same keystore |
 
-### 9.4 Runtime Crashes
+### 9.4 Runtime crashes
 
 | Symptom | Likely Cause | Fix |
 |---|---|---|
@@ -795,11 +802,10 @@ Software-only bypass options (2025):
 | `SecurityException: Signature not valid` | App explicitly checks own signature | Patch smali signature check (see §2.4) |
 | Works on debug build but not release | ProGuard removed a method you're calling | Check if class/method is kept in `proguard-rules.pro` |
 
----
 
-## 10. Quick Reference Cheat Sheet
+## 10. Quick reference cheat sheet
 
-### Core Workflow (MCP tool calls)
+### Core workflow (MCP tool calls)
 
 ```
 1. Analyze     → jddlab_jadx       args: ["-d", "out", "target.apk"]
@@ -809,10 +815,10 @@ Software-only bypass options (2025):
 5. Align       → jddlab_zipalign   args: ["-v", "-p", "4", "rebuilt.apk", "rebuilt_aligned.apk"]
 6. Sign        → jddlab_apksigner  args: ["sign", "--ks", "key.keystore", ...]
 7. Verify      → jddlab_apksigner  args: ["verify", "--verbose", "rebuilt_aligned.apk"]
-8. Install     → (host) adb install -r rebuilt_aligned.apk
+8. Install     → jddlab_adb        args: ["install", "-r", "rebuilt_aligned.apk"]
 ```
 
-### Smali Quick Patterns
+### Smali quick patterns
 
 ```smali
 # Return true
@@ -834,12 +840,12 @@ nop
 const-string v0, "value"
 ```
 
-### Key File Paths in Decompiled APK
+### Key file paths in decompiled APK
 
 | Path | Content |
 |---|---|
 | `AndroidManifest.xml` | Permissions, components, min/target SDK |
-| `apktool.yml` | Apktool metadata - do NOT hand-edit version fields |
+| `apktool.yml` | Apktool metadata; don't edit the version fields by hand |
 | `smali/com/example/app/` | Main app code (DEX 1) |
 | `smali_classes2/` | Additional DEX files (multi-dex) |
 | `res/values/strings.xml` | String resources |
@@ -847,7 +853,7 @@ const-string v0, "value"
 | `assets/` | Raw bundled files |
 | `lib/arm64-v8a/` | 64-bit ARM native libraries |
 
-### Common Smali Type Descriptors
+### Common Smali type descriptors
 
 | Java type | Smali |
 |---|---|
@@ -859,7 +865,7 @@ const-string v0, "value"
 | `Object` | `Ljava/lang/Object;` |
 | `String[]` | `[Ljava/lang/String;` |
 
-### Debug Keystore
+### Debug keystore
 
 ```
 Path:     /root/.android/debug.keystore  (built into the image)
@@ -867,7 +873,7 @@ Alias:    androiddebugkey
 Password: android
 ```
 
-No `extra_mounts` needed - use directly:
+No `extra_mounts` needed:
 ```json
 "args": ["sign", "--ks", "/root/.android/debug.keystore",
          "--ks-key-alias", "androiddebugkey",

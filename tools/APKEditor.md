@@ -1,20 +1,18 @@
 # APKEditor / apkeditor
 
-Powerful Android APK editor. The image exposes both `APKEditor` and `apkeditor` aliases.
+Android APK editor. The image has both `APKEditor` and `apkeditor` commands.
 
 ## Main modes
 
-Run `APKEditor -h` or `apkeditor -h` for the complete version-specific help. Common workflows include:
+- `d` / `decode`: decode binary resources (and DEX) to readable json/xml/smali.
+- `b` / `build`: build an APK from a decoded directory.
+- `m` / `merge`: merge split APKs (a directory, or XAPK/APKM/APKS) into one APK.
+- `x` / `refactor`: rename obfuscated resource names.
+- `p` / `protect`: obfuscate the APK's resource files.
+- `info`: print information about an APK.
 
-- Decode/decompile APK-like inputs.
-- Build/rebuild decoded projects.
-- Merge or split APK sets.
-- Refactor package metadata and resources.
-- Protect, inspect, or manipulate APK contents.
-
-## Common argument patterns
-
-APKEditor accepts subcommands/modes followed by mode-specific options and input/output paths. Use the exact arguments from `APKEditor -h` in the `args` array.
+The command comes first, followed by its options; `-i` is the input and `-o` the
+output. Run `APKEditor -h` or `APKEditor <command> -h` for the full help.
 
 ## Examples
 

@@ -10,5 +10,9 @@
 }
 
 # (The launcher activity is referenced from AndroidManifest.xml and is kept
-# automatically by AGP; SecretManager and other helpers are intentionally left to be
-# renamed/obfuscated by R8.)
+# automatically by AGP.)
+
+# The app's own helpers are small and each is used once, so R8 would inline them
+# all into MainActivity. Keep them as classes, but let R8 rename them and their
+# members (com.example.simple.a, b, ...), as in a typical obfuscated app.
+-keep,allowobfuscation class com.example.simple.** { *; }

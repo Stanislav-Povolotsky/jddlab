@@ -5,9 +5,9 @@ Align uncompressed data in an Android APK file to 4-byte boundaries.
 Part of the Android SDK Build Tools. Available in the jddlab Docker image at
 `/usr/local/android-sdk-linux/build-tools/current/zipalign`.
 
-Alignment is required for efficient memory mapping during app loading. It MUST be
-performed **before** signing with `apksigner` - running `zipalign` after signing
-invalidates v2/v3 signatures.
+Alignment lets Android memory-map uncompressed data when loading the app. Align
+before signing with `apksigner`: running `zipalign` after signing invalidates v2/v3
+signatures.
 
 ## Usage
 
@@ -16,7 +16,7 @@ zipalign [-f] [-p] [-v] [-z] <align> <infile.apk> <outfile.apk>
 zipalign -c [-p] [-v] <align> <infile.apk>
 ```
 
-- `<align>`: Alignment in bytes (use **4** for standard APKs).
+- `<align>`: Alignment in bytes (`4` for APKs).
 - `<infile.apk>`: Input APK.
 - `<outfile.apk>`: Output APK (when not using `-c`).
 
@@ -51,8 +51,8 @@ Check if an APK is already aligned:
 
 ```
 1. apktool b decompiled/ -o rebuilt.apk
-2. zipalign -v -p 4 rebuilt.apk rebuilt_aligned.apk   ← FIRST
-3. apksigner sign --ks key.keystore rebuilt_aligned.apk ← SECOND
+2. zipalign -v -p 4 rebuilt.apk rebuilt_aligned.apk
+3. apksigner sign --ks key.keystore rebuilt_aligned.apk
 ```
 
 ## MCP wrapper arguments

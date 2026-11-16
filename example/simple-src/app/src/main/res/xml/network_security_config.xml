@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pins example.com to a key it doesn't have, so HttpsURLConnection requests to it
+     fail until pinning is bypassed. See PinningChecks.java. -->
+<network-security-config>
+    <domain-config>
+        <domain includeSubdomains="false">example.com</domain>
+        <pin-set>
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+        </pin-set>
+    </domain-config>
+</network-security-config>

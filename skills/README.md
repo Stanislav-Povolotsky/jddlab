@@ -1,11 +1,11 @@
-# jddlab Skills
+# jddlab skills
 
-Skills are Markdown knowledge bases that teach AI assistants how to perform specific
-reverse-engineering tasks using jddlab tools.  Each skill lives in its own subdirectory
-and follows the `SKILL.md` format used by [opencode](https://opencode.ai) and Claude
-Code - the installer can also register them with Codex and VS Code Copilot.
+Skills are Markdown instructions that tell AI assistants how to do specific
+reverse-engineering tasks with jddlab tools. Each skill lives in its own subdirectory
+and uses the `SKILL.md` format of [opencode](https://opencode.ai) and Claude Code; the
+installer can also register them with Codex and VS Code Copilot.
 
-## Available Skills
+## Available skills
 
 | Directory | What it covers |
 |---|---|
@@ -17,9 +17,8 @@ Code - the installer can also register them with Codex and VS Code Copilot.
 
 ## Prerequisites
 
-Skills use **jddlab** tools - every tool runs inside the jddlab Docker container so
-nothing needs to be installed locally beyond Docker.  Make sure the jddlab MCP server
-is configured first:
+Every tool the skills use runs inside the jddlab Docker container, so Docker is the
+only local requirement. Configure the jddlab MCP server first:
 
 ```bash
 python mcp/install.py add vscode        # VS Code / GitHub Copilot
@@ -28,12 +27,12 @@ python mcp/install.py add claude-desktop
 python mcp/install.py add codex
 ```
 
-## Installing Skills
+## Installing skills
 
 ### Using the jddlab launcher (recommended)
 
-The `jddlab` / `jddlab.cmd` launchers include a `skills` subcommand that works from a
-repository checkout without any additional setup.
+The `jddlab` / `jddlab.cmd` launchers have a `skills` subcommand. It needs no
+repository checkout: the skills are copied out of the Docker image.
 
 ```bash
 # Install into the current project (default scope)
@@ -82,7 +81,7 @@ skills\install-skills-claude-cli.cmd
 skills\install-skills-vscode.cmd
 ```
 
-## Adding a New Skill
+## Adding a new skill
 
 1. Create a directory: `skills/<skill-name>/`
 2. Write `skills/<skill-name>/SKILL.md` following the existing template.
@@ -90,9 +89,9 @@ skills\install-skills-vscode.cmd
 
 ## File format
 
-Each `SKILL.md` is a Markdown document that **must start with a YAML front-matter
-block** giving the skill's `name` (matching the directory) and a `description` of when
-to use it - Claude Code and opencode use these to discover and trigger the skill:
+Each `SKILL.md` must start with a YAML front-matter block with the skill's `name`
+(matching the directory) and a `description` of when to use it. Claude Code and
+opencode use these fields to find and trigger the skill:
 
 ```markdown
 ---
@@ -104,5 +103,4 @@ description: One or two sentences on what this does and when to use it.
 ...
 ```
 
-Code blocks use `json` fences for MCP tool call examples so AI clients can copy them
-directly.
+MCP tool call examples go in `json` code blocks.

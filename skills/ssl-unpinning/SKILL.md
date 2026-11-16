@@ -3,48 +3,46 @@ name: ssl-unpinning
 description: Bypass Android TLS/certificate pinning with jddlab to intercept HTTPS - android-unpinner, Frida gadget injection (apk-patcher), objection, or manual smali patches. Use when a proxy (Burp/mitmproxy) shows no traffic because of certificate pinning.
 ---
 
-# Android SSL/Certificate Pinning Bypass - jddlab Edition
-**Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Advanced
+# Android SSL/certificate pinning bypass with jddlab
 
-> How to remove or bypass TLS certificate pinning in Android apps so you can
-> intercept HTTPS traffic (Burp/mitmproxy/Charles) using **jddlab**. Covers both
-> **static** (patch the APK) and **dynamic** (Frida/objection) approaches. Every
-> tool runs inside the `stanislavpovolotsky/jddlab` Docker container via the
-> **jddlab MCP server**.
->
-> **Authorized testing only.** Use on apps you own or are explicitly permitted to test.
+Version 1.0, 2026-08.
 
----
+How to remove or bypass TLS certificate pinning in Android apps so that you can
+intercept HTTPS traffic (Burp, mitmproxy, Charles) with jddlab, either by patching the
+APK or at runtime with Frida/objection. Every tool runs inside the
+`stanislavpovolotsky/jddlab` Docker container through the jddlab MCP server.
 
-## Table of Contents
+Use this only on apps you own or are explicitly permitted to test.
 
-1. [Choose an Approach](#1-choose-an-approach)
-2. [Toolchain Overview](#2-toolchain-overview)
-3. [Approach A: Automated Static Unpinning (android-unpinner)](#3-approach-a-automated-static-unpinning-android-unpinner)
-4. [Approach B: Frida Gadget Injection (apk-patcher)](#4-approach-b-frida-gadget-injection-apk-patcher)
+
+## Table of contents
+
+1. [Choose an approach](#1-choose-an-approach)
+2. [Toolchain overview](#2-toolchain-overview)
+3. [Approach A: automated unpinning (android-unpinner)](#3-approach-a-automated-unpinning-android-unpinner)
+4. [Approach B: Frida gadget injection (apk-patcher)](#4-approach-b-frida-gadget-injection-apk-patcher)
 5. [Approach C: objection patchapk](#5-approach-c-objection-patchapk)
-6. [Approach D: Manual smali Patch](#6-approach-d-manual-smali-patch)
-7. [Re-sign and Install](#7-re-sign-and-install)
-8. [Verify the Bypass](#8-verify-the-bypass)
+6. [Approach D: manual smali patch](#6-approach-d-manual-smali-patch)
+7. [Re-sign and install](#7-re-sign-and-install)
+8. [Verify the bypass](#8-verify-the-bypass)
 9. [Troubleshooting](#9-troubleshooting)
 
----
 
-## 1. Choose an Approach
+## 1. Choose an approach
 
 | Approach | Root needed? | Best when |
 |---|---|---|
-| A. `android-unpinner` | No (patches APK) | Quick, no device root, standard pinning |
+| A. `android-unpinner` | No (debuggable APK + runtime injection) | Quick, standard pinning, device connected |
 | B. `apk-patcher` (Frida gadget) | No | You want a full Frida script (custom hooks) baked in |
 | C. `objection patchapk` | No | You want objection's built-in pinning-bypass hooks |
 | D. Manual smali patch | No | Custom/native pinning the automated tools miss |
 
-Rooted device? You can skip patching entirely and run `frida`/`objection` against the
-running app from the host - but that is outside the container (needs USB/host Frida).
+On a rooted device with frida-server you can skip patching and attach `frida` /
+`objection` to the running app. jddlab reaches the device through the host ADB
+server (see §4).
 
----
 
-## 2. Toolchain Overview
+## 2. Toolchain overview
 
 | Task | jddlab MCP tool | Native command |
 |---|---|---|
@@ -56,37 +54,35 @@ running app from the host - but that is outside the container (needs USB/host Fr
 | Analyze (find pinning) | `jddlab_jadx` | `jadx` |
 | Align / sign | `jddlab_zipalign` / `jddlab_apksigner` | `zipalign` / `apksigner` |
 
----
 
-## 3. Approach A: Automated Static Unpinning (android-unpinner)
+## 3. Approach A: automated unpinning (android-unpinner)
 
-`android-unpinner` rewrites the APK to disable common pinning implementations and
-injects a Frida gadget where needed - no device root required.
-
-Use the **`patch-apk`** sub-command to produce a patched APK **without** a connected
-device (it writes `target.unpinned.apk`):
+`android-unpinner` needs no root. `patch-apks` makes the APK debuggable and re-signs
+it (writes `target.unpinned.apk`, no device needed); the pinning bypass itself happens
+at runtime, when `start-app` (or `all`) starts the app on a connected device and
+injects the Frida gadget with its unpinning scripts:
 
 ```json
 {
   "tool": "jddlab_android_unpinner",
-  "args": ["patch-apk", "target.apk"],
+  "args": ["patch-apks", "target.apk"],
   "input_paths": ["target.apk"],
   "output_paths": ["target.unpinned.apk"]
 }
 ```
 
-> Do **not** use the `all` sub-command here: `all` patches *and* installs + instruments
-> the app over Frida, which requires a connected USB device. Other sub-commands are
-> `push-frida` and `run`; see `jddlab android-unpinner --help` (or
+> `all` patches, installs and starts the app with the hooks in one go; it needs a
+> device. Other subcommands: `install`, `push-resources`, `start-app`, `get-apks`,
+> `list-packages`, `package-name` (see `jddlab android-unpinner --help` or
 > `tools/android-unpinner.md`). The patched APK is debug-signed and installable; if you
-> modify it further, re-sign per §7.
+> modify it further, re-sign it as in §7.
 
----
 
-## 4. Approach B: Frida Gadget Injection (apk-patcher)
+## 4. Approach B: Frida gadget injection (apk-patcher)
 
-Bake a Frida gadget + your own bypass script into the APK. This is the most flexible
-route (you control the JS).
+Put a Frida gadget and your own bypass script into the APK. This is the most flexible
+route, because you write the JS. `apk-patcher` injects the gadget baked into the image
+(no download).
 
 ```json
 {
@@ -97,31 +93,59 @@ route (you control the JS).
 }
 ```
 
-> `apk-patcher` expects the APK base name **without extension, with the trailing dot**
-> (`test.apk` → `./test.`). For split APKs, provide `base.`, `base.config.<lang>.apk`,
+> `apk-patcher` expects the APK base name without the extension but with the trailing
+> dot (`test.apk` → `./test.`). For split APKs, provide `base.`, `base.config.<lang>.apk`,
 > `base.config.<arch>.apk`, `base.config.<dpi>.apk` alongside. See the README
 > `apk-patcher` section.
 
-Load a custom pinning-bypass script with `-l`:
+Load a custom pinning-bypass script with `-l`. The gadget then runs it on every
+launch, with no client and no INTERNET permission needed:
 
 ```json
 {
   "tool": "jddlab_apk_patcher",
-  "args": ["-l", "unpin.js", "./target."],
+  "args": ["-f", "--frida-version", "16.1.3", "-l", "unpin.js", "./target."],
   "input_paths": ["target.apk", "unpin.js"],
   "output_paths": ["target.patched"]
 }
 ```
 
-A minimal `unpin.js` can pull in the community "Universal Android SSL Pinning Bypass"
-Frida script. The resulting APK runs the gadget on launch; attach with
-`frida -U Gadget` from the host if you want an interactive session.
+`unpin.js` can be the community "Universal Android SSL Pinning Bypass" Frida script.
+Scripts loaded by the gadget itself (`apk-patcher -l`) are plain scripts. Frida 17
+gadgets don't give such scripts the `Java` object (`Java.perform` fails silently). For
+Java hooks use the frida 16 gadget baked into the image: `-f --frida-version 16.1.3`
+(16.x gadgets read their config and script only from extracted native libraries,
+which `-f` enables), and start the hooks from `setTimeout(..., 1000)` rather than at
+the top level of the script. Alternatively compile the script with
+`frida-java-bridge`. Scripts loaded by the `frida` CLI (`frida -l`) have `Java` with
+either version. (Tested on Android 11.)
 
----
+Without `-l` the gadget listens and waits for a client when the app starts (the app
+needs the INTERNET permission for that; `objection patchapk` adds it, `apk-patcher`
+doesn't). Attach with `frida -U -n Gadget` (interactive, from a `jddlab` shell) or
+non-interactively through MCP. The bypass stays active only while the script is
+loaded, so keep `-t` as long as you capture traffic:
+
+```json
+{
+  "tool": "jddlab_frida",
+  "args": ["-U", "-n", "Gadget", "-l", "unpin.js", "-q", "-t", "30"],
+  "input_paths": ["unpin.js"],
+  "timeout_seconds": 120
+}
+```
+
+Device access (`adb install`, `frida -U`) goes through the host ADB server when one
+is running: ask the user to run `adb start-server` and connect the device on the host
+(USB, or `adb pair`/`adb connect`). Then `jddlab_adb`, `jddlab_frida*` and
+`jddlab_objection` see the device in every call. Without it, each MCP call gets a
+fresh ADB server inside the container that knows no devices.
+
 
 ## 5. Approach C: objection patchapk
 
-objection injects a Frida gadget and its own hook set (including pinning bypass):
+objection injects the Frida gadget baked into the image; its hooks include a pinning
+bypass:
 
 ```json
 {
@@ -132,17 +156,19 @@ objection injects a Frida gadget and its own hook set (including pinning bypass)
 }
 ```
 
-Then, against a device (host-side, needs USB/adb + Frida): `objection -g <pkg> explore`
-and run `android sslpinning disable`. Note `objection explore` needs an interactive
-TTY and a running device, so run it on the host, not headless in the container.
+Install the APK, start the app, and run `android sslpinning disable` in an
+interactive session: `objection -n Gadget explore` from a `jddlab` shell, or
+`objection -n Gadget explore -s "android sslpinning disable"`. The bypass lasts as
+long as the session. `objection ... run "android sslpinning disable"` (the
+non-interactive form) unloads its agent right after the command, so it doesn't keep
+the bypass; through MCP use `jddlab_frida` with a bypass script and `-t` (§4).
 
----
 
-## 6. Approach D: Manual smali Patch
+## 6. Approach D: manual smali patch
 
-When automated tools miss a custom/native implementation, patch by hand.
+When the automated tools miss a custom implementation, patch it by hand.
 
-**Step 1 - decompile:**
+Step 1, decompile:
 
 ```json
 {
@@ -153,15 +179,15 @@ When automated tools miss a custom/native implementation, patch by hand.
 }
 ```
 
-**Step 2 - locate pinning.** In `jddlab_jadx` output or the smali, search for:
+Step 2, find the pinning. In the `jddlab_jadx` output or the smali, search for:
 
 - `checkServerTrusted` / `checkClientTrusted` (custom `X509TrustManager`)
 - `CertificatePinner` / `certificatePinner` (OkHttp)
 - `TrustManager`, `SSLContext`, `HostnameVerifier`
 - `okhttp3` pinning config, or a `network_security_config.xml` with `<pin-set>`
 
-**Step 3 - neuter it.** Make the trust check return without throwing. For a
-`checkServerTrusted` smali method, strip the body to a simple return:
+Step 3, disable it. Make the trust check return without throwing. For a
+`checkServerTrusted` smali method, reduce the body to a plain return:
 
 ```smali
 .method public checkServerTrusted([Ljava/security/cert/X509Certificate;Ljava/lang/String;)V
@@ -174,7 +200,7 @@ For OkHttp `CertificatePinner`, remove the `.add(...)` pins or make the `check` 
 return-void. Also check `res/xml/network_security_config.xml` and remove any
 `<pin-set>` / set `<trust-anchors>` to include `user` CAs.
 
-**Step 4 - rebuild:**
+Step 4, rebuild:
 
 ```json
 {
@@ -185,11 +211,10 @@ return-void. Also check `res/xml/network_security_config.xml` and remove any
 }
 ```
 
----
 
-## 7. Re-sign and Install
+## 7. Re-sign and install
 
-Any modified/patched APK must be aligned, signed, and verified before install:
+A modified APK must be aligned, signed and verified before installing it:
 
 ```json
 {"tool":"jddlab_zipalign","args":["-v","-p","4","rebuilt.apk","aligned.apk"],"input_paths":["rebuilt.apk"],"output_paths":["aligned.apk"]}
@@ -201,21 +226,37 @@ Any modified/patched APK must be aligned, signed, and verified before install:
 {"tool":"jddlab_apksigner","args":["verify","--print-certs","aligned.apk"],"input_paths":["aligned.apk"]}
 ```
 
-Install on the host: `adb install -r aligned.apk`. See the **android-apk-patch** skill
-for split-APK signing and install-multiple.
+Install it with `jddlab_adb` (`["install", "-r", "aligned.apk"]`) or `adb` on the host.
+The android-apk-patch skill covers split-APK signing and `install-multiple`.
 
----
 
-## 8. Verify the Bypass
+## 8. Verify the bypass
 
 1. Configure the device/emulator to route through your proxy (Burp/mitmproxy) and
-   install the proxy CA (as a user cert - the patch should now accept it).
+   install the proxy CA as a user certificate (the patched app should accept it).
 2. Launch the app and exercise a network call.
-3. You should see decrypted HTTPS in the proxy. If the app shows connection errors but
-   no proxy traffic, pinning is still active - move to a different approach or patch the
-   remaining implementation.
+3. The proxy should show decrypted HTTPS. If the app reports connection errors and
+   the proxy shows no traffic, pinning is still active: try another approach or patch
+   the remaining implementation.
 
----
+The [example app](../../example/README.md) is a self-contained target that needs no
+proxy to verify a bypass. It makes two pinned HTTPS requests, one via the platform
+`network_security_config.xml` and one via OkHttp's `CertificatePinner`, both pinned
+to a key the servers don't have, and prints the result of each to logcat
+(`adb logcat -s jddlab-sample:I`):
+
+```
+pinning[network_security_config] https://example.com/ -> BLOCKED (...)
+pinning[okhttp CertificatePinner] https://example.org/ -> BLOCKED (...)
+```
+
+A line turns into `OK HTTP 200` once that request's pinning is bypassed. The checks
+repeat every 5 seconds, so a Frida script you attach after launch takes effect on the
+next line. `android-unpinner all` bypasses the platform-pinned request; its universal
+scripts miss the OkHttp pinner because R8 renamed `okhttp3.CertificatePinner`, so find
+the renamed class in jadx (search for the `"Certificate pinning failure!"` string) and
+hook its `check` method with your own Frida script (§4).
+
 
 ## 9. Troubleshooting
 

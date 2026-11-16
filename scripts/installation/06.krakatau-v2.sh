@@ -21,7 +21,9 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     pushd /build
     git clone -b $BRANCH --single-branch "https://github.com/$REPO" .
     $SCRIPT_DIR/helpers/get-git-branch-info.sh local $BRANCH >/tmp/$pkg/info.txt
-    rm -rf .git tests
+    # Keep tests/: Cargo.toml declares a [[test]] target there and cargo refuses to
+    # parse the manifest without it. Tests are never compiled by the build below.
+    rm -rf .git
     popd
 else
     $SCRIPT_DIR/helpers/get-git-branch-info.sh remote $BRANCH $REPO >/tmp/$pkg/info.txt
@@ -35,7 +37,8 @@ echo "$commit_url" >> $pkg_info
 if [[ "$versions_collect_mode" == "0" ]]; then
     # Installation mode
     pushd /build
-    cargo build --release
+    # Build only the CLI binary (the 'krak2' workspace package): no tests, no examples.
+    cargo build --release -p krak2 --bin krak2
     mv target/release/krak2 $pkg_path
     popd
 

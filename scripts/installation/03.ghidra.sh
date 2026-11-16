@@ -28,6 +28,18 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     popd
     ln -s ../$pkg/support/analyzeHeadless $bin_path/$cmd_ghidra_analyze_headless
 
+    # Ghidra releases ship the native decompiler for linux_x86_64 only. On arm64
+    # build it from the C++ sources included in the release (a few minutes).
+    # 'ghidra_opt' is the decompiler process Ghidra talks to (os/<os>/decompile);
+    # the Makefile only knows x86/mac, and would pass -m32: clear ARCH_TYPE.
+    decompiler_dir=$pkg_path/Ghidra/Features/Decompiler
+    if [[ "$(uname -m)" == "aarch64" && ! -x $decompiler_dir/os/linux_arm_64/decompile ]]; then
+        make -C $decompiler_dir/src/decompile/cpp -j$(nproc) ARCH_TYPE= ghidra_opt
+        mkdir -p $decompiler_dir/os/linux_arm_64
+        mv $decompiler_dir/src/decompile/cpp/ghidra_opt $decompiler_dir/os/linux_arm_64/decompile
+        rm -rf $decompiler_dir/src/decompile/cpp/ghi_opt
+    fi
+
     chmod +x helpers/ghidra/*.sh
     mv helpers/ghidra/* $pkg_path/
     ln -s ../$pkg/ghidra-decompile.sh $bin_path/$cmd_decompile

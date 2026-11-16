@@ -61,4 +61,6 @@ android {
 }
 
 dependencies {
+    // Most apps pin certificates with OkHttp; R8 obfuscates the library code too.
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 }

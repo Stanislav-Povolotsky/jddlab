@@ -36,16 +36,17 @@ keystores. Part of the JDK (available as `keytool` in the jddlab Docker image).
 
 ## Built-in debug keystore
 
-The jddlab image ships the standard Android debug keystore at
-`/root/.android/debug.keystore` - no host files or `extra_mounts` needed:
-- **Path**: `/root/.android/debug.keystore`
-- **Alias**: `androiddebugkey`
-- **Keystore / key password**: `android`
-- **Algorithm**: RSA 2048, validity 10000 days
-- **Supports**: v1 + v2 + v3 signing schemes
+The image includes the standard Android debug keystore, so no host files or
+`extra_mounts` are needed:
 
-When the user mounts their own `~/.android` via `extra_mounts`, it overrides this
-built-in keystore automatically.
+- Path: `/root/.android/debug.keystore`
+- Alias: `androiddebugkey`
+- Keystore and key password: `android`
+- Algorithm: RSA 2048, valid for 10000 days
+- Signing schemes: v1, v2 and v3
+
+If the user mounts their own `~/.android` with `extra_mounts`, that keystore is used
+instead.
 
 ## Examples
 

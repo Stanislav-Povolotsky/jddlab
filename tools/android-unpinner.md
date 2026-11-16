@@ -1,6 +1,8 @@
 # android-unpinner
 
-Remove certificate pinning from APKs without root.
+Remove certificate pinning from Android apps without root. `patch-apks` makes the APK
+debuggable and re-signs it; `start-app` (or `all`) then starts it on a connected device
+and injects the Frida gadget baked into the image with the unpinning scripts.
 
 ## Usage
 
@@ -10,12 +12,13 @@ android-unpinner [OPTIONS] COMMAND [ARGS]...
 
 ## Main modes
 
-Run `android-unpinner --help` for the complete command list. The common workflow is `patch-apk <apk...>`.
+Commands: `all`, `patch-apks`, `install`, `start-app`, `push-resources`, `get-apks`,
+`list-packages`, `package-name`. Run `android-unpinner --help` for details.
 
 ## Example
 
 ```json
-{"args":["patch-apk","test.apk"],"input_paths":["test.apk"],"output_paths":["."]}
+{"args":["patch-apks","test.apk"],"input_paths":["test.apk"],"output_paths":["test.unpinned.apk"]}
 ```
 
 

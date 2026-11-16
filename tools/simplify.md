@@ -10,7 +10,15 @@ simplify <input> [options]
 
 ## Common arguments
 
-Run `simplify -h` for the complete option list. Typical arguments include input APK/DEX/smali targets, output locations, class or method filters, execution limits, and verbosity flags.
+- `-o <file>`: output DEX.
+- `-it <regex>` / `-et <regex>`: only include / exclude classes and methods matching
+  the regex (e.g. `-it 'com/example/Crypto'`).
+- `-ie`: ignore errors while executing methods (needed when the app uses Android
+  framework classes simplify's VM can't load).
+- `--max-execution-time <s>`, `--max-call-depth <n>`, `--max-address-visits <n>`: execution limits.
+- `-q`, `-v <level>`: quiet / verbose.
+
+Run `simplify -h` for all options.
 
 ## Example
 

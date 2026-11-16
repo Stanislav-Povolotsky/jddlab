@@ -22,6 +22,10 @@ if [[ "$versions_collect_mode" == "0" ]]; then
     git clone -b $BRANCH --single-branch "https://github.com/$REPO" .
     $SCRIPT_DIR/helpers/get-git-branch-info.sh local $BRANCH >/tmp/$pkg/info.txt
     rm -rf .git tests
+    # Krakatau v1 (master) still has one Python 2 leftover that breaks writing any
+    # disassembled class under Python 3 (NameError: name 'unicode' is not defined).
+    grep -q "isinstance(data, unicode)" Krakatau/script_util.py
+    sed -i "s/isinstance(data, unicode)/isinstance(data, str)/" Krakatau/script_util.py
     popd
 else
     $SCRIPT_DIR/helpers/get-git-branch-info.sh remote $BRANCH $REPO >/tmp/$pkg/info.txt

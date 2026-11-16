@@ -3,39 +3,37 @@ name: native-jni-analysis
 description: Analyze an app's native (.so) / JNI code with jddlab - map Java native methods to symbols, extract JNI bindings, and decompile ARM/ARM64 with Ghidra headless. Use when security logic (keys, pinning, root/tamper checks) lives in native libraries.
 ---
 
-# Native Library & JNI Analysis - jddlab Edition
-**Version**: 1.0 | **Last Updated**: 2026-08 | **Difficulty**: Advanced
+# Native library and JNI analysis with jddlab
 
-> How to analyze the native (`.so`) side of an Android app: map JNI methods to their
-> native implementations, decompile ARM/ARM64/x86 code with **Ghidra (headless)**, and
-> tie it back to the Java layer. Every tool runs inside the
-> `stanislavpovolotsky/jddlab` Docker container via the **jddlab MCP server**.
+Version 1.0, 2026-08.
 
----
+How to analyze the native (`.so`) side of an Android app: map JNI methods to their
+native implementations, decompile ARM/ARM64/x86 code with headless Ghidra, and tie it
+back to the Java layer. Every tool runs inside the `stanislavpovolotsky/jddlab` Docker
+container through the jddlab MCP server.
 
-## Table of Contents
 
-1. [Why Native Analysis](#1-why-native-analysis)
-2. [Toolchain Overview](#2-toolchain-overview)
-3. [Step 1: Extract Native Libraries & JNI Bindings](#3-step-1-extract-native-libraries--jni-bindings)
-4. [Step 2: Map Java `native` Methods to Symbols](#4-step-2-map-java-native-methods-to-symbols)
-5. [Step 3: Decompile with Ghidra (headless)](#5-step-3-decompile-with-ghidra-headless)
-6. [Step 4: Custom Ghidra Scripts](#6-step-4-custom-ghidra-scripts)
-7. [Reading the Output & Common Targets](#7-reading-the-output--common-targets)
+## Table of contents
+
+1. [Why native analysis](#1-why-native-analysis)
+2. [Toolchain overview](#2-toolchain-overview)
+3. [Step 1: extract native libraries & JNI bindings](#3-step-1-extract-native-libraries--jni-bindings)
+4. [Step 2: map Java `native` methods to symbols](#4-step-2-map-java-native-methods-to-symbols)
+5. [Step 3: decompile with Ghidra (headless)](#5-step-3-decompile-with-ghidra-headless)
+6. [Step 4: custom Ghidra scripts](#6-step-4-custom-ghidra-scripts)
+7. [Reading the output & common targets](#7-reading-the-output--common-targets)
 8. [Troubleshooting](#8-troubleshooting)
 
----
 
-## 1. Why Native Analysis
+## 1. Why native analysis
 
-Apps increasingly move security-critical logic into native code: string/crypto key
-storage, TLS pinning, root/tamper detection, license checks, and DRM. When the Java
-layer is a thin shell that calls `native` methods, the real logic is in
-`lib/<abi>/*.so` and you must analyze the machine code.
+Apps often keep security logic in native code: string and crypto key storage, TLS
+pinning, root/tamper detection, license checks, DRM. When the Java layer only calls
+`native` methods, the logic is in `lib/<abi>/*.so` and you have to analyze the machine
+code.
 
----
 
-## 2. Toolchain Overview
+## 2. Toolchain overview
 
 | Task | jddlab MCP tool | Native command |
 |---|---|---|
@@ -47,16 +45,15 @@ layer is a thin shell that calls `native` methods, the real logic is in
 
 `.so` files are ELF shared objects. There is one per ABI: `arm64-v8a` (most modern
 phones), `armeabi-v7a` (older/32-bit), `x86_64`/`x86` (emulators). Analyze the ABI you
-run on - usually `arm64-v8a`.
+run on, usually `arm64-v8a`.
 
----
 
-## 3. Step 1: Extract Native Libraries & JNI Bindings
+## 3. Step 1: extract native libraries & JNI bindings
 
-`extract_jni` parses an **APK** and lists its JNI method signatures, which helps
-correlate Java `native` methods with the native functions. Its CLI is
-`extract_jni <apk> [-o <file.json>]`: with `-o` it writes a **JSON file** (not a
-directory), and without `-o` it prints the JSON to stdout.
+`extract_jni` parses an APK and lists its JNI method signatures, which helps match
+Java `native` methods to native functions. Its CLI is
+`extract_jni <apk> [-o <file.json>]`: with `-o` it writes a JSON file (not a
+directory), without `-o` it prints the JSON to stdout.
 
 ```json
 {
@@ -67,8 +64,8 @@ directory), and without `-o` it prints the JSON to stdout.
 }
 ```
 
-> `extract_jni` does **not** extract the `.so` files themselves - it only reports the
-> JNI method signatures. Get the `.so` binaries with `apktool`/`jadx` (below).
+> `extract_jni` only reports the JNI method signatures; it doesn't extract the `.so`
+> files. Get the binaries with `apktool`/`jadx` (below).
 
 If you just need the raw `.so` files, decode the APK and read `lib/<abi>/`:
 
@@ -83,13 +80,12 @@ If you just need the raw `.so` files, decode the APK and read `lib/<abi>/`:
 
 (`-s` skips smali for speed; `lib/` is still extracted.)
 
----
 
-## 4. Step 2: Map Java `native` Methods to Symbols
+## 4. Step 2: map Java `native` methods to symbols
 
-Two JNI binding styles - know which you're facing:
+There are two JNI binding styles.
 
-**a) Static binding (exported symbols).** The native function is named
+a) Static binding (exported symbols). The native function is named
 `Java_<pkg>_<Class>_<method>`. Decompile Java with `jddlab_jadx`, find the `native`
 declarations, then match them to exports in the `.so` (e.g. `Java_com_example_Crypto_decrypt`).
 
@@ -104,20 +100,19 @@ nm -D --defined-only dec/lib/arm64-v8a/libnative.so | grep Java_
 Ghidra's symbol tree (§5) also lists the `Java_...` exports directly, so you can skip
 this step if you go straight to decompilation.
 
-**b) Dynamic binding (`RegisterNatives`).** No `Java_...` exports - the app registers
-methods at runtime, usually from `JNI_OnLoad`. Start your Ghidra analysis at
+b) Dynamic binding (`RegisterNatives`). There are no `Java_...` exports: the app
+registers methods at runtime, usually from `JNI_OnLoad`. Start your Ghidra analysis at
 `JNI_OnLoad`, find the `RegisterNatives` call, and read the `JNINativeMethod` table
 (method name, signature, function pointer) it passes. `extract_jni` (§3) often surfaces
 this mapping for you.
 
----
 
-## 5. Step 3: Decompile with Ghidra (headless)
+## 5. Step 3: decompile with Ghidra (headless)
 
-`ghidra-decompile` runs Ghidra headless and emits decompiled C for a binary. Its CLI
-is **positional** - `ghidra-decompile <input-binary> [<output.c>]` - and the output is
-a **single `.c` file** (defaults to `<input>.c` if you omit it). Do NOT pass `-i`/`-o`
-flags or a directory:
+`ghidra-decompile` runs Ghidra headless and writes decompiled C for a binary. Its CLI
+is positional, `ghidra-decompile <input-binary> [<output.c>]`, and the output is a
+single `.c` file (`<input>.c` if you omit it). Don't pass `-i`/`-o` flags or a
+directory:
 
 ```json
 {
@@ -129,19 +124,18 @@ flags or a directory:
 }
 ```
 
-Ghidra analysis is CPU/RAM heavy - give it a generous `timeout_seconds` and ensure
-Docker has enough memory. The decompiled C can be large; grep it for the JNI functions
+Ghidra analysis needs a lot of CPU and RAM: give it a large `timeout_seconds` and
+enough Docker memory. The decompiled C can be large; grep it for the JNI functions
 (`Java_...`) instead of reading it whole. See `tools/ghidra-decompile.md` for details.
 
 For a full project (multiple binaries, scripting, cross-references), use the headless
 analyzer directly via `jddlab_ghidra` with a project dir and `-import`.
 
----
 
-## 6. Step 4: Custom Ghidra Scripts
+## 6. Step 4: custom Ghidra scripts
 
-The image bundles a headless-friendly decompile script; you can run your own analysis
-scripts through the full `ghidra` analyzer. A typical headless invocation:
+The image bundles a decompile script for headless use, and you can run your own
+analysis scripts through the full `ghidra` analyzer. A typical headless call:
 
 ```json
 {
@@ -162,28 +156,26 @@ Use post-scripts to auto-locate `RegisterNatives`, dump strings/xrefs, or emit
 decompiled C for just the JNI-exported functions. See the bundled
 `ghidra/custom-scripts/CustomDecompileScript.java` for a starting template.
 
----
 
-## 7. Reading the Output & Common Targets
+## 7. Reading the output & common targets
 
 Once you have decompiled C, focus on what the Java layer delegated to native:
 
-- **String/key hiding:** look for byte arrays assembled at runtime, XOR/AES loops, and
+- String/key hiding: look for byte arrays assembled at runtime, XOR/AES loops, and
   `AStrcpy`/`memcpy` into a decrypt buffer. Cross-reference with strings that never
   appear in the Java layer.
-- **Root/tamper detection:** `stat`/`access` on `/system/bin/su`, `getprop`,
+- Root/tamper detection: `stat`/`access` on `/system/bin/su`, `getprop`,
   `/proc/self/maps` reads, package-name checks, signature (`GET_SIGNATURES`) verified
   natively.
-- **TLS pinning in native:** BoringSSL/OpenSSL calls (`SSL_CTX_set_custom_verify`,
+- TLS pinning in native code: BoringSSL/OpenSSL calls (`SSL_CTX_set_custom_verify`,
   `SSL_get_peer_certificate`), embedded certificate/pubkey hashes.
-- **Anti-Frida/anti-debug:** scans of `/proc/self/maps` for `frida`/`gum`, `ptrace`
+- Anti-Frida/anti-debug: scans of `/proc/self/maps` for `frida`/`gum`, `ptrace`
   self-attach, thread-name checks.
 
-To defeat a native check you typically patch the `.so` (flip a branch / return
-constant) and repackage the APK - align, sign, and reinstall (see the
-**android-apk-patch** and **ssl-unpinning** skills).
+To defeat a native check, patch the `.so` (flip a branch or return a constant), then
+repackage, align, sign and reinstall the APK (see the android-apk-patch and
+ssl-unpinning skills).
 
----
 
 ## 8. Troubleshooting
 

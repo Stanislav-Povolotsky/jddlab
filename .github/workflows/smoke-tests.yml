@@ -1,0 +1,48 @@
+name: Smoke tests
+
+# On-demand smoke tests of a published image on both architectures (arm64 runs
+# under QEMU emulation and is slow). The release build (docker-image.yml) only
+# tests the image for the runner's architecture.
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "Image to test"
+        default: "stanislavpovolotsky/jddlab:latest"
+        required: true
+      arm64_tests:
+        description: "Tests on arm64: 'native' (tools with native code) or 'all'"
+        type: choice
+        options: [native, all]
+        default: native
+
+jobs:
+  amd64:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Smoke tests (amd64)
+        run: docker run --rm --platform linux/amd64 "${{ inputs.image }}" bash /usr/local/jddlab/tests/smoke.sh
+
+      - name: MCP smoke test
+        run: python scripts/workflow/mcp-smoke-test.py --image "${{ inputs.image }}"
+
+  arm64:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Smoke tests (arm64, emulated)
+        run: |
+          args="--emulated"
+          if [ "${{ inputs.arm64_tests }}" == "native" ]; then args="$args --native-only"; fi
+          docker run --rm --platform linux/arm64 "${{ inputs.image }}" bash /usr/local/jddlab/tests/smoke.sh $args

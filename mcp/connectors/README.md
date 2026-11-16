@@ -1,6 +1,6 @@
-# MCP Connector Examples
+# MCP connector examples
 
-This directory contains example connector snippets for the jddlab MCP server.
+Connector snippets for the jddlab MCP server.
 
 Replace `<REPO_PATH>` with the absolute path to this repository. On Windows, either use doubled backslashes in JSON or use forward slashes:
 
@@ -16,7 +16,7 @@ python <REPO_PATH>/mcp/server.py
 
 The server uses stdio transport and exposes one MCP tool per jddlab command, plus a generic `jddlab_run` tool.
 
-## Recommended Installation
+## Recommended installation
 
 If you installed the standalone `jddlab` launcher, use its MCP subcommand:
 
@@ -28,7 +28,7 @@ jddlab mcp add vscode
 jddlab mcp doctor
 ```
 
-The launcher copies the MCP server out of the Docker image (from `/usr/local/jddlab/host`) into `~/.jddlab/mcp/current` using `docker cp`, then runs the installer from there. The examples below are useful for manual setup or troubleshooting.
+The launcher copies the MCP server out of the Docker image (from `/usr/local/jddlab/host`) into `~/.jddlab/mcp/current` using `docker cp`, then runs the installer from there. Use the snippets below for manual setup or troubleshooting.
 
 ## Prerequisites
 
@@ -87,7 +87,7 @@ startup_timeout_sec = 120
 
 Restart Codex after editing the config.
 
-## VS Code and Other MCP Clients
+## VS Code and other MCP clients
 
 Use `vscode-mcp.json` or `generic-mcp.json` as a starting point. Any MCP client that supports stdio servers can run this server with:
 
@@ -98,9 +98,9 @@ Use `vscode-mcp.json` or `generic-mcp.json` as a starting point. Any MCP client 
 }
 ```
 
-## Smoke Test
+## Smoke test
 
-You can test that the server process starts:
+Check that the server process starts:
 
 ```shell
 python <REPO_PATH>/mcp/server.py --list-commands

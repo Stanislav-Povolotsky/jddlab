@@ -1,7 +1,8 @@
 #!/bin/bash
 set -ex
 
-apt-get update && apt-get install -y curl ca-certificates python3-pip python3-venv pipx zip openjdk-21-jdk-headless git jq xmlstarlet python3-setuptools
+apt-get update && apt-get install -y curl ca-certificates python3-pip python3-venv pipx zip unzip openjdk-21-jdk-headless git jq xmlstarlet python3-setuptools \
+    build-essential bison flex
 
 echo Installing mvn
 pushd /tmp

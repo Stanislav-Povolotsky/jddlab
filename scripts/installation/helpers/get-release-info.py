@@ -8,6 +8,9 @@
 #   https://maven.google.com/web/index.html#<package>:<artifact>:[<version>]
 #   https://maven.google.com/web/index.html#com.android.tools.smali:smali
 #   https://maven.google.com/web/index.html#com.android.tools.smali:smali:3.0.8
+# - Maven Central
+#   https://central.sonatype.com/artifact/<group>/<artifact>[/<version>]
+#   https://central.sonatype.com/artifact/org.benf/cfr
 import sys
 import re
 import requests
@@ -23,6 +26,8 @@ def get_release_info(url, tag = 'latest', opts = None):
     #    release_info = get_release_info_mvnrepository(url, tag = tag)
     elif url.startswith("https://maven.google.com/"):
         release_info = get_release_info_google_maven(url, tag = tag)
+    elif url.startswith("https://central.sonatype.com/"):
+        release_info = get_release_info_maven_central(url, tag = tag)
     elif url.startswith("https://www.jetbrains.com/"):
         release_info = get_release_info_jetbrains(url, tag = tag)
     if(not release_info):
@@ -112,6 +117,33 @@ def get_release_info_google_maven(url, tag = 'latest'):
     else:
         raise Exception(f"Unsupported url format: {url}")
     return release_info
+
+def get_release_info_maven_central(url, tag = 'latest'):
+    # https://central.sonatype.com/artifact/<group>/<artifact>[/<version>]
+    m = re.match(R'^https://central.sonatype.com/artifact/([^/]+)/([^/]+)(/([^/]+))?/?$', url)
+    if not m:
+        raise Exception(f"Unsupported url format: {url}")
+    group, artifact, opt_version = m.group(1), m.group(2), m.group(4)
+    if(opt_version):
+        tag = opt_version
+    base_url = f'https://repo1.maven.org/maven2/{group.replace(".","/")}/{artifact}'
+    if(tag.lower() == 'latest'):
+        try:
+            root = ET.fromstring(requests.get(f'{base_url}/maven-metadata.xml').text)
+            tag = root.findtext('versioning/release') or root.findtext('versioning/latest')
+            if(not tag):
+                raise Exception("No release version in maven-metadata.xml")
+        except Exception as e:
+            raise Exception(f"Project '{url}' tag 'latest' request error: {e}")
+    project_url = f"https://central.sonatype.com/artifact/{group}/{artifact}/{tag}"
+    jar_name = f"{artifact}-{tag}.jar"
+    return {
+        'project-url': project_url,
+        'url': project_url,
+        'tag': tag,
+        'version': f"{artifact} {tag}",
+        'assets': [{'name': jar_name, 'url': f"{base_url}/{tag}/{jar_name}"}],
+    }
 
 """
 def get_release_info_mvnrepository(url, tag = 'latest'):

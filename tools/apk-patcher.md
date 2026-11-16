@@ -12,17 +12,42 @@ Run `apk-patcher -h` for the complete version-specific option list.
 
 ## Frida gadget version
 
-By default (jddlab patch) apk-patcher injects the Frida gadget **baked into the
-image at build time** - it does not reach out to GitHub on every run, so patching
-is offline and reproducible. The baked version is recorded in
+In jddlab, apk-patcher injects the Frida gadget baked into the image at build time
+instead of downloading one from GitHub on every run, so patching works offline and
+gives the same result every time. The baked version is recorded in
 `/usr/local/jddlab/software-list.txt` and the gadgets live in
 `/usr/local/frida-gadgets`.
 
 To use a different gadget:
 
-- `--frida-version <ver>` - download and inject a specific Frida version from GitHub.
-- `--online` (or the `JDDLAB_FRIDA_ONLINE=1` env var) - download the latest version from GitHub.
-- `JDDLAB_FRIDA_GADGET_DIR=<dir>` - point the cache at a different directory.
+- `--frida-version <ver>`: inject a specific Frida version. It is taken from the image
+  when baked in (the latest 17.x, and 16.1.3 for old Android versions), otherwise
+  downloaded from GitHub.
+- `--online` (or `JDDLAB_FRIDA_ONLINE=1`): download the latest version from GitHub.
+- `JDDLAB_FRIDA_GADGET_DIR=<dir>`: use gadgets from another directory.
+
+## Gadget config
+
+Without `-c`, jddlab adds a gadget config: with `-l <script>` the gadget runs that
+script itself on every launch (`script` interaction), otherwise it listens on
+127.0.0.1:27042 and waits for a client (`listen`, `on_load: wait`) before the app
+continues. A config is required when the app doesn't extract its native libraries
+(`extractNativeLibs=false`, the default for modern apps): without one the gadget
+doesn't start. Ready-made configs are in the image: `/root/frida/config/onload_wait.config`
+and `/root/frida/config/onload_nowait.config`.
+
+`listen` needs the INTERNET permission. `apk-patcher` doesn't add it (its
+`-f`/`--fix_manifest` only sets `extractNativeLibs`), so for an app without it use
+`-l` or `objection patchapk`, which adds the permission.
+
+Scripts loaded by the gadget itself (`apk-patcher -l`) are plain scripts. Frida 17
+gadgets don't give such scripts the `Java` object (`Java.perform` fails silently). For
+Java hooks use the frida 16 gadget baked into the image: `-f --frida-version 16.1.3`
+(16.x gadgets read their config and script only from extracted native libraries,
+which `-f` enables), and start the hooks from `setTimeout(..., 1000)` rather than at
+the top level of the script. Alternatively compile the script with
+`frida-java-bridge`. Scripts loaded by the `frida` CLI (`frida -l`) have `Java` with
+either version. (Tested on Android 11.)
 
 ## Example
 
