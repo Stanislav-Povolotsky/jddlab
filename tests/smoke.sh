@@ -46,18 +46,22 @@ done
 
 # fail <message>: abort the current test (tests run in a subshell)
 fail() { echo "    ASSERT: $*"; exit 1; }
+# Per-command timeout, so a pathological input fails the build loudly instead of
+# hanging it (every real step finishes in well under a minute).
+RUN_TIMEOUT="${JDDLAB_SMOKE_TIMEOUT:-300}"
 # run <cmd...>: run a command, logging it and its output; fail on non-zero exit
 run() {
     echo "    \$ $*"
-    "$@" >"$T/out.log" 2>&1
+    timeout "$RUN_TIMEOUT" "$@" >"$T/out.log" 2>&1
     local rc=$?
     sed 's/^/      /' "$T/out.log" | tail -n 15
+    [ $rc -ne 124 ] || fail "'$1' timed out after ${RUN_TIMEOUT}s"
     [ $rc -eq 0 ] || fail "'$1' exited with code $rc"
 }
 # run_any <cmd...>: like run, but ignore the exit code (tools that exit 1/2 on --help)
 run_any() {
     echo "    \$ $*"
-    "$@" >"$T/out.log" 2>&1
+    timeout "$RUN_TIMEOUT" "$@" >"$T/out.log" 2>&1
     sed 's/^/      /' "$T/out.log" | tail -n 15
     return 0
 }
@@ -83,6 +87,33 @@ dex_jar() {
         d2j-dex2jar -f -o "$WORK/shared/simple.jar" "$APK" >"$WORK/shared/dex2jar.log" 2>&1
     fi
     echo "$WORK/shared/simple.jar"
+}
+app_jar() {
+    # A jar with only the sample app's own classes (com/example/simple/*). The APK
+    # also bundles OkHttp and Kotlin classes (~220 in all) to give jadx, apkscan and
+    # the deobfuscation skill realistic input, but feeding every pure-Java decompiler
+    # the whole library set is slow and makes fernflower loop forever on some Kotlin
+    # bytecode. The decompiler smoke tests only need the app's own MainActivity.
+    if [ ! -s "$WORK/shared/app.jar" ]; then
+        local jar; jar=$(dex_jar)
+        local d="$WORK/shared/app-classes"
+        mkdir -p "$d"
+        {
+            (cd "$d" && unzip -oq "$jar" 'com/example/simple/*') &&
+            (cd "$d" && jar cf "$WORK/shared/app.jar" com)
+        } >"$WORK/shared/app_jar.log" 2>&1
+    fi
+    echo "$WORK/shared/app.jar"
+}
+app_dex() {
+    # A dex with only the app's own classes, from app.jar. simplify builds a VM over
+    # every class in its input, so the full 221-class dex makes it slow (minutes); it
+    # only optimizes the app's MainActivity here anyway.
+    if [ ! -s "$WORK/shared/app.dex" ]; then
+        local jar; jar=$(app_jar)
+        d2j-jar2dex -f -o "$WORK/shared/app.dex" "$jar" >"$WORK/shared/app_dex.log" 2>&1
+    fi
+    echo "$WORK/shared/app.dex"
 }
 res_apk() {
     # The sample APK has an empty resource table without a package name, which
@@ -185,32 +216,32 @@ test_enjarify() {
 }
 
 test_cfr() {
-    local jar; jar=$(dex_jar)
+    local jar; jar=$(app_jar)
     run cfr "$jar" --outputdir "$T/out"
     expect_grep "class MainActivity" "$T/out/com/example/simple/MainActivity.java"
 }
 
 test_procyon() {
-    local jar; jar=$(dex_jar)
+    local jar; jar=$(app_jar)
     run procyon -jar "$jar" -o "$T/out"
     expect_grep "class MainActivity" "$T/out/com/example/simple/MainActivity.java"
 }
 
 test_fernflower() {
-    local jar; jar=$(dex_jar)
+    local jar; jar=$(app_jar)
     mkdir -p "$T/out"
     run fernflower "$jar" "$T/out"
-    expect_zip_entry "$T/out/simple.jar" '^com/example/simple/MainActivity\.java$'
+    expect_zip_entry "$T/out/app.jar" '^com/example/simple/MainActivity\.java$'
 }
 
 test_vineflower() {
-    local jar; jar=$(dex_jar)
+    local jar; jar=$(app_jar)
     run vineflower "$jar" "$T/out"
     expect_grep "class MainActivity" "$T/out"
 }
 
 test_krakatau1() {
-    local jar; jar=$(dex_jar)
+    local jar; jar=$(app_jar)
     run krakatau-disassemble -out "$T/dis" -r "$jar"
     expect_grep ".class public super com/example/simple/MainActivity" "$T/dis"
     run krakatau-assemble -out "$T/rebuilt.jar" -r "$T/dis"
@@ -218,7 +249,7 @@ test_krakatau1() {
 }
 
 test_krakatau2() {
-    local jar; jar=$(dex_jar)
+    local jar; jar=$(app_jar)
     run krak2 dis --out "$T/dis.zip" "$jar"
     expect_zip_entry "$T/dis.zip" 'com/example/simple/MainActivity\.j$'
     run krak2 asm --out "$T/rebuilt.jar" "$T/dis.zip"
@@ -232,8 +263,11 @@ test_java_deobfuscator() {
 }
 
 test_simplify() {
-    # -ie: the sample references Android framework classes that simplify's VM can't load
-    run simplify -ie -it 'com/example/simple/MainActivity' -o "$T/simplified.dex" "$APK"
+    # -ie: the sample references Android framework (and OkHttp) classes simplify's VM
+    # can't load. Run on a dex of just the app's classes (app_dex), not the full APK:
+    # simplify builds a VM over every class, so the bundled library makes it minutes.
+    local dex; dex=$(app_dex)
+    run simplify -ie -it 'com/example/simple/MainActivity' -o "$T/simplified.dex" "$dex"
     expect_file "$T/simplified.dex"
 }
 
