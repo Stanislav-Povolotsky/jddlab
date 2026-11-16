@@ -1274,24 +1274,36 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 <h1 id="jddlab-example-app">jddlab example app</h1>
-<p>A tiny, deliberately &quot;interesting&quot; Android app you can use to practice the jddlab
-tools and <a href="../skills/README.html">AI skills</a> on something you built yourself.</p>
-<p>The sample intentionally contains:</p>
+<p>A small Android app for practicing the jddlab tools and
+<a href="../skills/README.html">AI skills</a> on something you built yourself. It contains:</p>
 <ul>
-<li><strong>A native (JNI) library</strong> (<code>libnative-lib.so</code>) whose secret is stored <strong>XOR-encoded</strong>
-and decoded at runtime - a target for the
-<a href="../skills/native-jni-analysis/SKILL.html">native-jni-analysis</a> skill.</li>
-<li><strong>Hardcoded Java &quot;secrets&quot;</strong> (a fake AWS key, an API token, an internal endpoint) -
-a target for the <a href="../skills/secret-scanning/SKILL.html">secret-scanning</a> skill (APKscan).</li>
-<li><strong>R8 code shrinking + obfuscation</strong> on the release build, so most classes are renamed -
-a target for the <a href="../skills/java-deobfuscation/SKILL.html">java-deobfuscation</a> skill.</li>
-<li>A dummy native &quot;pin&quot; check you can practice patching with the
-<a href="../skills/android-apk-patch/SKILL.html">android-apk-patch</a> and
-<a href="../skills/ssl-unpinning/SKILL.html">ssl-unpinning</a> skills.</li>
+<li>a native (JNI) library, <code>libnative-lib.so</code>, whose secret is stored XOR-encoded and
+decoded at runtime, for the
+<a href="../skills/native-jni-analysis/SKILL.html">native-jni-analysis</a> skill;</li>
+<li>hardcoded Java &quot;secrets&quot; (a fake AWS key, an API token, an internal endpoint) for
+the <a href="../skills/secret-scanning/SKILL.html">secret-scanning</a> skill (APKscan);</li>
+<li>a string that is decrypted at runtime (<code>StringVault</code>), so the plaintext endpoint
+never appears in the APK, for the
+<a href="../skills/java-deobfuscation/SKILL.html">java-deobfuscation</a> skill (recover it in
+jadx or with a Frida hook);</li>
+<li>R8 shrinking and obfuscation in the release build: the app's own helper classes
+are renamed to <code>a</code>, <code>b</code>, <code>d</code>, ... and the bundled OkHttp library is obfuscated too,
+for the <a href="../skills/java-deobfuscation/SKILL.html">java-deobfuscation</a> skill;</li>
+<li>certificate pinning on two live HTTPS requests, pinned to a key the servers don't
+have, so both fail until you bypass pinning. One uses the platform
+<code>network_security_config.xml</code> (<code>example.com</code>), the other uses OkHttp's
+<code>CertificatePinner</code> (<code>example.org</code>). The app prints <code>BLOCKED</code> or <code>OK HTTP 200</code> for
+each on screen and to logcat (<code>adb logcat -s jddlab-sample:I</code>), so you can see the
+bypass work without a proxy. For the
+<a href="../skills/ssl-unpinning/SKILL.html">ssl-unpinning</a> skill;</li>
+<li>a dummy native &quot;pin&quot; check to practice patching with the
+<a href="../skills/android-apk-patch/SKILL.html">android-apk-patch</a> skill.</li>
 </ul>
 <blockquote>
 <p>All planted secrets are fake, non-functional placeholders (the AWS key is the
-well-known example key from AWS docs). Never ship real secrets in an APK.</p>
+well-known example key from AWS docs). Never ship real secrets in an APK. The app
+needs the INTERNET permission for the pinning requests; the two hosts are the
+IANA <code>example.com</code>/<code>example.org</code> reserved domains.</p>
 </blockquote>
 <h2 id="layout">Layout</h2>
 <pre><code>example/
@@ -1307,24 +1319,27 @@ well-known example key from AWS docs). Never ship real secrets in an APK.</p>
         └── src/main/
             ├── AndroidManifest.xml
             ├── cpp/                # native-lib.cpp + CMakeLists.txt (JNI)
+            ├── res/xml/network_security_config.xml  # platform cert pin (example.com)
             └── java/com/example/simple/
-                ├── MainActivity.java
-                ├── NativeLib.java   # native method declarations (kept by R8)
-                └── SecretManager.java  # hardcoded secrets (obfuscated by R8)
+                ├── MainActivity.java   # kept by R8; runs the pinning checks
+                ├── NativeLib.java      # native method declarations (kept by R8)
+                ├── SecretManager.java  # hardcoded secrets (obfuscated by R8)
+                ├── StringVault.java    # runtime-decrypted string (obfuscated)
+                └── PinningChecks.java  # the two pinned HTTPS requests (obfuscated)
 </code></pre>
 <h2 id="building-simpleapk">Building <code>simple.apk</code></h2>
-<p>The project ships with a committed Gradle <strong>wrapper</strong> (<code>gradlew</code>, pinned to Gradle
-8.10.2), so you do not need a system Gradle. You do need the <strong>Android SDK</strong> and
-<strong>NDK</strong> (for the native code) and a <strong>JDK 17–21</strong>.</p>
-<h3 id="option-a---command-line-wrapper">Option A - command line (wrapper)</h3>
+<p>The project includes the Gradle wrapper (<code>gradlew</code>, pinned to Gradle 8.10.2), so
+you don't need a system Gradle. You need the Android SDK, the NDK (for the native
+code) and JDK 17 to 21.</p>
+<h3 id="option-a-command-line-wrapper">Option A: command line (wrapper)</h3>
 <p>From <code>example/simple-src/</code>, with the Android SDK/NDK installed and
 <code>ANDROID_HOME</code>/<code>ANDROID_SDK_ROOT</code> set:</p>
 <pre><code class="language-bash">./gradlew :app:assembleRelease
 cp app/build/outputs/apk/release/app-release.apk ../simple.apk
 </code></pre>
 <blockquote>
-<p><strong>JDK version:</strong> AGP/Gradle here run on JDK 17–21. If your default <code>java</code> is newer
-(e.g. JDK 22+), point Gradle at a JDK 21 - for example Android Studio's bundled JBR:</p>
+<p>AGP/Gradle here run on JDK 17 to 21. If your default <code>java</code> is newer (JDK 22+),
+point Gradle at a JDK 21, for example the JBR bundled with Android Studio:</p>
 <pre><code class="language-bash"># Linux/macOS
 ./gradlew -Dorg.gradle.java.home=&quot;$HOME/android-studio/jbr&quot; :app:assembleRelease
 </code></pre>
@@ -1332,7 +1347,7 @@ cp app/build/outputs/apk/release/app-release.apk ../simple.apk
 </code></pre>
 <p>(or set <code>JAVA_HOME</code> to a JDK 21 for the session).</p>
 </blockquote>
-<h3 id="option-b---android-studio">Option B - Android Studio</h3>
+<h3 id="option-b-android-studio">Option B: Android Studio</h3>
 <ol>
 <li><code>File → Open</code> and select <code>example/simple-src/</code>.</li>
 <li>Let it sync and install the NDK/CMake if prompted (Studio uses its own JDK).</li>
@@ -1356,8 +1371,26 @@ manually:</p>
 jddlab apkscan -f json -o secrets.json simple.apk   # find the planted secrets
 jddlab apktool d -o dec simple.apk     # decode; inspect dec/lib/*/libnative-lib.so
 </code></pre>
-<p>Then follow the matching <a href="http://SKILL.md">SKILL.md</a> to go deeper (recover the native secret with Ghidra,
-deobfuscate, patch the pin check, etc.).</p>
+<p>Recovering the runtime-decrypted string: in the jadx output, the renamed
+<code>SecretManager</code> passes an encoded literal to the decode method of the renamed
+<code>StringVault</code> (search for the <code>^ ((i + 42) &amp; 255)</code> XOR loop). Compute it by hand,
+run the dex through <code>jddlab simplify</code>, or hook the decode method with Frida. The
+plaintext (<code>https://admin.internal.example.com/debug?key=dbg-7f3a9c</code>) is not in the
+APK as a string.</p>
+<p>Seeing the pinning bypass: install the APK, open the app, and watch the two pinning
+lines in logcat. They read <code>BLOCKED</code> until you bypass pinning, then <code>OK HTTP 200</code>.
+The app re-runs the checks every 5 seconds (or on a tap), so a Frida script attached
+after launch takes effect on the next line.</p>
+<pre><code class="language-bash">jddlab adb install -r simple.apk
+jddlab adb logcat -s jddlab-sample:I   # both lines BLOCKED
+</code></pre>
+<p><code>android-unpinner all simple.apk</code> flips the platform-pinned <code>example.com</code> request to
+<code>OK HTTP 200</code>. Its universal scripts don't catch the R8-renamed OkHttp pinner, so
+<code>example.org</code> stays BLOCKED until you find the renamed <code>CertificatePinner</code> in jadx (by
+the <code>&quot;Certificate pinning failure!&quot;</code> string) and hook its check with your own Frida
+script. See <a href="../skills/ssl-unpinning/SKILL.html">ssl-unpinning</a> §8.</p>
+<p>The matching <a href="http://SKILL.md">SKILL.md</a> then walks through recovering the native secret with Ghidra,
+deobfuscating the renamed classes and patching the pin check.</p>
 
 </article>
 <script src="../hljs/highlight.min.js"></script>

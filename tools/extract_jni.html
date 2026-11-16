@@ -1274,11 +1274,16 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 <h1 id="extract_jni">extract_jni</h1>
-<p>Extract JNI/native library artifacts from Android packages or unpacked APK contents.</p>
+<p>Lists the JNI methods of an APK as JSON: Java <code>native</code> method declarations and the
+JNI symbols exported by its native libraries. It doesn't extract the <code>.so</code> files
+(use <code>apktool d</code> or <code>unzip</code> for that).</p>
 <h2 id="usage">Usage</h2>
-<p>Run <code>extract_jni --help</code> for the exact version-specific argument list. Pass the APK or directory input and any output option accepted by the tool.</p>
+<pre><code class="language-text">extract_jni &lt;apk&gt; [-o &lt;file.json&gt;]
+</code></pre>
+<p>With <code>-o</code> the JSON goes to a file, otherwise to stdout. Run <code>extract_jni --help</code> for
+all options.</p>
 <h2 id="example">Example</h2>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;app.apk&quot;,&quot;jni-out&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;],&quot;output_paths&quot;:[&quot;jni-out&quot;]}
+<pre><code class="language-json">{&quot;args&quot;:[&quot;app.apk&quot;,&quot;-o&quot;,&quot;jni.json&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;],&quot;output_paths&quot;:[&quot;jni.json&quot;]}
 </code></pre>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>

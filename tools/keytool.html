@@ -1308,17 +1308,17 @@ keystores. Part of the JDK (available as <code>keytool</code> in the jddlab Dock
 <li><code>-alias &lt;name&gt;</code>: List only this alias.</li>
 </ul>
 <h2 id="built-in-debug-keystore">Built-in debug keystore</h2>
-<p>The jddlab image ships the standard Android debug keystore at
-<code>/root/.android/debug.keystore</code> - no host files or <code>extra_mounts</code> needed:</p>
+<p>The image includes the standard Android debug keystore, so no host files or
+<code>extra_mounts</code> are needed:</p>
 <ul>
-<li><strong>Path</strong>: <code>/root/.android/debug.keystore</code></li>
-<li><strong>Alias</strong>: <code>androiddebugkey</code></li>
-<li><strong>Keystore / key password</strong>: <code>android</code></li>
-<li><strong>Algorithm</strong>: RSA 2048, validity 10000 days</li>
-<li><strong>Supports</strong>: v1 + v2 + v3 signing schemes</li>
+<li>Path: <code>/root/.android/debug.keystore</code></li>
+<li>Alias: <code>androiddebugkey</code></li>
+<li>Keystore and key password: <code>android</code></li>
+<li>Algorithm: RSA 2048, valid for 10000 days</li>
+<li>Signing schemes: v1, v2 and v3</li>
 </ul>
-<p>When the user mounts their own <code>~/.android</code> via <code>extra_mounts</code>, it overrides this
-built-in keystore automatically.</p>
+<p>If the user mounts their own <code>~/.android</code> with <code>extra_mounts</code>, that keystore is used
+instead.</p>
 <h2 id="examples">Examples</h2>
 <h3 id="generate-a-new-keystore-output-to-work">Generate a new keystore (output to /work)</h3>
 <pre><code class="language-json">{

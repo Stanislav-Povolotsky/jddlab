@@ -1303,14 +1303,14 @@ body { margin: 0; background: #ffffff; }
 <li><code>-v</code>: Short for <code>--verbose</code>.</li>
 </ul>
 <h2 id="built-in-debug-keystore">Built-in debug keystore</h2>
-<p>The jddlab image ships <code>/root/.android/debug.keystore</code> - the standard Android debug
-keystore baked into the image. No <code>extra_mounts</code> required. When the user mounts their
-own <code>~/.android</code> via <code>extra_mounts</code>, that overrides the built-in one automatically.</p>
+<p>The image includes the standard Android debug keystore at
+<code>/root/.android/debug.keystore</code>, so no <code>extra_mounts</code> are needed. If the user mounts
+their own <code>~/.android</code> with <code>extra_mounts</code>, that one is used instead.</p>
 <ul>
-<li><strong>Path</strong>: <code>/root/.android/debug.keystore</code></li>
-<li><strong>Alias</strong>: <code>androiddebugkey</code></li>
-<li><strong>Keystore / key password</strong>: <code>android</code></li>
-<li><strong>Algorithm</strong>: RSA 2048, validity 10000 days</li>
+<li>Path: <code>/root/.android/debug.keystore</code></li>
+<li>Alias: <code>androiddebugkey</code></li>
+<li>Keystore and key password: <code>android</code></li>
+<li>Algorithm: RSA 2048, valid for 10000 days</li>
 </ul>
 <h2 id="examples">Examples</h2>
 <p>Sign with the built-in debug keystore (no <code>extra_mounts</code> needed):</p>
@@ -1333,13 +1333,9 @@ own <code>~/.android</code> via <code>extra_mounts</code>, that overrides the bu
   &quot;input_paths&quot;: [&quot;app_aligned.apk&quot;]
 }
 </code></pre>
-<h2 id="critical-sign-after-zipalign">CRITICAL: Sign AFTER zipalign</h2>
-<p>APK signing with v2/v3 schemes covers the entire APK binary. Running <code>zipalign</code>
-after signing invalidates the signature. Always:</p>
-<ol>
-<li>Run <code>zipalign</code> first.</li>
-<li>Run <code>apksigner</code> second.</li>
-</ol>
+<h2 id="align-before-signing">Align before signing</h2>
+<p>v2/v3 signatures cover the whole APK file, so running <code>zipalign</code> after signing
+invalidates them. Run <code>zipalign</code> first, then <code>apksigner</code>.</p>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>
 <ul>

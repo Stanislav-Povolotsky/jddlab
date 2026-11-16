@@ -1274,14 +1274,17 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 <h1 id="android-unpinner">android-unpinner</h1>
-<p>Remove certificate pinning from APKs without root.</p>
+<p>Remove certificate pinning from Android apps without root. <code>patch-apks</code> makes the APK
+debuggable and re-signs it; <code>start-app</code> (or <code>all</code>) then starts it on a connected device
+and injects the Frida gadget baked into the image with the unpinning scripts.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-text">android-unpinner [OPTIONS] COMMAND [ARGS]...
 </code></pre>
 <h2 id="main-modes">Main modes</h2>
-<p>Run <code>android-unpinner --help</code> for the complete command list. The common workflow is <code>patch-apk &lt;apk...&gt;</code>.</p>
+<p>Commands: <code>all</code>, <code>patch-apks</code>, <code>install</code>, <code>start-app</code>, <code>push-resources</code>, <code>get-apks</code>,
+<code>list-packages</code>, <code>package-name</code>. Run <code>android-unpinner --help</code> for details.</p>
 <h2 id="example">Example</h2>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;patch-apk&quot;,&quot;test.apk&quot;],&quot;input_paths&quot;:[&quot;test.apk&quot;],&quot;output_paths&quot;:[&quot;.&quot;]}
+<pre><code class="language-json">{&quot;args&quot;:[&quot;patch-apks&quot;,&quot;test.apk&quot;],&quot;input_paths&quot;:[&quot;test.apk&quot;],&quot;output_paths&quot;:[&quot;test.unpinned.apk&quot;]}
 </code></pre>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>

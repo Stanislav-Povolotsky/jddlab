@@ -1274,14 +1274,23 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 <h1 id="androguard">androguard</h1>
-<p>Android reverse engineering toolkit.</p>
+<p>Android reverse engineering toolkit (Python).</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-text">androguard [OPTIONS] COMMAND [ARGS]...
 </code></pre>
 <h2 id="main-modes">Main modes</h2>
-<p>Run <code>androguard --help</code> for the complete command list. Common workflows include APK analysis, DEX inspection, decompilation helpers, signing helpers, and CLI analysis utilities.</p>
+<ul>
+<li><code>axml &lt;apk&gt;</code>: print the decoded <code>AndroidManifest.xml</code>.</li>
+<li><code>apkid &lt;apk&gt;</code>: package name, version code and version name.</li>
+<li><code>sign &lt;apk&gt;</code>: signing scheme versions and certificate fingerprints.</li>
+<li><code>arsc</code>: decode <code>resources.arsc</code>.</li>
+<li><code>decompile</code>, <code>disassemble</code>, <code>cg</code>: decompile, disassemble, build a call graph.</li>
+<li><code>analyze</code>: interactive IPython session (needs <code>interactive</code>).</li>
+<li><code>trace</code>, <code>dtrace</code>, <code>dump</code>: dynamic analysis on a connected device.</li>
+</ul>
+<p>Run <code>androguard --help</code> or <code>androguard &lt;command&gt; --help</code> for options.</p>
 <h2 id="example">Example</h2>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;--help&quot;]}
+<pre><code class="language-json">{&quot;args&quot;:[&quot;axml&quot;,&quot;app.apk&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;]}
 </code></pre>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>

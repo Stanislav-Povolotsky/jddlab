@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Android APK Patching &amp;amp; Repackaging - jddlab Edition</title>
+<title>Android APK patching and repackaging with jddlab</title>
 <link rel="stylesheet" href="../../hljs/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="../../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
 <style>
@@ -1274,34 +1274,28 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 
-<h1 id="android-apk-patching--repackaging---jddlab-edition">Android APK Patching &amp; Repackaging - jddlab Edition</h1>
-<p><strong>Version</strong>: 1.0 | <strong>Last Updated</strong>: 2025-08 | <strong>Difficulty</strong>: Expert</p>
-<blockquote>
-<p>A complete reference for modifying Android APKs using <strong>jddlab</strong> - from analysis to
-smali editing, recompilation, signing, and testing. Every tool runs inside the
-<code>stanislavpovolotsky/jddlab</code> Docker container via the <strong>jddlab MCP server</strong> - no
-local tool installation required beyond Docker.</p>
-</blockquote>
-<hr />
-<h2 id="table-of-contents">Table of Contents</h2>
+<h1 id="android-apk-patching-and-repackaging-with-jddlab">Android APK patching and repackaging with jddlab</h1>
+<p>Version 1.0, 2025-08.</p>
+<p>How to modify Android APKs with jddlab: analysis, smali editing, recompilation,
+signing and testing. Every tool runs inside the <code>stanislavpovolotsky/jddlab</code> Docker
+container through the jddlab MCP server, so Docker is the only local requirement.</p>
+<h2 id="table-of-contents">Table of contents</h2>
 <ol>
-<li><a href="#1-jddlab-toolchain-overview">jddlab Toolchain Overview</a></li>
-<li><a href="#2-decompilation--recompilation-workflow">Decompilation &amp; Recompilation Workflow</a></li>
-<li><a href="#3-split-apk-handling">Split APK Handling (.apks / .apkm / .xapk)</a></li>
-<li><a href="#4-signing-align-then-sign">Signing: Align then Sign</a></li>
-<li><a href="#5-dependency-hell">Dependency Hell: Frameworks, AndroidX, OEM Resources</a></li>
-<li><a href="#6-gapps-dependent-apks">GApps-Dependent APKs: Patching &amp; Workarounds</a></li>
+<li><a href="#1-jddlab-toolchain-overview">jddlab toolchain overview</a></li>
+<li><a href="#2-decompilation--recompilation-workflow">Decompilation &amp; recompilation workflow</a></li>
+<li><a href="#3-split-apk-handling">Split APK handling (.apks / .apkm / .xapk)</a></li>
+<li><a href="#4-signing-align-then-sign">Signing: align then sign</a></li>
+<li><a href="#5-dependency-hell">Dependency hell: frameworks, AndroidX, OEM resources</a></li>
+<li><a href="#6-gapps-dependent-apks">GApps-dependent APKs: patching &amp; workarounds</a></li>
 <li><a href="#7-testing">Testing: ADB, Redroid, Waydroid</a></li>
-<li><a href="#8-advanced-patching">Advanced Patching: Frida, Obfuscation, Integrity Checks</a></li>
+<li><a href="#8-advanced-patching">Advanced patching: Frida, obfuscation, integrity checks</a></li>
 <li><a href="#9-troubleshooting">Troubleshooting</a></li>
-<li><a href="#10-quick-reference-cheat-sheet">Quick Reference Cheat Sheet</a></li>
+<li><a href="#10-quick-reference-cheat-sheet">Quick reference cheat sheet</a></li>
 </ol>
-<hr />
-<h2 id="1-jddlab-toolchain-overview">1. jddlab Toolchain Overview</h2>
-<p>jddlab bundles all required tools in a single Docker image.  Use the jddlab MCP server
-(<code>jddlab_*</code> tools) - the server handles Docker invocations, path rewriting, and mount
-inference automatically.</p>
-<h3 id="11-tool-mapping">1.1 Tool Mapping</h3>
+<h2 id="1-jddlab-toolchain-overview">1. jddlab toolchain overview</h2>
+<p>jddlab bundles the tools in one Docker image. Use them through the jddlab MCP server
+(<code>jddlab_*</code> tools); the server runs Docker, picks the mount root and rewrites paths.</p>
+<h3 id="11-tool-mapping">1.1 Tool mapping</h3>
 <table>
 <thead>
 <tr>
@@ -1327,9 +1321,9 @@ inference automatically.</p>
 <td><code>apktool b</code></td>
 </tr>
 <tr>
-<td>Merge / split split-APK sets</td>
+<td>Merge a split-APK set into one APK</td>
 <td><code>jddlab_APKEditor</code></td>
-<td><code>APKEditor m</code> / <code>APKEditor s</code></td>
+<td><code>APKEditor m</code></td>
 </tr>
 <tr>
 <td>Align APK (before signing)</td>
@@ -1398,15 +1392,17 @@ inference automatically.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="12-why-old-tool-versions-will-fail-you">1.2 Why Old Tool Versions Will Fail You</h3>
-<p>The Docker image is kept up to date.  Key minimum versions enforced inside the image:</p>
+<h3 id="12-tool-versions">1.2 Tool versions</h3>
+<p>Old tool versions fail on current apps. The image is rebuilt when tools update, and
+has at least:</p>
 <ul>
-<li><strong>Apktool ≥ 2.9.0</strong> - required for API 34+ resources (Android 14+).</li>
-<li><strong>smali ≥ 3.0.5</strong> - required for DEX format 038+ (Android 13+).</li>
-<li><strong>apksigner from build-tools ≥ 35</strong> - required for v2/v3/v4 signing.</li>
-<li><strong>Never use <code>jarsigner</code></strong> - it only produces v1 signatures; Android 7.0+ rejects them.</li>
+<li>Apktool 2.9.0, needed for API 34+ resources (Android 14+);</li>
+<li>smali 3.0.5, needed for DEX format 038+ (Android 13+);</li>
+<li>apksigner from build-tools 35, for v2/v3/v4 signing.</li>
 </ul>
-<h3 id="13-mcp-tool-call-structure">1.3 MCP Tool Call Structure</h3>
+<p>Don't use <code>jarsigner</code>: it produces only v1 signatures, and apps targeting Android 11
+(API 30) or newer must have a v2 signature.</p>
+<h3 id="13-mcp-tool-call-structure">1.3 MCP tool call structure</h3>
 <p>Every <code>jddlab_*</code> MCP tool accepts:</p>
 <table>
 <thead>
@@ -1425,12 +1421,12 @@ inference automatically.</p>
 <tr>
 <td><code>input_paths</code></td>
 <td><code>string[]</code></td>
-<td>Host input files/dirs - used for mount-root inference</td>
+<td>Host input files/dirs, used to pick the mount root</td>
 </tr>
 <tr>
 <td><code>output_paths</code></td>
 <td><code>string[]</code></td>
-<td>Host output files/dirs - used for mount-root inference</td>
+<td>Host output files/dirs, used to pick the mount root</td>
 </tr>
 <tr>
 <td><code>workdir</code></td>
@@ -1456,10 +1452,9 @@ inference automatically.</p>
 </table>
 <p>Paths in <code>args</code> that match a file/dir under the inferred mount root are rewritten to
 <code>/work/…</code> automatically.</p>
-<hr />
-<h2 id="2-decompilation--recompilation-workflow">2. Decompilation &amp; Recompilation Workflow</h2>
-<h3 id="21-standard-single-apk-workflow">2.1 Standard Single APK Workflow</h3>
-<p><strong>Step 1 - Analyze with jadx (read-only)</strong></p>
+<h2 id="2-decompilation--recompilation-workflow">2. Decompilation &amp; recompilation workflow</h2>
+<h3 id="21-standard-single-apk-workflow">2.1 Standard single APK workflow</h3>
+<p><strong>Step 1: analyze with jadx (read-only)</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_jadx&quot;,
   &quot;args&quot;: [&quot;-d&quot;, &quot;analysis_output&quot;, &quot;target.apk&quot;],
@@ -1467,7 +1462,7 @@ inference automatically.</p>
   &quot;output_paths&quot;: [&quot;analysis_output&quot;]
 }
 </code></pre>
-<p><strong>Step 2 - Decompile with apktool</strong></p>
+<p><strong>Step 2: decompile with apktool</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_apktool&quot;,
   &quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;decompiled&quot;, &quot;-f&quot;],
@@ -1475,9 +1470,9 @@ inference automatically.</p>
   &quot;output_paths&quot;: [&quot;decompiled&quot;]
 }
 </code></pre>
-<p><strong>Step 3 - Edit smali / resources / manifest</strong></p>
-<p>Edit files directly on the host inside <code>decompiled/</code>.  See §2.4 for smali patterns.</p>
-<p><strong>Step 4 - Recompile</strong></p>
+<p><strong>Step 3: edit smali, resources, manifest</strong></p>
+<p>Edit the files in <code>decompiled/</code> on the host. §2.4 has smali patterns.</p>
+<p><strong>Step 4: recompile</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_apktool&quot;,
   &quot;args&quot;: [&quot;b&quot;, &quot;decompiled&quot;, &quot;-o&quot;, &quot;rebuilt.apk&quot;],
@@ -1485,7 +1480,7 @@ inference automatically.</p>
   &quot;output_paths&quot;: [&quot;rebuilt.apk&quot;]
 }
 </code></pre>
-<p><strong>Step 5 - Align (MUST be before signing)</strong></p>
+<p><strong>Step 5: align (before signing)</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_zipalign&quot;,
   &quot;args&quot;: [&quot;-v&quot;, &quot;-p&quot;, &quot;4&quot;, &quot;rebuilt.apk&quot;, &quot;rebuilt_aligned.apk&quot;],
@@ -1493,7 +1488,7 @@ inference automatically.</p>
   &quot;output_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
 }
 </code></pre>
-<p><strong>Step 6 - Sign</strong></p>
+<p><strong>Step 6: sign</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_apksigner&quot;,
   &quot;args&quot;: [
@@ -1508,35 +1503,37 @@ inference automatically.</p>
   &quot;output_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
 }
 </code></pre>
-<p>The debug keystore is built into the image - no <code>extra_mounts</code> needed. To use your
-own host key instead, add <code>&quot;extra_mounts&quot;: [{&quot;host&quot;: &quot;~/.android&quot;, &quot;container&quot;: &quot;/root/.android&quot;, &quot;mode&quot;: &quot;ro&quot;}]</code>.</p>
-<p><strong>Step 7 - Verify</strong></p>
+<p>The debug keystore is built into the image, so no <code>extra_mounts</code> are needed. To use
+your own host key instead, add <code>&quot;extra_mounts&quot;: [{&quot;host&quot;: &quot;~/.android&quot;, &quot;container&quot;: &quot;/root/.android&quot;, &quot;mode&quot;: &quot;ro&quot;}]</code>.</p>
+<p><strong>Step 7: verify</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_apksigner&quot;,
   &quot;args&quot;: [&quot;verify&quot;, &quot;--verbose&quot;, &quot;--print-certs&quot;, &quot;rebuilt_aligned.apk&quot;],
   &quot;input_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
 }
 </code></pre>
-<p><strong>Step 8 - Install via ADB</strong> (run on host, not via jddlab)</p>
+<p><strong>Step 8: install</strong></p>
+<p>With <code>jddlab_adb</code> (<code>[&quot;install&quot;, &quot;-r&quot;, &quot;rebuilt_aligned.apk&quot;]</code>; it uses the host ADB
+server, see §7.1) or on the host:</p>
 <pre><code class="language-bash">adb install -r rebuilt_aligned.apk
 </code></pre>
-<h3 id="22-important-decompilation-flags">2.2 Important Decompilation Flags</h3>
+<h3 id="22-important-decompilation-flags">2.2 Important decompilation flags</h3>
 <pre><code class="language-json">// Force specific API level (fixes many resource resolution issues)
 {&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--api&quot;, &quot;35&quot;], ...}
 
 // Ignore missing resources (new in apktool 2.11.x)
 {&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--ignore-missing-resources&quot;], ...}
 
-// Keep original sources only (skip resources, faster)
+// Don't decode sources: keep classes.dex as is, decode resources (resource-only mods)
 {&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;-s&quot;], ...}
 
-// Decode only resources (skip smali, for resource-only mods)
+// Don't decode resources: keep resources.arsc as is, decode smali (code-only mods, faster)
 {&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;-r&quot;], ...}
 
 // For Samsung/Android 15 framework JARs with DEX format 039
 {&quot;args&quot;: [&quot;d&quot;, &quot;framework.jar&quot;, &quot;-api&quot;, &quot;29&quot;, &quot;-o&quot;, &quot;out&quot;], ...}
 </code></pre>
-<h3 id="23-decompiled-directory-structure">2.3 Decompiled Directory Structure</h3>
+<h3 id="23-decompiled-directory-structure">2.3 Decompiled directory structure</h3>
 <pre><code>decompiled/
 ├── AndroidManifest.xml        # App manifest (editable XML)
 ├── apktool.yml                # Apktool metadata (do NOT manually edit version fields)
@@ -1553,7 +1550,7 @@ own host key instead, add <code>&quot;extra_mounts&quot;: [{&quot;host&quot;: &q
 ├── smali/                     # Disassembled DEX (MAIN CODE)
 └── smali_classes2/            # Additional DEX files (multi-dex apps)
 </code></pre>
-<h3 id="24-smali-editing-basics">2.4 Smali Editing Basics</h3>
+<h3 id="24-smali-editing-basics">2.4 Smali editing basics</h3>
 <pre><code class="language-smali"># 1. Force a boolean method to always return true (premium check bypass)
 .method public isPremium()Z
     .registers 2
@@ -1577,7 +1574,7 @@ iput-object v0, p0, Lcom/example/app/MainActivity;-&gt;mStatus:Ljava/lang/String
 # Search smali for: getPackageInfo, GET_SIGNATURES, MessageDigest, equals
 # Replace the comparison branch with: nop
 </code></pre>
-<h3 id="25-resource-editing">2.5 Resource Editing</h3>
+<h3 id="25-resource-editing">2.5 Resource editing</h3>
 <pre><code class="language-xml">&lt;!-- res/values/strings.xml --&gt;
 &lt;string name=&quot;app_name&quot;&gt;My Patched App&lt;/string&gt;
 
@@ -1592,9 +1589,8 @@ iput-object v0, p0, Lcom/example/app/MainActivity;-&gt;mStatus:Ljava/lang/String
     &lt;/intent-filter&gt;
 &lt;/activity&gt;
 </code></pre>
-<hr />
-<h2 id="3-split-apk-handling">3. Split APK Handling</h2>
-<h3 id="31-understanding-split-apk-formats">3.1 Understanding Split APK Formats</h3>
+<h2 id="3-split-apk-handling">3. Split APK handling</h2>
+<h3 id="31-understanding-split-apk-formats">3.1 Understanding split APK formats</h3>
 <table>
 <thead>
 <tr>
@@ -1621,15 +1617,15 @@ iput-object v0, p0, Lcom/example/app/MainActivity;-&gt;mStatus:Ljava/lang/String
 </tr>
 </tbody>
 </table>
-<p>All three are ZIP archives.  Extract with any unzip tool on the host.</p>
-<p><strong>Split types</strong>: <code>base.apk</code> (core code), <code>split_config.arm64_v8a.apk</code> (ARM64 libs),
+<p>All three are ZIP archives; extract them with any unzip tool on the host.</p>
+<p>Split types: <code>base.apk</code> (core code), <code>split_config.arm64_v8a.apk</code> (ARM64 libs),
 <code>split_config.xxhdpi.apk</code> (screen density resources), <code>split_config.en.apk</code> (language).</p>
-<h3 id="32-merge--decompile--rebuild-workflow">3.2 Merge → Decompile → Rebuild Workflow</h3>
-<p><strong>Step 1 - Extract splits on host</strong></p>
+<h3 id="32-merge--decompile--rebuild-workflow">3.2 Merge → decompile → rebuild workflow</h3>
+<p><strong>Step 1: extract the splits on the host</strong></p>
 <pre><code class="language-bash">mkdir splits &amp;&amp; cd splits
 unzip ../input.apks   # or .apkm / .xapk
 </code></pre>
-<p><strong>Step 2 - Merge into single fat APK</strong></p>
+<p><strong>Step 2: merge them into one APK</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_APKEditor&quot;,
   &quot;args&quot;: [&quot;m&quot;, &quot;-i&quot;, &quot;splits/base.apk&quot;, &quot;splits/split_config.arm64_v8a.apk&quot;, &quot;splits/split_config.xxhdpi.apk&quot;, &quot;splits/split_config.en.apk&quot;, &quot;-o&quot;, &quot;merged.apk&quot;],
@@ -1637,7 +1633,7 @@ unzip ../input.apks   # or .apkm / .xapk
   &quot;output_paths&quot;: [&quot;merged.apk&quot;]
 }
 </code></pre>
-<p><strong>Step 3 - Decompile merged APK</strong></p>
+<p><strong>Step 3: decompile the merged APK</strong></p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_apktool&quot;,
   &quot;args&quot;: [&quot;d&quot;, &quot;merged.apk&quot;, &quot;-o&quot;, &quot;decompiled&quot;, &quot;-f&quot;],
@@ -1645,8 +1641,8 @@ unzip ../input.apks   # or .apkm / .xapk
   &quot;output_paths&quot;: [&quot;decompiled&quot;]
 }
 </code></pre>
-<p><strong>Step 4 - Modify, recompile, align, sign</strong> (see §2.1 steps 3–7).</p>
-<p><strong>Step 5 - Install splits</strong></p>
+<p><strong>Step 4: modify, recompile, align, sign</strong> (§2.1, steps 3 to 7).</p>
+<p><strong>Step 5: install the splits</strong></p>
 <pre><code class="language-bash"># If you only modified the base APK, keep original splits:
 adb uninstall com.example.app
 adb install-multiple modified_base_aligned.apk \
@@ -1654,14 +1650,15 @@ adb install-multiple modified_base_aligned.apk \
     splits/split_config.xxhdpi.apk \
     splits/split_config.en.apk
 </code></pre>
-<p>If some splits embed signature checks, re-sign ALL with the same keystore:</p>
+<p>All splits of an app must be signed with the same key. If you re-signed the base APK,
+re-sign every split with the same keystore:</p>
 <pre><code class="language-bash">for apk in splits/*.apk; do
     # align then sign each one via jddlab_zipalign + jddlab_apksigner
     ...
 done
 adb install-multiple modified_base_aligned.apk splits/*.apk
 </code></pre>
-<h3 id="33-split-apk-pitfalls">3.3 Split APK Pitfalls</h3>
+<h3 id="33-split-apk-pitfalls">3.3 Split APK pitfalls</h3>
 <table>
 <thead>
 <tr>
@@ -1676,7 +1673,7 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 </tr>
 <tr>
 <td><code>toc.pb</code> metadata mismatch</td>
-<td>Use <code>adb install-multiple</code> - don't use bundletool for patched installs</td>
+<td>Use <code>adb install-multiple</code>, not bundletool, for patched installs</td>
 </tr>
 <tr>
 <td><code>null</code> resources on base APK decompilation</td>
@@ -1684,9 +1681,8 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="4-signing-align-then-sign">4. Signing: Align then Sign</h2>
-<h3 id="41-apk-signature-schemes">4.1 APK Signature Schemes</h3>
+<h2 id="4-signing-align-then-sign">4. Signing: align then sign</h2>
+<h3 id="41-apk-signature-schemes">4.1 APK signature schemes</h3>
 <table>
 <thead>
 <tr>
@@ -1699,12 +1695,12 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 <tr>
 <td>v1 (JAR)</td>
 <td>API 1</td>
-<td>Weak - modifiable. Required for backward compat.</td>
+<td>Weak (files can be modified). Needed for Android &lt; 7.0.</td>
 </tr>
 <tr>
 <td>v2</td>
 <td>API 24 (Android 7.0)</td>
-<td>Whole-APK signature. <strong>Required for modern Android.</strong></td>
+<td>Whole-APK signature. Required for apps targeting API 30+.</td>
 </tr>
 <tr>
 <td>v3</td>
@@ -1714,13 +1710,13 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 <tr>
 <td>v4</td>
 <td>API 30 (Android 11)</td>
-<td>Merkle hash tree - computed on-demand during install</td>
+<td>Merkle hash tree, computed on demand during install</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Critical rule</strong>: v2/v3 are whole-APK signatures. Always run <code>zipalign</code> BEFORE <code>apksigner</code>.</p>
-<p><strong>Never use <code>jarsigner</code></strong> - v1-only output is silently rejected by Android 7.0+.</p>
-<h3 id="42-available-keystores">4.2 Available Keystores</h3>
+<p>v2/v3 sign the whole APK, so any change after signing breaks them: run <code>zipalign</code>
+before <code>apksigner</code>, never after. Don't use <code>jarsigner</code> (v1 only, see §1.2).</p>
+<h3 id="42-available-keystores">4.2 Available keystores</h3>
 <table>
 <thead>
 <tr>
@@ -1737,7 +1733,7 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 <td><code>/root/.android/debug.keystore</code> (inside image)</td>
 <td><code>androiddebugkey</code></td>
 <td><code>android</code></td>
-<td><strong>Preferred</strong> - built into image, no <code>extra_mounts</code> needed</td>
+<td>Default: built into the image, no <code>extra_mounts</code> needed</td>
 </tr>
 <tr>
 <td>Host debug key</td>
@@ -1771,7 +1767,7 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
   &quot;output_paths&quot;: [&quot;my-key.jks&quot;]
 }
 </code></pre>
-<h3 id="43-full-signing-workflow-via-jddlab">4.3 Full Signing Workflow via jddlab</h3>
+<h3 id="43-full-signing-workflow-via-jddlab">4.3 Full signing workflow via jddlab</h3>
 <pre><code class="language-json">// 1. Align
 {
   &quot;tool&quot;: &quot;jddlab_zipalign&quot;,
@@ -1823,7 +1819,7 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
   &quot;input_paths&quot;: [&quot;rebuilt_aligned.apk&quot;]
 }
 </code></pre>
-<h3 id="44-signature-related-failures">4.4 Signature-Related Failures</h3>
+<h3 id="44-signature-related-failures">4.4 Signature-related failures</h3>
 <table>
 <thead>
 <tr>
@@ -1860,14 +1856,13 @@ adb install-multiple modified_base_aligned.apk splits/*.apk
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="5-dependency-hell">5. Dependency Hell</h2>
-<h3 id="51-common-resource-errors">5.1 Common Resource Errors</h3>
+<h2 id="5-dependency-hell">5. Dependency hell</h2>
+<h3 id="51-common-resource-errors">5.1 Common resource errors</h3>
 <pre><code>error: resource 'com.example:id/material_textinput' not found
 error: style attribute 'attr/layout_constraintBaseline_toBaselineOf' not found
 ERROR: AAPT2 aapt2(...) exited with code 1
 </code></pre>
-<h3 id="52-install-oem-frameworks-via-jddlab">5.2 Install OEM Frameworks via jddlab</h3>
+<h3 id="52-install-oem-frameworks-via-jddlab">5.2 Install OEM frameworks via jddlab</h3>
 <p>For system or OEM apps that reference non-AOSP framework resources, install their
 framework files first:</p>
 <pre><code class="language-json">// Install Android framework (usually automatic)
@@ -1888,12 +1883,12 @@ framework files first:</p>
 <pre><code class="language-bash">adb pull /system/framework/ ./device_frameworks/
 </code></pre>
 <p>Then install via the MCP tool above.</p>
-<h3 id="53-force-api-level">5.3 Force API Level</h3>
+<h3 id="53-force-api-level">5.3 Force API level</h3>
 <pre><code class="language-json">{&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--api&quot;, &quot;35&quot;], ...}
 // or for legacy:
 {&quot;args&quot;: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;out&quot;, &quot;-f&quot;, &quot;--api&quot;, &quot;29&quot;], ...}
 </code></pre>
-<h3 id="54-aapt2-error-reference">5.4 AAPT2 Error Reference</h3>
+<h3 id="54-aapt2-error-reference">5.4 AAPT2 error reference</h3>
 <table>
 <thead>
 <tr>
@@ -1930,23 +1925,22 @@ framework files first:</p>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="6-gapps-dependent-apks">6. GApps-Dependent APKs</h2>
-<h3 id="61-why-gapps-patching-is-hard">6.1 Why GApps Patching Is Hard</h3>
+<h2 id="6-gapps-dependent-apks">6. GApps-dependent APKs</h2>
+<h3 id="61-why-gapps-patching-is-hard">6.1 Why GApps patching is hard</h3>
 <ul>
 <li>~100+ dynamic feature module splits</li>
 <li>Runtime signature verification by OS and other GApps</li>
 <li>DroidGuard/Play Integrity attestation baked in</li>
 <li>Automatic updates overwrite patches</li>
 </ul>
-<p><strong>Bottom line</strong>: Do not try to patch <code>com.google.android.gms</code> directly.</p>
+<p>Don't try to patch <code>com.google.android.gms</code> itself.</p>
 <h3 id="62-strategy-microg">6.2 Strategy: MicroG</h3>
-<p>MicroG is an open-source Google Play Services replacement.  Install <code>GmsCore.apk</code> from
+<p>MicroG is an open-source replacement for Google Play Services. Install <code>GmsCore.apk</code> from
 <a href="https://github.com/microg/GmsCore/releases">https://github.com/microg/GmsCore/releases</a> on your test device/emulator alongside your
 patched APK.</p>
-<h3 id="63-strategy-patch-individual-gapps-youtube-maps-etc">6.3 Strategy: Patch Individual GApps (YouTube, Maps, etc.)</h3>
-<p><strong>ReVanced</strong> provides battle-tested patches: <a href="https://github.com/ReVanced/revanced-patches">https://github.com/ReVanced/revanced-patches</a></p>
-<p>Manual patching - find the signature-check smali:</p>
+<h3 id="63-strategy-patch-individual-gapps-youtube-maps-etc">6.3 Strategy: patch individual GApps (YouTube, Maps, etc.)</h3>
+<p>ReVanced maintains patches for many Google apps: <a href="https://github.com/ReVanced/revanced-patches">https://github.com/ReVanced/revanced-patches</a></p>
+<p>To patch by hand, find the signature check in the smali:</p>
 <pre><code class="language-json">// Decompile and search
 {
   &quot;tool&quot;: &quot;jddlab_jadx&quot;,
@@ -1957,20 +1951,25 @@ patched APK.</p>
 </code></pre>
 <p>Grep for: <code>getPackageInfo</code>, <code>GET_SIGNATURES</code>, <code>MessageDigest</code>, <code>equals</code>.
 Patch the comparison branch to always return valid.</p>
-<h3 id="64-certificate-pinning-bypass-automated">6.4 Certificate Pinning Bypass (automated)</h3>
-<p><code>android-unpinner</code> needs a sub-command. Use <code>patch-apk</code> to produce a patched APK
-(<code>target.unpinned.apk</code>) without a connected device (do not use <code>all</code>, which also
-installs + instruments over Frida and needs a USB device):</p>
+<h3 id="64-certificate-pinning-bypass-automated">6.4 Certificate pinning bypass (automated)</h3>
+<p><code>android-unpinner patch-apks</code> makes the APK debuggable and re-signs it
+(<code>target.unpinned.apk</code>, no device needed). The pinning bypass itself is applied at
+runtime: <code>start-app</code> (or <code>all</code>, which also installs the APK) starts the app on a
+connected device and injects the Frida gadget with the unpinning scripts. See the
+ssl-unpinning skill.</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_android_unpinner&quot;,
-  &quot;args&quot;: [&quot;patch-apk&quot;, &quot;target.apk&quot;],
+  &quot;args&quot;: [&quot;patch-apks&quot;, &quot;target.apk&quot;],
   &quot;input_paths&quot;: [&quot;target.apk&quot;],
   &quot;output_paths&quot;: [&quot;target.unpinned.apk&quot;]
 }
 </code></pre>
-<hr />
 <h2 id="7-testing">7. Testing</h2>
-<h3 id="71-adb-install-commands-host-not-via-jddlab">7.1 ADB Install Commands (host, not via jddlab)</h3>
+<h3 id="71-adb-install-commands-host-or-jddlab_adb">7.1 ADB install commands (host, or <code>jddlab_adb</code>)</h3>
+<p><code>jddlab_adb</code> (and <code>jddlab_frida*</code>, <code>jddlab_objection</code>) use the host ADB server when
+one is running, so the device connected on the host (USB or Wi-Fi) is visible in every
+MCP call. If <code>jddlab_adb [&quot;devices&quot;]</code> lists nothing, ask the user to run
+<code>adb start-server</code> and connect the device on the host.</p>
 <pre><code class="language-bash">adb install -r app.apk              # Replace existing
 adb install -d app.apk              # Allow version downgrade
 adb install -g app.apk              # Grant all runtime permissions
@@ -1979,10 +1978,11 @@ adb uninstall com.example.app       # Remove app + data
 adb shell am start -n com.example.app/.MainActivity
 adb logcat -s &quot;AndroidRuntime:E&quot; &quot;*:S&quot;
 </code></pre>
-<h3 id="72-frida-injection-via-jddlab">7.2 Frida Injection via jddlab</h3>
-<p>Inject a Frida gadget into an APK for dynamic analysis. <code>apk-patcher</code> takes the APK
-<strong>base name without the extension, with the trailing dot</strong> (<code>target.apk</code> -&gt; <code>./target.</code>)
-as a positional argument, and writes <code>target.patched</code>; flags are <code>-l &lt;script&gt;</code>,
+<h3 id="72-frida-injection-via-jddlab">7.2 Frida injection via jddlab</h3>
+<p>Inject a Frida gadget into an APK for dynamic analysis (the gadget baked into the
+image, no download). <code>apk-patcher</code> takes the APK base name without the extension but
+with the trailing dot (<code>target.apk</code> -&gt; <code>./target.</code>) as a positional argument and writes
+<code>target.patched</code>. Flags are <code>-l &lt;script&gt;</code>,
 <code>-a &lt;arch&gt;</code>, <code>-d &lt;dir&gt;</code>, <code>-c &lt;config&gt;</code>, <code>-f</code>, <code>-v</code> (there is no <code>-o</code>):</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_apk_patcher&quot;,
@@ -1991,20 +1991,23 @@ as a positional argument, and writes <code>target.patched</code>; flags are <cod
   &quot;output_paths&quot;: [&quot;target.patched&quot;]
 }
 </code></pre>
-<p>Then re-sign the APK inside <code>target.patched</code> via <code>jddlab_zipalign</code> + <code>jddlab_apksigner</code>.</p>
+<p>Then re-sign the APK in <code>target.patched</code> with <code>jddlab_zipalign</code> and <code>jddlab_apksigner</code>.</p>
 <h3 id="73-objection-runtime-exploration-via-frida">7.3 Objection (runtime exploration via Frida)</h3>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_objection&quot;,
-  &quot;args&quot;: [&quot;patchapk&quot;, &quot;-s&quot;, &quot;target.apk&quot;],
+  &quot;args&quot;: [&quot;patchapk&quot;, &quot;-s&quot;, &quot;target.apk&quot;, &quot;-a&quot;, &quot;arm64-v8a&quot;],
   &quot;input_paths&quot;: [&quot;target.apk&quot;],
-  &quot;output_paths&quot;: [&quot;target.objection.apk&quot;],
-  &quot;interactive&quot;: true
+  &quot;output_paths&quot;: [&quot;target.objection.apk&quot;]
 }
 </code></pre>
-<p>Note: <code>objection explore</code> requires an interactive TTY - run it directly on host via
-<code>frida-tools</code> against a running device.</p>
+<p><code>patchapk</code> injects the gadget baked into the image and adds the INTERNET permission
+the gadget needs to listen; without <code>-a</code> it asks the device for its ABI over ADB.
+<code>objection explore</code> needs an interactive TTY. Through MCP, <code>objection -n Gadget run &quot;&lt;command&gt;&quot;</code> works for one-shot commands (e.g. <code>android hooking list activities</code>), but
+the agent is unloaded right after, so hooks such as <code>android sslpinning disable</code> don't
+stay active; for those use <code>jddlab_frida</code> with a script and <code>-t</code>
+(<code>[&quot;-U&quot;, &quot;-n&quot;, &quot;Gadget&quot;, &quot;-l&quot;, &quot;hook.js&quot;, &quot;-q&quot;, &quot;-t&quot;, &quot;30&quot;]</code>).</p>
 <h3 id="74-redroid-android-in-docker-headless">7.4 Redroid (Android in Docker, headless)</h3>
-<p>Redroid runs a full Android system in Docker for headless testing - perfect for CI/CD.</p>
+<p>Redroid runs a full Android system in Docker without a display, which also works in CI.</p>
 <pre><code class="language-bash"># Prerequisites (Linux host only)
 sudo modprobe binder_linux
 docker volume create redroid_data
@@ -2028,7 +2031,7 @@ scrcpy -s localhost:5555
 sudo python3 redroid-script/redroid-script.py redroid14 --magisk --libndk
 docker restart redroid14
 </code></pre>
-<p><strong>Redroid does NOT work on macOS</strong> (no binder support in Docker Desktop).</p>
+<p>Redroid doesn't work on macOS: Docker Desktop has no binder support.</p>
 <h3 id="75-waydroid-android-in-lxc-linux-desktop">7.5 Waydroid (Android in LXC, Linux desktop)</h3>
 <pre><code class="language-bash">curl https://repo.waydro.id | sudo bash
 sudo apt install waydroid
@@ -2043,8 +2046,7 @@ waydroid app launch com.example.app
 git clone https://github.com/casualsnek/waydroid_script.git
 sudo python3 waydroid_script/waydroid_script.py -l
 </code></pre>
-<hr />
-<h2 id="8-advanced-patching">8. Advanced Patching</h2>
+<h2 id="8-advanced-patching">8. Advanced patching</h2>
 <h3 id="81-deobfuscation-via-jddlab">8.1 Deobfuscation via jddlab</h3>
 <p>Detect the obfuscator:</p>
 <pre><code class="language-json">{
@@ -2053,9 +2055,9 @@ sudo python3 waydroid_script/waydroid_script.py -l
   &quot;input_paths&quot;: [&quot;target.jar&quot;]
 }
 </code></pre>
-<p>Run deobfuscation. <code>java-deobfuscator</code> is driven by a YAML config (via <code>--config</code>, two
-dashes); the input, output and transformers all live <strong>inside the YAML</strong>, not as CLI
-flags (see the java-deobfuscation skill for a config example):</p>
+<p>Run the deobfuscation. <code>java-deobfuscator</code> reads a YAML config (<code>--config</code>, two
+dashes); the input, output and transformers are set in the YAML, not as CLI flags (the
+java-deobfuscation skill has a config example):</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_java_deobfuscator&quot;,
   &quot;args&quot;: [&quot;--config&quot;, &quot;deobf-config.yml&quot;],
@@ -2071,9 +2073,9 @@ flags (see the java-deobfuscation skill for a config example):</p>
   &quot;output_paths&quot;: [&quot;target.jar&quot;]
 }
 </code></pre>
-<h3 id="82-native-code-analysis-via-ghidra">8.2 Native Code Analysis via Ghidra</h3>
-<p><code>ghidra-decompile</code> takes <strong>positional</strong> args (<code>&lt;input-binary&gt; [&lt;output.c&gt;]</code>) and emits a
-single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
+<h3 id="82-native-code-analysis-via-ghidra">8.2 Native code analysis via Ghidra</h3>
+<p><code>ghidra-decompile</code> takes positional arguments (<code>&lt;input-binary&gt; [&lt;output.c&gt;]</code>) and
+writes a single <code>.c</code> file; there are no <code>-i</code>/<code>-o</code> flags:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_ghidra_decompile&quot;,
   &quot;args&quot;: [&quot;lib/arm64-v8a/libnative.so&quot;, &quot;libnative.decompiled.c&quot;],
@@ -2081,7 +2083,7 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
   &quot;output_paths&quot;: [&quot;libnative.decompiled.c&quot;]
 }
 </code></pre>
-<h3 id="83-extract-jni-artifacts">8.3 Extract JNI Artifacts</h3>
+<h3 id="83-extract-jni-artifacts">8.3 Extract JNI artifacts</h3>
 <p><code>extract_jni &lt;apk&gt; [-o &lt;file.json&gt;]</code> reports JNI method signatures as JSON (a file with
 <code>-o</code>, else stdout):</p>
 <pre><code class="language-json">{
@@ -2091,17 +2093,17 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
   &quot;output_paths&quot;: [&quot;jni_methods.json&quot;]
 }
 </code></pre>
-<h3 id="84-smali-level-ssl-pinning-bypass">8.4 Smali-Level SSL Pinning Bypass</h3>
+<h3 id="84-smali-level-ssl-pinning-bypass">8.4 Smali-Level SSL pinning bypass</h3>
 <p>Search in jadx output or decompiled smali for:</p>
 <ul>
 <li><code>checkServerTrusted</code> / <code>checkClientTrusted</code></li>
 <li><code>OkHttpClient.Builder().certificatePinner</code></li>
 <li><code>SSLContext</code>, <code>TrustManager</code>, <code>HostnameVerifier</code></li>
 </ul>
-<p>Patch approach: find the <code>checkServerTrusted</code> smali method and make it return immediately
-(remove all code, add <code>return-void</code>).</p>
+<p>Find the <code>checkServerTrusted</code> smali method and make it return immediately (replace the
+body with <code>return-void</code>).</p>
 <p>For automated pinning removal use <code>jddlab_android_unpinner</code> (see §6.4).</p>
-<h3 id="85-play-integrity--root-detection-bypass">8.5 Play Integrity / Root Detection Bypass</h3>
+<h3 id="85-play-integrity--root-detection-bypass">8.5 Play Integrity / root detection bypass</h3>
 <p>Software-only bypass options (2025):</p>
 <table>
 <thead>
@@ -2121,10 +2123,9 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 </tr>
 </tbody>
 </table>
-<p><strong>CRITICAL</strong>: Play Integrity does NOT pass on any emulator - use a physical device.</p>
-<hr />
+<p>Play Integrity checks don't pass on emulators; use a physical device.</p>
 <h2 id="9-troubleshooting">9. Troubleshooting</h2>
-<h3 id="91-decompilation-failures">9.1 Decompilation Failures</h3>
+<h3 id="91-decompilation-failures">9.1 Decompilation failures</h3>
 <table>
 <thead>
 <tr>
@@ -2142,7 +2143,7 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 <tr>
 <td><code>Unsupported DEX format</code></td>
 <td>Old baksmali / smali</td>
-<td>jddlab image is always up to date; ensure you're using <code>stanislavpovolotsky/jddlab:latest</code></td>
+<td>Update the image (<code>jddlab update</code>, <code>stanislavpovolotsky/jddlab:latest</code>)</td>
 </tr>
 <tr>
 <td><code>java.io.IOException: Was not able to decode XML</code></td>
@@ -2151,7 +2152,7 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="92-recompilation-failures">9.2 Recompilation Failures</h3>
+<h3 id="92-recompilation-failures">9.2 Recompilation failures</h3>
 <table>
 <thead>
 <tr>
@@ -2183,7 +2184,7 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="93-installation-failures">9.3 Installation Failures</h3>
+<h3 id="93-installation-failures">9.3 Installation failures</h3>
 <table>
 <thead>
 <tr>
@@ -2215,7 +2216,7 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 </tr>
 </tbody>
 </table>
-<h3 id="94-runtime-crashes">9.4 Runtime Crashes</h3>
+<h3 id="94-runtime-crashes">9.4 Runtime crashes</h3>
 <table>
 <thead>
 <tr>
@@ -2247,9 +2248,8 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="10-quick-reference-cheat-sheet">10. Quick Reference Cheat Sheet</h2>
-<h3 id="core-workflow-mcp-tool-calls">Core Workflow (MCP tool calls)</h3>
+<h2 id="10-quick-reference-cheat-sheet">10. Quick reference cheat sheet</h2>
+<h3 id="core-workflow-mcp-tool-calls">Core workflow (MCP tool calls)</h3>
 <pre><code>1. Analyze     → jddlab_jadx       args: [&quot;-d&quot;, &quot;out&quot;, &quot;target.apk&quot;]
 2. Decompile   → jddlab_apktool    args: [&quot;d&quot;, &quot;target.apk&quot;, &quot;-o&quot;, &quot;dec&quot;, &quot;-f&quot;]
 3. Edit smali / resources on host
@@ -2257,9 +2257,9 @@ single <code>.c</code> file - no <code>-i</code>/<code>-o</code> flags:</p>
 5. Align       → jddlab_zipalign   args: [&quot;-v&quot;, &quot;-p&quot;, &quot;4&quot;, &quot;rebuilt.apk&quot;, &quot;rebuilt_aligned.apk&quot;]
 6. Sign        → jddlab_apksigner  args: [&quot;sign&quot;, &quot;--ks&quot;, &quot;key.keystore&quot;, ...]
 7. Verify      → jddlab_apksigner  args: [&quot;verify&quot;, &quot;--verbose&quot;, &quot;rebuilt_aligned.apk&quot;]
-8. Install     → (host) adb install -r rebuilt_aligned.apk
+8. Install     → jddlab_adb        args: [&quot;install&quot;, &quot;-r&quot;, &quot;rebuilt_aligned.apk&quot;]
 </code></pre>
-<h3 id="smali-quick-patterns">Smali Quick Patterns</h3>
+<h3 id="smali-quick-patterns">Smali quick patterns</h3>
 <pre><code class="language-smali"># Return true
 const/4 v0, 0x1
 return v0
@@ -2278,7 +2278,7 @@ nop
 # Set string
 const-string v0, &quot;value&quot;
 </code></pre>
-<h3 id="key-file-paths-in-decompiled-apk">Key File Paths in Decompiled APK</h3>
+<h3 id="key-file-paths-in-decompiled-apk">Key file paths in decompiled APK</h3>
 <table>
 <thead>
 <tr>
@@ -2293,7 +2293,7 @@ const-string v0, &quot;value&quot;
 </tr>
 <tr>
 <td><code>apktool.yml</code></td>
-<td>Apktool metadata - do NOT hand-edit version fields</td>
+<td>Apktool metadata; don't edit the version fields by hand</td>
 </tr>
 <tr>
 <td><code>smali/com/example/app/</code></td>
@@ -2321,7 +2321,7 @@ const-string v0, &quot;value&quot;
 </tr>
 </tbody>
 </table>
-<h3 id="common-smali-type-descriptors">Common Smali Type Descriptors</h3>
+<h3 id="common-smali-type-descriptors">Common Smali type descriptors</h3>
 <table>
 <thead>
 <tr>
@@ -2360,12 +2360,12 @@ const-string v0, &quot;value&quot;
 </tr>
 </tbody>
 </table>
-<h3 id="debug-keystore">Debug Keystore</h3>
+<h3 id="debug-keystore">Debug keystore</h3>
 <pre><code>Path:     /root/.android/debug.keystore  (built into the image)
 Alias:    androiddebugkey
 Password: android
 </code></pre>
-<p>No <code>extra_mounts</code> needed - use directly:</p>
+<p>No <code>extra_mounts</code> needed:</p>
 <pre><code class="language-json">&quot;args&quot;: [&quot;sign&quot;, &quot;--ks&quot;, &quot;/root/.android/debug.keystore&quot;,
          &quot;--ks-key-alias&quot;, &quot;androiddebugkey&quot;,
          &quot;--ks-pass&quot;, &quot;pass:android&quot;, &quot;--key-pass&quot;, &quot;pass:android&quot;, ...]

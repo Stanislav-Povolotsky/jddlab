@@ -1279,14 +1279,14 @@ body { margin: 0; background: #ffffff; }
 <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab"><img src="https://img.shields.io/docker/image-size/stanislavpovolotsky/jddlab?sort=date&amp;arch=amd64" alt="Docker Image Size" /></a>
 <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab"><img src="https://img.shields.io/docker/pulls/stanislavpovolotsky/jddlab" alt="Docker Pulls" /></a></p>
 <ul>
-<li>jddlab is a <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">Docker image</a> that includes all the necessary tools to decompile and deobfuscate Java and Android APKs.</li>
-<li><code>jddlab</code> is a command-line tool that runs the <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">jddlab Docker image</a> and provides a quick and convenient way to use all the decompilation and deobfuscation tools.</li>
+<li>jddlab is a <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">Docker image</a> with the tools to decompile and deobfuscate Java code and Android apps.</li>
+<li><code>jddlab</code> is a command-line tool that runs the <a href="https://hub.docker.com/r/stanislavpovolotsky/jddlab/tags?name=latest">jddlab Docker image</a>, so you can call any of these tools with one command.</li>
 </ul>
-<p>Why running <code>jddlab</code> is better than using separate tools on the host:</p>
+<p>Why use <code>jddlab</code> instead of installing the tools on the host:</p>
 <ul>
-<li>Safety: Docker isolates jddlab tools from the host system, minimizing risks and vulnerabilities.</li>
-<li>Easy Installation: Install all the tools and dependencies with a single docker pull command.</li>
-<li>Quick Updates: Simply pull the latest container version to get new tools, features, and patches.</li>
+<li>Safety: Docker isolates the tools (and the samples you analyze) from the host system.</li>
+<li>Installation: one <code>docker pull</code> installs all the tools and their dependencies.</li>
+<li>Updates: pull the latest image to get new tools, versions and fixes.</li>
 </ul>
 <h2 id="contents">Contents</h2>
 <ul>
@@ -1301,6 +1301,7 @@ body { margin: 0; background: #ffffff; }
 <li><a href="#ai-skills">AI Skills</a></li>
 <li><a href="#how-to">How to</a></li>
 <li><a href="#tools">Tools</a> - full list with usage examples</li>
+<li><a href="#smoke-tests">Smoke tests</a></li>
 <li><a href="#troubleshooting">Troubleshooting</a></li>
 <li><a href="#license">License</a></li>
 </ul>
@@ -1324,11 +1325,11 @@ body { margin: 0; background: #ffffff; }
 It runs <code>jddlab</code> docker instance and maps current folder as a <code>/work</code> folder (rw) to make all files in the current folder and subfolders accessable for jddlab commands.<br />
 For example if you have <code>test.apk</code> in the current folder, it will be accessible as <code>./test.apk</code> or <code>/work/test.apk</code> inside the jddlab instance.</p>
 <blockquote>
-<p>The <code>jddlab</code> / <code>jddlab.cmd</code> you download is a <strong>thin launcher</strong>: its only job is to
-copy the real launcher (plus the MCP server and AI skills) out of the Docker image
-into <code>~/.jddlab/mcp/current</code> and hand over to it. This means the real logic ships
-<strong>inside the image</strong> and is refreshed together with it by <code>jddlab update</code> - you
-download the thin launcher once and rarely need to update it by hand.</p>
+<p>The <code>jddlab</code> / <code>jddlab.cmd</code> you download is a thin launcher. It copies the real
+launcher (plus the MCP server and AI skills) out of the Docker image into
+<code>~/.jddlab/mcp/current</code> and runs it. The real logic ships inside the image and is
+updated with it by <code>jddlab update</code>, so you download the thin launcher once and
+rarely need to update it by hand.</p>
 </blockquote>
 <p>To install <code>jddlab</code> command-line tool:</p>
 <details>
@@ -1373,20 +1374,20 @@ jddlab update        # Pull the latest image (and refresh the installed MCP/skil
 </code></pre>
 <p>The same commands also accept a <code>--</code> prefix (<code>jddlab --tools</code>, <code>jddlab --version</code>, etc.).</p>
 <h4 id="file-ownership-linuxmacos">File ownership (Linux/macOS)</h4>
-<p>On Linux and macOS the launcher runs the container as your <strong>current host user</strong>
+<p>On Linux and macOS the launcher runs the container as your current host user
 (<code>--user $(id -u):$(id -g)</code>), so files created under <code>/work</code> are owned by you
-instead of <code>root</code>. The container still uses a shared, world-writable home at
-<code>/root</code> (where the frida/adb configs live), so this is transparent.</p>
+instead of <code>root</code>. The container keeps a shared, world-writable home at <code>/root</code>
+(where the frida/adb configs live), so the tools work the same either way.</p>
 <p>If you need the container to run as <code>root</code> inside (for example to write to a
 location that requires it), set <code>JDDLAB_ROOT=1</code>:</p>
 <pre><code>JDDLAB_ROOT=1 jddlab apktool --version
 </code></pre>
 <p>Which launcher you use already matches your environment:</p>
 <ul>
-<li><strong>Native Windows</strong> (<code>jddlab.cmd</code> from cmd/PowerShell): no UID mapping. Docker
+<li>Native Windows (<code>jddlab.cmd</code> from cmd/PowerShell): no UID mapping. Docker
 Desktop's filesystem driver already gives new files normal Windows ownership,
 and mapping to an arbitrary UID would actually break its mounts.</li>
-<li><strong>WSL2 / Linux / macOS</strong> (the <code>jddlab</code> shell script): your host user is mapped.
+<li>WSL2 / Linux / macOS (the <code>jddlab</code> shell script): your host user is mapped.
 When you work inside WSL on the Linux filesystem this is a real bind mount, so
 UID mapping is exactly what prevents root-owned files.</li>
 </ul>
@@ -1435,6 +1436,13 @@ upgrading the launcher.</p>
 <li><code>interactive</code>: add Docker <code>-it</code>; keep this false for most MCP clients.</li>
 </ul>
 <p>Tool-specific usage notes are in the <code>tools/</code> directory. Connector examples are in <code>mcp/connectors/</code>.</p>
+<p>Besides <code>/work</code>, every call mounts the <code>jddlab-cache</code> docker volume (tool caches,
+such as blutter's compiled analyzers). When an ADB server is running on the host,
+the container is connected to it, so <code>jddlab_adb</code>, <code>jddlab_frida*</code> and
+<code>jddlab_objection</code> keep their device connection between calls (see
+<a href="#how-to-use-adb-and-frida-with-jddlab">How to use ADB and Frida with jddlab</a>;
+<code>JDDLAB_ADB</code> / <code>JDDLAB_ADB_SERVER</code> can be set in the MCP server's environment).
+When a call exceeds <code>timeout_seconds</code>, its container is killed.</p>
 <h3 id="mcp-prerequisites">MCP prerequisites</h3>
 <ul>
 <li>Python 3.10 or newer.</li>
@@ -1451,7 +1459,7 @@ upgrading the launcher.</p>
 <pre><code class="language-shell">python mcp/server.py --list-commands
 </code></pre>
 <h3 id="install-mcp-connectors-with-jddlab">Install MCP connectors with jddlab</h3>
-<p>The standalone <code>jddlab</code> and <code>jddlab.cmd</code> launchers include an <code>mcp</code> subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) <strong>out of the Docker image</strong> - which ships them at <code>/usr/local/jddlab/host</code> - into <code>~/.jddlab/mcp/current</code> using <code>docker cp</code>, and then runs the installer from there. No separate download is involved, so the host files always match the image, and <code>docker cp</code> writes them owned by your user.</p>
+<p>The standalone <code>jddlab</code> and <code>jddlab.cmd</code> launchers include an <code>mcp</code> subcommand. The launcher does not need a local repository checkout. On first use it copies the MCP server (and the AI skills and tool docs) out of the Docker image, which ships them at <code>/usr/local/jddlab/host</code>, into <code>~/.jddlab/mcp/current</code> with <code>docker cp</code>, and runs the installer from there. Nothing else is downloaded, so the host files always match the image, and <code>docker cp</code> writes them as your user.</p>
 <blockquote>
 <p>The same files back <code>jddlab skills ...</code> (see below). Running <code>jddlab update</code>
 re-extracts them from the freshly pulled image; <code>jddlab mcp update</code> /
@@ -1528,7 +1536,7 @@ startup_timeout_sec = 120
 </code></pre>
 <p>The server infers a host mount root, rewrites <code>app.apk</code> and <code>decoded</code> to <code>/work/app.apk</code> and <code>/work/decoded</code>, then runs Docker.</p>
 <h2 id="ai-skills">AI Skills</h2>
-<p>Skills are Markdown knowledge bases (see <a href="skills/README.html"><code>skills/</code></a>) that teach AI assistants how to perform specific reverse-engineering tasks using jddlab tools. Each skill lives in <code>skills/&lt;name&gt;/SKILL.md</code> and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.</p>
+<p>Skills are Markdown instructions (see <a href="skills/README.html"><code>skills/</code></a>) that tell AI assistants how to do specific reverse-engineering tasks with jddlab tools. Each skill lives in <code>skills/&lt;name&gt;/SKILL.md</code> and can be installed into opencode, Claude CLI, VS Code Copilot, and Codex.</p>
 <h3 id="install-skills-with-jddlab">Install skills with jddlab</h3>
 <p>Like the <code>mcp</code> subcommand, <code>jddlab skills</code> works without a local repository checkout:
 it runs the skills installer copied out of the Docker image (shared with the MCP files
@@ -1551,7 +1559,7 @@ jddlab skills remove all
 jddlab skills list
 </code></pre>
 <p>On Windows the same commands work with <code>jddlab.cmd</code>.</p>
-<p><strong>Installation scope</strong> (where skill content is written):</p>
+<p>Installation scope (where the skills are written):</p>
 <table>
 <thead>
 <tr>
@@ -1581,21 +1589,68 @@ jddlab skills list
 </table>
 <p>Notes:</p>
 <ul>
-<li><strong>Claude Code / opencode / Codex</strong> load real skills (directories with a <code>SKILL.md</code>
+<li>Claude Code, opencode and Codex load real skills (directories with a <code>SKILL.md</code>
 that has <code>name</code> + <code>description</code> front-matter). For Claude Code, run <code>/skills</code>
 (restart it if already running) to see them.</li>
-<li><strong>Codex</strong> uses the cross-agent <code>.agents/skills/</code> location. opencode also discovers
+<li>Codex uses the cross-agent <code>.agents/skills/</code> location. opencode also discovers
 <code>.claude/skills/</code> and <code>.agents/skills/</code>, so skills installed for one of these clients
 are often visible to the others.</li>
-<li><strong>VS Code Copilot</strong> has no native skills feature, so the installer injects a skills
+<li>VS Code Copilot has no native skills feature, so the installer injects a skills
 index into <code>.github/copilot-instructions.md</code> instead.</li>
 </ul>
 <h3 id="available-skills">Available skills</h3>
 <p>See <a href="skills/README.html"><code>skills/README.md</code></a> for the full list of skills.</p>
 <h2 id="how-to">How to</h2>
-<h3 id="how-to-use-adb-with-jddlab">How to use ADB with jddlab</h3>
-<h4 id="wireless-debug">Wireless debug</h4>
-<p>The easiest way to enable wireless debugging with ADB:</p>
+<h3 id="how-to-use-adb-and-frida-with-jddlab">How to use ADB and Frida with jddlab</h3>
+<p>Every <code>jddlab &lt;command&gt;</code> (and every MCP tool call) runs in a new container. An ADB
+server started inside a container disappears when the container exits, together
+with everything you did with it, such as <code>adb connect</code>. There are two ways to work
+with a device:</p>
+<h4 id="recommended-the-host-adb-server">Recommended: the host ADB server</h4>
+<p>Install the Android platform-tools on the host, start the server there and connect
+the device to it over USB or Wi-Fi:</p>
+<pre><code>adb start-server
+adb devices              # USB device, or:
+adb pair 192.168.1.45:37630 &amp;&amp; adb connect 192.168.1.45:38191
+</code></pre>
+<p>When a host ADB server is running (port 5037), the <code>jddlab</code> launcher and the MCP
+server connect the container to it automatically: <code>adb</code>, <code>frida -U</code>, <code>objection</code>,
+<code>apk-patcher</code> and <code>android-unpinner</code> inside jddlab see the host's devices, and the
+connection survives between runs. With Docker Desktop (Windows/macOS) this is the
+only way to use USB devices, and it uses your own ADB key instead of the one built
+into the image.</p>
+<p>How it works: on Docker Desktop (Windows/macOS) the container gets
+<code>JDDLAB_ADB_SERVER=host.docker.internal:5037</code> and its entrypoint forwards
+<code>127.0.0.1:5037</code> inside the container to the host server. On Linux the container
+uses host networking (<code>--network=host</code>) and talks to the server directly.</p>
+<p>Environment variables of the <code>jddlab</code> launcher or of the MCP server (for example
+in the <code>env</code> section of the MCP client config) control it:</p>
+<ul>
+<li><code>JDDLAB_ADB=auto</code> (default) uses the host server if it is running,
+<code>JDDLAB_ADB=host</code> always uses it, <code>JDDLAB_ADB=container</code> never does.</li>
+<li><code>JDDLAB_ADB_SERVER=&lt;host&gt;:&lt;port&gt;</code> names the ADB server explicitly, for example the
+Windows host's server from WSL2: <code>JDDLAB_ADB_SERVER=host.docker.internal:5037</code>.</li>
+</ul>
+<p>With plain <code>docker run</code>, pass <code>-e JDDLAB_ADB_SERVER=host.docker.internal:5037</code>
+(Docker Desktop) or <code>--network=host</code> (Linux) yourself.</p>
+<h4 id="frida-without-root-gadget-workflow">Frida without root: gadget workflow</h4>
+<pre><code>jddlab objection patchapk -s app.apk         # inject the Frida gadget (baked into the image)
+jddlab adb install -r app.objection.apk
+jddlab adb shell monkey -p com.app.name 1     # start the app, the gadget waits for a client
+jddlab frida -U -n Gadget -l hook.js          # interactive REPL with your script
+jddlab frida -U -n Gadget -l hook.js -q -t 30 # non-interactive: run for 30s, print output
+</code></pre>
+<p><code>objection patchapk</code> also adds the INTERNET permission the gadget needs to listen
+for the client; <code>apk-patcher</code> doesn't (see <a href="tools/apk-patcher.html">tools/apk-patcher.md</a>,
+also for gadget-side scripts with <code>-l</code>). The non-interactive form (<code>-q -t &lt;seconds&gt;</code>)
+is the one to use from MCP clients, as are <code>frida-ps -U -ai</code>, <code>frida-trace</code> (with a
+<code>timeout_seconds</code>), <code>adb</code> and <code>objection ... run &lt;command&gt;</code> (one-shot commands: the
+agent is unloaded afterwards, so its hooks don't stay active). The <code>frida</code> CLI in the image matches the gadget
+version baked into it; for old Android versions use <code>frida@16</code> / <code>objection@16</code>
+with a frida 16.x gadget (see <a href="#objection---runtime-mobile-exploration-toolkit">objection</a>).</p>
+<h4 id="alternative-wireless-debugging-from-inside-the-container">Alternative: wireless debugging from inside the container</h4>
+<p>Without a host ADB server you can pair and connect from an interactive <code>jddlab</code>
+shell. The connection lasts as long as that shell:</p>
 <ol>
 <li>Open <strong>Developer options</strong> on your Android device.</li>
 <li>Enable <strong>Wireless debugging</strong>.</li>
@@ -1611,9 +1666,9 @@ connected to 192.168.1.45:38191
 </code></pre>
 </li>
 </ol>
-<p>After pairing and connecting, you can use ADB commands wirelessly.</p>
-<p><strong>Security warning:</strong> jddlab comes with preinstalled ADB keys, which greatly simplifies usage. However, this also means that anyone with network access to your device can connect to it via the debugger.<br />
-<strong>Recommendation:</strong> Mount your local <code>~/.android</code> directory to <code>/root/.android</code> inside the container to use your own ADB keys and prevent unauthorized access.</p>
+<p>After pairing and connecting, you can use ADB commands wirelessly in that shell.</p>
+<p><strong>Security warning:</strong> jddlab comes with a preinstalled ADB key so that pairing works without setup. The key is the same in every copy of the public image, so anyone with network access to a device that authorized it can connect to that device.<br />
+Use the host ADB server (above), or mount your local <code>~/.android</code> directory to <code>/root/.android</code> inside the container to use your own ADB keys:</p>
 <pre><code>docker run -it --rm -v &quot;$HOME/.android:/root/.android&quot; -v &quot;$PWD:/work&quot; stanislavpovolotsky/jddlab:latest apktool --version
 </code></pre>
 <p><strong>Security warning:</strong> The image also ships a built-in <code>debug.keystore</code> (alias <code>androiddebugkey</code>, password <code>android</code>) so APKs can be signed without any host setup. Since this key is public, APKs signed with it offer no authenticity guarantee. For anything beyond local testing, generate your own keystore with <code>jddlab keytool</code> and mount or pass it explicitly.</p>
@@ -1651,16 +1706,32 @@ your image is available via <code>jddlab versions</code> and in each
 <td>Java decompiler + bytecode tooling</td>
 </tr>
 <tr>
-<td><a href="#krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler">Krakatau (v1/v2)</a></td>
-<td>Java decompiler, assembler, disassembler</td>
+<td><a href="#cfr---java-decompiler">CFR</a></td>
+<td>Java decompiler (strong on modern Java)</td>
+</tr>
+<tr>
+<td><a href="#krakatau-v1-and-v2---java-bytecode-assembler-and-disassembler">Krakatau (v1/v2)</a></td>
+<td>Java bytecode assembler/disassembler (edit <code>.class</code> files as text)</td>
 </tr>
 <tr>
 <td><a href="#apkeditor---powerful-android-apk-editor">APKEditor</a></td>
-<td>Edit/merge/split/protect APKs</td>
+<td>Decode/build/merge APKs, refactor and protect resources</td>
 </tr>
 <tr>
 <td><a href="#apkscan---tool-to-scan-for-secrets-endpoints-and-other-sensitive-data-after-decompiling-and-deobfuscating-android-files">APKscan</a></td>
 <td>Scan for secrets, endpoints, sensitive data</td>
+</tr>
+<tr>
+<td><a href="#apkid---identify-packers-protectors-obfuscators-and-compilers">APKiD</a></td>
+<td>Identify packers, protectors, obfuscators, compilers</td>
+</tr>
+<tr>
+<td><a href="#mobsfscan---static-analysis-of-mobile-app-source-code">mobsfscan</a></td>
+<td>SAST of decompiled sources (insecure code patterns)</td>
+</tr>
+<tr>
+<td><a href="#quark-engine---android-malware-behaviour-analysis">Quark-Engine</a></td>
+<td>Android malware behaviour scoring</td>
 </tr>
 <tr>
 <td><a href="#enjarify---a-tool-for-translating-dalvik-bytecode-to-equivalent-java-bytecode">Enjarify</a></td>
@@ -1693,6 +1764,22 @@ your image is available via <code>jddlab versions</code> and in each
 <tr>
 <td><a href="#ghidra---software-reverse-engineering-framework">ghidra</a></td>
 <td>Native code reverse engineering</td>
+</tr>
+<tr>
+<td><a href="#hermes-dec---react-native-hermes-bytecode-disassembler-and-decompiler">hermes-dec</a></td>
+<td>React Native Hermes bytecode disassembler/decompiler</td>
+</tr>
+<tr>
+<td><a href="#blutter---flutter-dart-aot-reverse-engineering">blutter</a></td>
+<td>Flutter (Dart AOT <code>libapp.so</code>) reverse engineering</td>
+</tr>
+<tr>
+<td><a href="#pyxamstore-and-ilspycmd---xamarin-and-net-maui-apps">pyxamstore + ilspycmd</a></td>
+<td>Xamarin/.NET MAUI: unpack assemblies, decompile .NET to C#</td>
+</tr>
+<tr>
+<td><a href="#frida-tools---frida-cli">frida-tools</a></td>
+<td><code>frida</code>, <code>frida-ps</code>, <code>frida-trace</code>, ... (CLI, matches the baked gadget)</td>
 </tr>
 <tr>
 <td><a href="#android-unpinner---remove-certificate-pinning-from-apks">android-unpinner</a></td>
@@ -1993,9 +2080,15 @@ Usage: &lt;main class&gt; [options] &lt;type names or class/jar files&gt;
       Default: false
 </code></pre>
 </details>
-<h3 id="krakatau-v1-and-v2---java-decompiler-assembler-and-disassembler">Krakatau (v1 and v2) - Java decompiler, assembler, and disassembler</h3>
+<h3 id="krakatau-v1-and-v2---java-bytecode-assembler-and-disassembler">Krakatau (v1 and v2) - Java bytecode assembler and disassembler</h3>
 <p>URL: <a href="https://github.com/Storyyeller/Krakatau">https://github.com/Storyyeller/Krakatau</a></p>
-<p>Krakatau provides an assembler and disassembler for Java bytecode, which allows you to convert binary classfiles to a human readable text format, make changes, and convert it back to a classfile, even for obfuscated code.</p>
+<p>Krakatau provides an assembler and disassembler for Java bytecode, which allows you to convert binary classfiles to a human readable text format, make changes, and convert it back to a classfile, even for obfuscated code.<br />
+In jddlab it is not used as a decompiler: use jadx, CFR, Vineflower, FernFlower or Procyon to get Java sources. Krakatau works on JVM <code>.class</code>/<code>.jar</code> files; for Android code convert DEX to a jar first (<code>d2j-dex2jar</code>), or edit smali instead (apktool, smali/baksmali). v2 (<code>krak2</code>/<code>krakatau2</code>) is the maintained version; v1 (<code>krakatau-disassemble</code>/<code>krakatau-assemble</code>) is kept for compatibility.</p>
+<p>Example (roundtrip a jar through text assembly):</p>
+<pre><code>jddlab krak2 dis --out app-asm.zip app.jar
+# edit the .j files inside app-asm.zip
+jddlab krak2 asm --out app-patched.jar app-asm.zip
+</code></pre>
 <details>
    <summary>krakatau-disassemble command-line arguments</summary>
 <pre><code>shell&gt; jddlab krakatau-disassemble --help
@@ -2409,7 +2502,7 @@ See baksmali help &lt;command&gt; for more information about a specific command
 </details>
 <h3 id="androguard---the-swiss-army-knife-which-combines-lot-of-tools">androguard - the swiss army knife which combines lot of tools</h3>
 <p>URL: <a href="https://github.com/androguard/androguard">https://github.com/androguard/androguard</a></p>
-<p>Androguard is a tool to play with Android files (DEX, ODEX, APK, Android’s binary xml, Android resources).</p>
+<p>Androguard is a tool to play with Android files (DEX, ODEX, APK, Android's binary xml, Android resources).</p>
 <ul>
 <li>Decompile APKs and create CFG</li>
 <li>Disassembler for DEX</li>
@@ -2511,7 +2604,7 @@ adb shell monkey -p com.app.name 1
 Events injected: 1
 
 # Using objection to disable SSL pinning
-objection -g &quot;Gadget&quot; explore -s &quot;android sslpinning disable&quot;
+objection -n &quot;Gadget&quot; explore -s &quot;android sslpinning disable&quot;
 </code></pre>
 </details>
 <details>
@@ -2520,8 +2613,8 @@ objection -g &quot;Gadget&quot; explore -s &quot;android sslpinning disable&quot
 # Connect to a device via TCP/IP (you should pair device before using wireless debug)
 adb connect 192.168.1.45:38191
 
-# Add Frida gadget to APK (we are using old version of Frida gadget which can be runned on Android 10)
-objection@16 patchapk --source app.apk --gadget-version 16.1.3
+# Add Frida gadget to APK (objection@16 injects the Frida 16.1.3 gadget baked into the image, which runs on Android 10)
+objection@16 patchapk --source app.apk
 Patcher will be using Gadget version: 16.1.3
 Signed the new APK
 
@@ -2705,6 +2798,104 @@ jddlab apk-patcher ./test.
 2025-01-28 21:05:56.323 | SUCCESS  | [+] All done! The output APK can be found under /work/test.patched
 </code></pre>
 </details>
+<h3 id="cfr---java-decompiler">CFR - Java decompiler</h3>
+<p>URL: <a href="https://www.benf.org/other/cfr/">https://www.benf.org/other/cfr/</a> (Maven Central <code>org.benf:cfr</code>)</p>
+<p>CFR decompiles <code>.jar</code>/<code>.class</code> files and handles modern Java constructs (lambdas,
+string switches, records) well. Try it when another decompiler fails on a method.
+For Android code, convert DEX to a jar first.</p>
+<pre><code>jddlab d2j-dex2jar -o app.jar app.apk
+jddlab cfr app.jar --outputdir app-cfr
+</code></pre>
+<p>More: <a href="tools/cfr.html">tools/cfr.md</a>.</p>
+<h3 id="apkid---identify-packers-protectors-obfuscators-and-compilers">APKiD - identify packers, protectors, obfuscators and compilers</h3>
+<p>URL: <a href="https://github.com/rednaga/APKiD">https://github.com/rednaga/APKiD</a></p>
+<p>Tells how an APK/DEX was built and protected (dx/d8/r8, DexGuard, DexProtector,
+Jiagu and other packers, anti-debug/anti-VM checks). Run it first on an unknown
+APK: a packer means the code you decompile is only a loader stub.</p>
+<pre><code>jddlab apkid app.apk
+jddlab apkid -j app.apk      # JSON
+</code></pre>
+<p>More: <a href="tools/apkid.html">tools/apkid.md</a>.</p>
+<h3 id="hermes-dec---react-native-hermes-bytecode-disassembler-and-decompiler">hermes-dec - React Native Hermes bytecode disassembler and decompiler</h3>
+<p>URL: <a href="https://github.com/P1sec/hermes-dec">https://github.com/P1sec/hermes-dec</a></p>
+<p>React Native apps keep their logic in <code>assets/index.android.bundle</code>, which is
+either minified JavaScript or Hermes bytecode (HBC) that Java decompilers can't
+read. hermes-dec disassembles and decompiles HBC (versions up to 99) to
+pseudo-JavaScript, which is enough to recover endpoints, keys and app logic.</p>
+<pre><code>unzip app.apk assets/index.android.bundle
+jddlab hbc-file-parser assets/index.android.bundle          # header, bytecode version
+jddlab hbc-disassembler assets/index.android.bundle app.hasm
+jddlab hbc-decompiler assets/index.android.bundle app.js
+</code></pre>
+<p>More: <a href="tools/hbc-decompiler.html">tools/hbc-decompiler.md</a>.</p>
+<h3 id="blutter---flutter-dart-aot-reverse-engineering">blutter - Flutter (Dart AOT) reverse engineering</h3>
+<p>URL: <a href="https://github.com/worawit/blutter">https://github.com/worawit/blutter</a></p>
+<p>Flutter apps compile Dart to native code in <code>lib/arm64-v8a/libapp.so</code>. blutter
+recovers Dart class/function names, the object pool (strings, constants), an
+annotated disassembly and a Frida script template (<code>blutter_frida.js</code>).</p>
+<pre><code>unzip app.apk 'lib/arm64-v8a/*' -d app
+jddlab blutter app/lib/arm64-v8a blutter-out
+</code></pre>
+<p>The first run for a given Dart version downloads that Dart SDK and compiles a
+matching analyzer (several minutes, needs network). The result is cached in the
+<code>jddlab-cache</code> docker volume (mounted automatically by the launcher and the MCP
+server), so later runs are fast. Android arm64 only.</p>
+<p>More: <a href="tools/blutter.html">tools/blutter.md</a>.</p>
+<h3 id="pyxamstore-and-ilspycmd---xamarin-and-net-maui-apps">pyxamstore and ilspycmd - Xamarin and .NET MAUI apps</h3>
+<p>URLs: <a href="https://github.com/AbhiTheModder/pyxamstore">https://github.com/AbhiTheModder/pyxamstore</a>, <a href="https://github.com/icsharpcode/ILSpy">https://github.com/icsharpcode/ILSpy</a></p>
+<p>The C# code of Xamarin / .NET MAUI apps lives in .NET assemblies packed (often
+LZ4-compressed) into an assembly store: <code>assemblies/assemblies.blob</code> (Xamarin) or
+<code>lib/&lt;abi&gt;/libassemblies.&lt;abi&gt;.blob.so</code> (.NET 8+/MAUI). pyxamstore extracts the
+DLLs, ilspycmd decompiles them to C#.</p>
+<pre><code>unzip app.apk 'lib/arm64-v8a/*' 'assemblies/*' -d app
+jddlab pyxamstore app/lib/arm64-v8a/libassemblies.arm64-v8a.blob.so -u -o dlls
+jddlab ilspycmd -l c dlls/MyApp.dll                  # list classes
+jddlab ilspycmd -p -o myapp-src -r dlls dlls/MyApp.dll
+</code></pre>
+<p>More: <a href="tools/pyxamstore.html">tools/pyxamstore.md</a>, <a href="tools/ilspycmd.html">tools/ilspycmd.md</a>.</p>
+<h3 id="mobsfscan---static-analysis-of-mobile-app-source-code">mobsfscan - static analysis of mobile app source code</h3>
+<p>URL: <a href="https://github.com/MobSF/mobsfscan">https://github.com/MobSF/mobsfscan</a></p>
+<p>Semgrep-based rules from MobSF for insecure code: weak crypto, WebView and
+SSL/TLS misuse, hardcoded secrets, insecure logging and storage. Run it on
+decompiled sources:</p>
+<pre><code>jddlab jadx -d app-src app.apk
+jddlab mobsfscan --json -o mobsfscan.json app-src/sources
+</code></pre>
+<p>More: <a href="tools/mobsfscan.html">tools/mobsfscan.md</a>.</p>
+<h3 id="quark-engine---android-malware-behaviour-analysis">Quark-Engine - Android malware behaviour analysis</h3>
+<p>URL: <a href="https://github.com/quark-engine/quark-engine">https://github.com/quark-engine/quark-engine</a></p>
+<p>Scores an APK against behaviour rules (SMS, contacts, dynamic code loading, ...)
+and shows which methods implement them. The rule set is included in the image.</p>
+<pre><code>jddlab quark -a app.apk -s
+jddlab quark -a app.apk -d -o quark-report.json
+</code></pre>
+<p>More: <a href="tools/quark.html">tools/quark.md</a>.</p>
+<h3 id="frida-tools---frida-cli">frida-tools - Frida CLI</h3>
+<p>URL: <a href="https://github.com/frida/frida-tools">https://github.com/frida/frida-tools</a></p>
+<p><code>frida</code>, <code>frida-ps</code>, <code>frida-trace</code>, <code>frida-kill</code>, <code>frida-compile</code> and the other
+frida-tools commands. Their version matches the Frida gadget baked into the image
+(used by <code>apk-patcher</code> and <code>android-unpinner</code>); <code>frida@16</code>, <code>frida-ps@16</code>, ...
+are the 16.x versions for old Android releases. See
+<a href="#how-to-use-adb-and-frida-with-jddlab">How to use ADB and Frida with jddlab</a> for
+connecting to a device and the gadget workflow.</p>
+<pre><code>jddlab frida-ps -U -ai
+jddlab frida -U -n Gadget -l hook.js -q -t 30
+</code></pre>
+<p>More: <a href="tools/frida.html">tools/frida.md</a>.</p>
+<h2 id="smoke-tests">Smoke tests</h2>
+<p>Smoke tests check every image build before it is released. Each bundled tool runs
+on a small real input (the sample APK in <code>example/</code>, a Hermes bundle, a .NET
+assembly), and the test checks the output: decompiled classes, recovered strings, a
+re-signed APK, a Frida script injected into a process. If an upstream update breaks
+a tool, the release is not published. The release build tests
+the amd64 image and the MCP server end-to-end against it; both images (arm64
+under QEMU) can be tested on demand with the &quot;Smoke tests&quot; GitHub Actions
+workflow. You can run the tests yourself:</p>
+<pre><code>docker run --rm stanislavpovolotsky/jddlab bash /usr/local/jddlab/tests/smoke.sh          # all tests
+docker run --rm stanislavpovolotsky/jddlab bash /usr/local/jddlab/tests/smoke.sh --list   # list them
+docker run --rm stanislavpovolotsky/jddlab bash /usr/local/jddlab/tests/smoke.sh jadx cfr # selected
+python scripts/workflow/mcp-smoke-test.py --image stanislavpovolotsky/jddlab:latest      # MCP
+</code></pre>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <details>
    <summary><b>Docker errors: <code>Cannot connect to the Docker daemon</code> / <code>docker: command not found</code></b></summary>
@@ -2731,7 +2922,7 @@ image that supports UID mapping.</li>
 </details>
 <details>
    <summary><b>A tool cannot see my file / <code>No such file or directory</code></b></summary>
-<p>Only the <strong>current directory and its subfolders</strong> are mounted into the container
+<p>Only the current directory and its subfolders are mounted into the container
 as <code>/work</code>. Files outside it are not visible. <code>cd</code> into the folder that contains
 your APK before running jddlab, and reference files by relative path
 (<code>./app.apk</code>) or as <code>/work/app.apk</code>.</p>
@@ -2739,11 +2930,15 @@ your APK before running jddlab, and reference files by relative path
 <details>
    <summary><b>ADB cannot find my device</b></summary>
 <ul>
-<li>Use wireless debugging as described in <a href="#how-to-use-adb-with-jddlab">How to use ADB with jddlab</a>.</li>
-<li>To forward the host ADB server into the container, run <code>adb start-server</code> on
-the host and uncomment the <code>--network=host</code> line in the <code>jddlab</code> launcher.</li>
-<li>See the <a href="#how-to-use-adb-with-jddlab">Security warning</a> about the preinstalled
-ADB keys and mounting your own <code>~/.android</code>.</li>
+<li>Run <code>adb start-server</code> on the host and check <code>adb devices</code> there: jddlab then
+uses the host ADB server automatically, see
+<a href="#how-to-use-adb-and-frida-with-jddlab">How to use ADB and Frida with jddlab</a>.</li>
+<li>From WSL2 with the ADB server on Windows, set
+<code>JDDLAB_ADB_SERVER=host.docker.internal:5037</code>.</li>
+<li>Without a host server, pair and connect from an interactive <code>jddlab</code> shell; the
+connection is lost when the shell exits.</li>
+<li>See the <a href="#how-to-use-adb-and-frida-with-jddlab">Security warning</a> about the
+preinstalled ADB keys and mounting your own <code>~/.android</code>.</li>
 </ul>
 </details>
 <details>
@@ -2754,15 +2949,14 @@ Docker has enough memory allotted (Docker Desktop → Settings → Resources).</
 <details>
    <summary><b><code>jddlab update</code> says the image is up to date but a tool is outdated</b></summary>
 <p><code>jddlab update</code> pulls <code>stanislavpovolotsky/jddlab:latest</code>. Run <code>jddlab versions</code>
-to see the exact bundled tool versions. If a tool is behind upstream, open an
-issue - the image is rebuilt to track upstream releases.</p>
+to see the exact bundled tool versions. The image is rebuilt twice a month when
+upstream releases change; if a tool is still behind, open an issue.</p>
 </details>
 <h2 id="license">License</h2>
 <p>The original jddlab code in this repository (launcher scripts, <code>scripts/</code>,
 <code>mcp/</code>, and <code>skills/</code>) is released under the <a href="LICENSE.html">MIT License</a>.</p>
-<p>jddlab is a <strong>pack</strong>: it bundles many independent third-party reverse-engineering
-tools into a Docker image, and <strong>each bundled tool keeps its own license</strong> and
-belongs to its respective authors. The MIT license above does not supersede
+<p>jddlab bundles many independent third-party reverse-engineering tools into a Docker
+image. Each bundled tool keeps its own license and belongs to its authors. The MIT license above does not supersede
 those. The version and upstream URL of every bundled tool are recorded in the
 image at <code>/usr/local/jddlab/software-list.txt</code> (<code>jddlab versions</code>) and in each
 <a href="https://github.com/Stanislav-Povolotsky/jddlab/releases">release</a>. Review each

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Java &amp;amp; Android Deobfuscation - jddlab Edition</title>
+<title>Java and Android deobfuscation with jddlab</title>
 <link rel="stylesheet" href="../../hljs/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="../../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
 <style>
@@ -1274,29 +1274,25 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 
-<h1 id="java--android-deobfuscation---jddlab-edition">Java &amp; Android Deobfuscation - jddlab Edition</h1>
-<p><strong>Version</strong>: 1.0 | <strong>Last Updated</strong>: 2026-08 | <strong>Difficulty</strong>: Advanced</p>
-<blockquote>
+<h1 id="java-and-android-deobfuscation-with-jddlab">Java and Android deobfuscation with jddlab</h1>
+<p>Version 1.0, 2026-08.</p>
 <p>How to identify and reverse common Java/Android obfuscation (ProGuard/R8, string
-encryption, control-flow tricks, commercial protectors) using <strong>jddlab</strong> tools.
-Every tool runs inside the <code>stanislavpovolotsky/jddlab</code> Docker container via the
-<strong>jddlab MCP server</strong> - no local installation required beyond Docker.</p>
-</blockquote>
-<hr />
-<h2 id="table-of-contents">Table of Contents</h2>
+encryption, control-flow tricks, commercial protectors) with jddlab tools. Every tool
+runs inside the <code>stanislavpovolotsky/jddlab</code> Docker container through the jddlab MCP
+server, so Docker is the only local requirement.</p>
+<h2 id="table-of-contents">Table of contents</h2>
 <ol>
-<li><a href="#1-toolchain-overview">Toolchain Overview</a></li>
-<li><a href="#2-step-0-get-bytecode-into-a-jar">Step 0: Get Bytecode into a JAR</a></li>
-<li><a href="#3-step-1-detect-the-obfuscator">Step 1: Detect the Obfuscator</a></li>
-<li><a href="#4-step-2-transform-with-java-deobfuscator">Step 2: Transform with java-deobfuscator</a></li>
-<li><a href="#5-step-3-string-decryption">Step 3: String Decryption</a></li>
-<li><a href="#6-step-4-simplify-android-vm-deobfuscator">Step 4: Simplify (Android VM Deobfuscator)</a></li>
-<li><a href="#7-step-5-read-the-result">Step 5: Read the Result</a></li>
-<li><a href="#8-recompiling-back-to-dexapk">Recompiling Back to DEX/APK</a></li>
+<li><a href="#1-toolchain-overview">Toolchain overview</a></li>
+<li><a href="#2-step-0-get-bytecode-into-a-jar">Step 0: get bytecode into a JAR</a></li>
+<li><a href="#3-step-1-detect-the-obfuscator">Step 1: detect the obfuscator</a></li>
+<li><a href="#4-step-2-transform-with-java-deobfuscator">Step 2: transform with java-deobfuscator</a></li>
+<li><a href="#5-step-3-string-decryption">Step 3: string decryption</a></li>
+<li><a href="#6-step-4-simplify-android-vm-deobfuscator">Step 4: Simplify (Android VM deobfuscator)</a></li>
+<li><a href="#7-step-5-read-the-result">Step 5: read the result</a></li>
+<li><a href="#8-recompiling-back-to-dexapk">Recompiling back to DEX/APK</a></li>
 <li><a href="#9-troubleshooting">Troubleshooting</a></li>
 </ol>
-<hr />
-<h2 id="1-toolchain-overview">1. Toolchain Overview</h2>
+<h2 id="1-toolchain-overview">1. Toolchain overview</h2>
 <table>
 <thead>
 <tr>
@@ -1343,12 +1339,11 @@ Every tool runs inside the <code>stanislavpovolotsky/jddlab</code> Docker contai
 </tr>
 </tbody>
 </table>
-<p><strong>Rule of thumb:</strong> <code>simplify</code> targets <strong>Dalvik/Android</strong> (DEX) and virtualized/reflection
-obfuscation. <code>java-deobfuscator</code> targets <strong>JVM bytecode</strong> (JAR) and commercial Java
-protectors (Zelix, Allatori, Stringer, DashO, Skidfuscator, etc.). Convert with
-<code>dex2jar</code> when you need to move between the two worlds.</p>
-<hr />
-<h2 id="2-step-0-get-bytecode-into-a-jar">2. Step 0: Get Bytecode into a JAR</h2>
+<p><code>simplify</code> works on Dalvik bytecode (DEX) and handles virtualized and reflection-based
+obfuscation. <code>java-deobfuscator</code> works on JVM bytecode (JAR) and knows commercial Java
+protectors (Zelix, Allatori, Stringer, DashO, Skidfuscator and others). Use <code>dex2jar</code>
+to convert between the two.</p>
+<h2 id="2-step-0-get-bytecode-into-a-jar">2. Step 0: get bytecode into a JAR</h2>
 <p><code>java-deobfuscator</code> works on JVM <code>.jar</code>/<code>.class</code>. Convert an APK/DEX first:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_dex2jar&quot;,
@@ -1357,21 +1352,20 @@ protectors (Zelix, Allatori, Stringer, DashO, Skidfuscator, etc.). Convert with
   &quot;output_paths&quot;: [&quot;target.jar&quot;]
 }
 </code></pre>
-<p>Keep the original DEX too - some Android-specific obfuscation (see §6) is easier to
-handle with <code>simplify</code> directly on the DEX.</p>
-<hr />
-<h2 id="3-step-1-detect-the-obfuscator">3. Step 1: Detect the Obfuscator</h2>
-<p>Before transforming, identify which transformers apply. Guessing wastes time and can
-corrupt the jar.</p>
+<p>Keep the original DEX as well: some Android-specific obfuscation (see §6) is easier
+to handle with <code>simplify</code> directly on the DEX.</p>
+<h2 id="3-step-1-detect-the-obfuscator">3. Step 1: detect the obfuscator</h2>
+<p>Find out which transformers apply before transforming anything. Enabling the wrong
+ones wastes time and can corrupt the jar.</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_java_deobfuscator_detect&quot;,
   &quot;args&quot;: [&quot;target.jar&quot;],
   &quot;input_paths&quot;: [&quot;target.jar&quot;]
 }
 </code></pre>
-<p>The output lists detected obfuscators / applicable transformers. Note them - you will
-enable exactly those in the config in the next step. Also look at <code>jadx</code> output for
-tell-tale signs:</p>
+<p>The output lists the detected obfuscators and the transformers that apply; enable
+exactly those in the config in the next step. The <code>jadx</code> output also shows typical
+signs:</p>
 <ul>
 <li>Meaningless single-letter/<code>Il1I</code> class &amp; method names → name obfuscation (usually
 cosmetic; decompilers handle it).</li>
@@ -1379,8 +1373,7 @@ cosmetic; decompilers handle it).</li>
 <li>Huge <code>switch</code> on an int with <code>goto</code>-like flow → control-flow flattening.</li>
 <li>Classes loaded via <code>Class.forName</code> / reflection only → reflection obfuscation.</li>
 </ul>
-<hr />
-<h2 id="4-step-2-transform-with-java-deobfuscator">4. Step 2: Transform with java-deobfuscator</h2>
+<h2 id="4-step-2-transform-with-java-deobfuscator">4. Step 2: transform with java-deobfuscator</h2>
 <p><code>java-deobfuscator</code> is config-driven (YAML). A minimal config:</p>
 <pre><code class="language-yaml"># deobf-config.yml
 input: /work/target.jar
@@ -1405,18 +1398,17 @@ transformers:
 </code></pre>
 <blockquote>
 <p>The flag is <code>--config</code> (two dashes). Many transformers also need the Android
-framework classes on the classpath - add a <code>path:</code> section to the YAML pointing at
+framework classes on the classpath: add a <code>path:</code> section to the YAML pointing at
 <code>/usr/local/android-sdk-linux/platforms/android-*/android.jar</code> if a transformer
 complains about missing classes.</p>
 </blockquote>
-<p>Iterate: enable one transformer family at a time, re-decompile, and check the diff.
-Enabling everything at once often fails on the first incompatible class.</p>
-<hr />
-<h2 id="5-step-3-string-decryption">5. Step 3: String Decryption</h2>
-<p>Two independent approaches - try both:</p>
-<p><strong>A) java-deobfuscator string transformer</strong> (JVM): add the matching
+<p>Enable one transformer family at a time, re-decompile and check the diff. With
+everything enabled at once the run often fails on the first incompatible class.</p>
+<h2 id="5-step-3-string-decryption">5. Step 3: string decryption</h2>
+<p>There are two independent approaches; try both.</p>
+<p>A) java-deobfuscator string transformer (JVM): add the matching
 <code>*.StringEncryptionTransformer</code> for the detected protector to the config above.</p>
-<p><strong>B) dex2jar string decryption</strong> (works from the DEX side, no config needed):</p>
+<p>B) dex2jar string decryption, which works on the DEX side and needs no config:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_d2j_decrypt_string&quot;,
   &quot;args&quot;: [&quot;target.apk&quot;, &quot;-o&quot;, &quot;target-decrypted.jar&quot;],
@@ -1427,11 +1419,10 @@ Enabling everything at once often fails on the first incompatible class.</p>
 <p><code>d2j-decrypt-string</code> can invoke a named decrypt method; consult
 <code>jddlab d2j-decrypt-string --help</code> (or <code>tools/d2j-decrypt-string.md</code>) for the
 <code>--decrypt-method</code>/<code>--decrypt-classes</code> selectors when auto-detection misses.</p>
-<hr />
-<h2 id="6-step-4-simplify-android-vm-deobfuscator">6. Step 4: Simplify (Android VM Deobfuscator)</h2>
+<h2 id="6-step-4-simplify-android-vm-deobfuscator">6. Step 4: Simplify (Android VM deobfuscator)</h2>
 <p><code>simplify</code> executes the app's Dalvik code in a virtual machine and constant-folds the
-result - excellent against reflection, string decryption routines, and dead-code
-padding on <strong>Android</strong>. It works on a smali directory or a DEX.</p>
+result. It works well against reflection, string decryption routines and dead-code
+padding, on a smali directory or a DEX.</p>
 <p>Disassemble to smali first (if needed):</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_baksmali&quot;,
@@ -1440,8 +1431,8 @@ padding on <strong>Android</strong>. It works on a smali directory or a DEX.</p>
   &quot;output_paths&quot;: [&quot;smali_in&quot;]
 }
 </code></pre>
-<p>Run simplify. Its input is a <strong>positional</strong> argument (<code>simplify &lt;input&gt; [options]</code>),
-with <code>-o</code> for the output - do NOT use <code>-i</code>:</p>
+<p>Run simplify. The input is a positional argument (<code>simplify &lt;input&gt; [options]</code>) and
+<code>-o</code> is the output; there is no <code>-i</code>:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_simplify&quot;,
   &quot;args&quot;: [&quot;smali_in&quot;, &quot;-o&quot;, &quot;out.dex&quot;],
@@ -1450,10 +1441,9 @@ with <code>-o</code> for the output - do NOT use <code>-i</code>:</p>
   &quot;timeout_seconds&quot;: 3600
 }
 </code></pre>
-<p>Simplify can be slow and memory-hungry on large apps - scope it to the obfuscated
+<p>On large apps simplify is slow and needs a lot of memory: limit it to the obfuscated
 classes (pass a smaller smali subtree) and raise <code>timeout_seconds</code> / <code>JAVA_OPTS</code>.</p>
-<hr />
-<h2 id="7-step-5-read-the-result">7. Step 5: Read the Result</h2>
+<h2 id="7-step-5-read-the-result">7. Step 5: read the result</h2>
 <p>Decompile the cleaned artifact and compare against the original:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_jadx&quot;,
@@ -1462,11 +1452,10 @@ classes (pass a smaller smali subtree) and raise <code>timeout_seconds</code> / 
   &quot;output_paths&quot;: [&quot;deobf_src&quot;]
 }
 </code></pre>
-<p>If jadx output is still messy on specific classes, cross-check with a second
-decompiler - <code>jddlab_vineflower</code> and <code>jddlab_procyon</code> often recover different
-constructs (loops, ternaries, switch-on-string).</p>
-<hr />
-<h2 id="8-recompiling-back-to-dexapk">8. Recompiling Back to DEX/APK</h2>
+<p>If jadx output is still messy for some classes, try a second decompiler:
+<code>jddlab_cfr</code>, <code>jddlab_vineflower</code> and <code>jddlab_procyon</code> often recover loops, ternaries
+and string switches differently.</p>
+<h2 id="8-recompiling-back-to-dexapk">8. Recompiling back to DEX/APK</h2>
 <p>If you deobfuscated a JAR and want to run it on-device again:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_jar2dex&quot;,
@@ -1475,10 +1464,9 @@ constructs (loops, ternaries, switch-on-string).</p>
   &quot;output_paths&quot;: [&quot;classes.dex&quot;]
 }
 </code></pre>
-<p>Then rebuild/repackage the APK and re-sign it - see the <strong>android-apk-patch</strong> skill
-(align → sign → verify). Note: deobfuscation changes bytecode, so the app must be
-re-signed and any self-integrity checks may need patching.</p>
-<hr />
+<p>Then repackage the APK and re-sign it (align, sign, verify; see the android-apk-patch
+skill). Deobfuscation changes the bytecode, so the app must be re-signed, and its own
+integrity checks may need patching.</p>
 <h2 id="9-troubleshooting">9. Troubleshooting</h2>
 <table>
 <thead>

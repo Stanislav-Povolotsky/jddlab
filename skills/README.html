@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>jddlab Skills</title>
+<title>jddlab skills</title>
 <link rel="stylesheet" href="../hljs/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
 <style>
@@ -1273,12 +1273,12 @@ body { margin: 0; background: #ffffff; }
 <body>
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
-<h1 id="jddlab-skills">jddlab Skills</h1>
-<p>Skills are Markdown knowledge bases that teach AI assistants how to perform specific
-reverse-engineering tasks using jddlab tools.  Each skill lives in its own subdirectory
-and follows the <code>SKILL.md</code> format used by <a href="https://opencode.ai">opencode</a> and Claude
-Code - the installer can also register them with Codex and VS Code Copilot.</p>
-<h2 id="available-skills">Available Skills</h2>
+<h1 id="jddlab-skills">jddlab skills</h1>
+<p>Skills are Markdown instructions that tell AI assistants how to do specific
+reverse-engineering tasks with jddlab tools. Each skill lives in its own subdirectory
+and uses the <code>SKILL.md</code> format of <a href="https://opencode.ai">opencode</a> and Claude Code; the
+installer can also register them with Codex and VS Code Copilot.</p>
+<h2 id="available-skills">Available skills</h2>
 <table>
 <thead>
 <tr>
@@ -1310,18 +1310,17 @@ Code - the installer can also register them with Codex and VS Code Copilot.</p>
 </tbody>
 </table>
 <h2 id="prerequisites">Prerequisites</h2>
-<p>Skills use <strong>jddlab</strong> tools - every tool runs inside the jddlab Docker container so
-nothing needs to be installed locally beyond Docker.  Make sure the jddlab MCP server
-is configured first:</p>
+<p>Every tool the skills use runs inside the jddlab Docker container, so Docker is the
+only local requirement. Configure the jddlab MCP server first:</p>
 <pre><code class="language-bash">python mcp/install.py add vscode        # VS Code / GitHub Copilot
 python mcp/install.py add claude-cli    # Claude Code / Claude CLI
 python mcp/install.py add claude-desktop
 python mcp/install.py add codex
 </code></pre>
-<h2 id="installing-skills">Installing Skills</h2>
+<h2 id="installing-skills">Installing skills</h2>
 <h3 id="using-the-jddlab-launcher-recommended">Using the jddlab launcher (recommended)</h3>
-<p>The <code>jddlab</code> / <code>jddlab.cmd</code> launchers include a <code>skills</code> subcommand that works from a
-repository checkout without any additional setup.</p>
+<p>The <code>jddlab</code> / <code>jddlab.cmd</code> launchers have a <code>skills</code> subcommand. It needs no
+repository checkout: the skills are copied out of the Docker image.</p>
 <pre><code class="language-bash"># Install into the current project (default scope)
 jddlab skills add claude-cli
 jddlab skills add vscode
@@ -1360,16 +1359,16 @@ python skills/install.py remove all
 skills\install-skills-claude-cli.cmd
 skills\install-skills-vscode.cmd
 </code></pre>
-<h2 id="adding-a-new-skill">Adding a New Skill</h2>
+<h2 id="adding-a-new-skill">Adding a new skill</h2>
 <ol>
 <li>Create a directory: <code>skills/&lt;skill-name&gt;/</code></li>
 <li>Write <code>skills/&lt;skill-name&gt;/SKILL.md</code> following the existing template.</li>
 <li>Run <code>python skills/install.py add all</code> to push it to your AI clients.</li>
 </ol>
 <h2 id="file-format">File format</h2>
-<p>Each <code>SKILL.md</code> is a Markdown document that <strong>must start with a YAML front-matter
-block</strong> giving the skill's <code>name</code> (matching the directory) and a <code>description</code> of when
-to use it - Claude Code and opencode use these to discover and trigger the skill:</p>
+<p>Each <code>SKILL.md</code> must start with a YAML front-matter block with the skill's <code>name</code>
+(matching the directory) and a <code>description</code> of when to use it. Claude Code and
+opencode use these fields to find and trigger the skill:</p>
 <pre><code class="language-markdown">---
 name: my-skill
 description: One or two sentences on what this does and when to use it.
@@ -1378,8 +1377,7 @@ description: One or two sentences on what this does and when to use it.
 # My Skill
 ...
 </code></pre>
-<p>Code blocks use <code>json</code> fences for MCP tool call examples so AI clients can copy them
-directly.</p>
+<p>MCP tool call examples go in <code>json</code> code blocks.</p>
 
 </article>
 <script src="../hljs/highlight.min.js"></script>

@@ -1274,18 +1274,18 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 <h1 id="apkeditor--apkeditor">APKEditor / apkeditor</h1>
-<p>Powerful Android APK editor. The image exposes both <code>APKEditor</code> and <code>apkeditor</code> aliases.</p>
+<p>Android APK editor. The image has both <code>APKEditor</code> and <code>apkeditor</code> commands.</p>
 <h2 id="main-modes">Main modes</h2>
-<p>Run <code>APKEditor -h</code> or <code>apkeditor -h</code> for the complete version-specific help. Common workflows include:</p>
 <ul>
-<li>Decode/decompile APK-like inputs.</li>
-<li>Build/rebuild decoded projects.</li>
-<li>Merge or split APK sets.</li>
-<li>Refactor package metadata and resources.</li>
-<li>Protect, inspect, or manipulate APK contents.</li>
+<li><code>d</code> / <code>decode</code>: decode binary resources (and DEX) to readable json/xml/smali.</li>
+<li><code>b</code> / <code>build</code>: build an APK from a decoded directory.</li>
+<li><code>m</code> / <code>merge</code>: merge split APKs (a directory, or XAPK/APKM/APKS) into one APK.</li>
+<li><code>x</code> / <code>refactor</code>: rename obfuscated resource names.</li>
+<li><code>p</code> / <code>protect</code>: obfuscate the APK's resource files.</li>
+<li><code>info</code>: print information about an APK.</li>
 </ul>
-<h2 id="common-argument-patterns">Common argument patterns</h2>
-<p>APKEditor accepts subcommands/modes followed by mode-specific options and input/output paths. Use the exact arguments from <code>APKEditor -h</code> in the <code>args</code> array.</p>
+<p>The command comes first, followed by its options; <code>-i</code> is the input and <code>-o</code> the
+output. Run <code>APKEditor -h</code> or <code>APKEditor &lt;command&gt; -h</code> for the full help.</p>
 <h2 id="examples">Examples</h2>
 <pre><code class="language-json">{&quot;args&quot;:[&quot;-h&quot;]}
 </code></pre>

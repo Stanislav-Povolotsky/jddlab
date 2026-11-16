@@ -1279,14 +1279,27 @@ body { margin: 0; background: #ffffff; }
 <p>You are using the jddlab MCP server. Prefer the most specific MCP tool for the command, and pass command-line arguments in the <code>args</code> array exactly as the native tool expects them.</p>
 <p>Workflow:</p>
 <ol>
-<li>Identify the target type: APK/XAPK/APKS, DEX, JAR, class file, smali tree, native library, or mixed project.</li>
+<li>Identify the target type: APK/XAPK/APKS, DEX, JAR, class file, smali tree, native library, or mixed project.
+For an unknown APK run <code>jddlab_apkid</code> first (packers, protectors, obfuscators, compiler), and check which
+framework holds the app logic:
+<ul>
+<li><code>assets/index.android.bundle</code> -&gt; React Native (Hermes bytecode or plain JS);</li>
+<li><code>lib/&lt;abi&gt;/libapp.so</code> + <code>libflutter.so</code> -&gt; Flutter;</li>
+<li><code>assemblies/assemblies.blob</code> or <code>lib/&lt;abi&gt;/libassemblies.&lt;abi&gt;.blob.so</code> -&gt; Xamarin / .NET MAUI.</li>
+</ul>
+</li>
 <li>Pick a read-only inspection command first when possible:
 <ul>
 <li>APK resources and smali: <code>jddlab_apktool</code> with <code>[&quot;d&quot;, &quot;-o&quot;, &quot;&lt;out&gt;&quot;, &quot;&lt;apk&gt;&quot;]</code>.</li>
-<li>Java source recovery from APK/DEX/JAR: <code>jddlab_jadx</code>, <code>jddlab_vineflower</code>, <code>jddlab_fernflower</code>, or <code>jddlab_procyon</code>.</li>
+<li>Java source recovery from APK/DEX/JAR: <code>jddlab_jadx</code>, then <code>jddlab_cfr</code>, <code>jddlab_vineflower</code>, <code>jddlab_fernflower</code>, or <code>jddlab_procyon</code> (on a jar) as second opinions.</li>
 <li>DEX/JAR conversion: <code>jddlab_dex2jar</code>, <code>jddlab_jar2dex</code>, <code>jddlab_dex2smali</code>, or <code>jddlab_smali</code>.</li>
 <li>Native code: <code>jddlab_ghidra_decompile</code>.</li>
+<li>React Native Hermes bytecode: <code>jddlab_hbc_file_parser</code>, <code>jddlab_hbc_decompiler</code>, <code>jddlab_hbc_disassembler</code>.</li>
+<li>Flutter: <code>jddlab_blutter</code> on the extracted <code>lib/arm64-v8a</code> directory (first run per Dart version takes minutes: use a large <code>timeout_seconds</code>).</li>
+<li>Xamarin / .NET MAUI: <code>jddlab_pyxamstore</code> to extract the DLLs, then <code>jddlab_ilspycmd</code> to decompile them to C#.</li>
+<li>Security review of decompiled sources: <code>jddlab_mobsfscan</code>; secrets: <code>jddlab_apkscan</code>; malware behaviour: <code>jddlab_quark</code>.</li>
 <li>Certificate pinning or Frida patching: <code>jddlab_android_unpinner</code>, <code>jddlab_apk_patcher</code>, or <code>jddlab_objection</code>.</li>
+<li>Dynamic analysis on a device: <code>jddlab_adb</code>, <code>jddlab_frida_ps</code>, <code>jddlab_frida</code> (non-interactive: <code>-q</code> with <code>-l</code>/<code>-e</code> and <code>-t &lt;seconds&gt;</code>), <code>jddlab_frida_trace</code> (always with <code>timeout_seconds</code>). These use the host ADB server when it is running, so device connections persist between calls; if <code>adb devices</code> shows nothing, ask the user to run <code>adb start-server</code> and connect the device on the host.</li>
 </ul>
 </li>
 <li>Supply <code>input_paths</code> and <code>output_paths</code> so the server can infer the Docker mount root and rewrite paths to <code>/work</code>.</li>

@@ -1276,13 +1276,13 @@ body { margin: 0; background: #ffffff; }
 <h1 id="security-policy">Security Policy</h1>
 <h2 id="scope">Scope</h2>
 <p>jddlab is a Docker image and launcher that bundles third-party reverse-engineering
-tools. This policy covers the <strong>original jddlab code</strong> in this repository (the
-<code>jddlab</code> / <code>jddlab.cmd</code> launchers, the <code>scripts/</code> build tooling, the <code>mcp/</code> server,
-and the <code>skills/</code>). Vulnerabilities in the <strong>bundled third-party tools</strong> (Apktool,
-jadx, Ghidra, dex2jar, etc.) should be reported to their respective upstream
-projects - see <code>/usr/local/jddlab/software-list.txt</code> (<code>jddlab versions</code>) for links.</p>
+tools. This policy covers the original jddlab code in this repository: the
+<code>jddlab</code> / <code>jddlab.cmd</code> launchers, the <code>scripts/</code> build tooling, the <code>mcp/</code> server
+and the <code>skills/</code>. Report vulnerabilities in the bundled third-party tools (Apktool,
+jadx, Ghidra, dex2jar and others) to their upstream projects; the links are in
+<code>/usr/local/jddlab/software-list.txt</code> (<code>jddlab versions</code>).</p>
 <h2 id="reporting-a-vulnerability">Reporting a vulnerability</h2>
-<p>Please report security issues <strong>privately</strong>, not via public GitHub issues:</p>
+<p>Report security issues privately, not in public GitHub issues:</p>
 <ul>
 <li>Preferred: open a <a href="https://github.com/Stanislav-Povolotsky/jddlab/security/advisories/new">GitHub private security advisory</a>.</li>
 <li>Alternatively, contact the maintainer through the profile on
@@ -1292,37 +1292,38 @@ projects - see <code>/usr/local/jddlab/software-list.txt</code> (<code>jddlab ve
 launcher commit you were using. You will normally get an initial response within a
 few days.</p>
 <h2 id="security-model--things-to-be-aware-of">Security model &amp; things to be aware of</h2>
-<p>jddlab is a toolkit for analyzing <strong>untrusted</strong> and potentially malicious binaries
-(APKs, DEX/JARs, native <code>.so</code> libraries). Keep the following in mind:</p>
+<p>jddlab is used to analyze untrusted and possibly malicious binaries (APKs,
+DEX/JARs, native <code>.so</code> libraries).</p>
 <ul>
-<li><strong>Run untrusted samples inside the container, not on the host.</strong> The container
-boundary is the primary isolation layer. Do not extract and execute malware on
-your host.</li>
-<li><strong><code>/work</code> is mounted read-write.</strong> The launcher maps your current directory into
-the container as <code>/work</code>. Anything the tools (or a malicious sample that achieves
-code execution) write goes to your real filesystem. Run jddlab from a dedicated
-working directory, not from your home or a source-tree root.</li>
-<li><strong>Preinstalled ADB keys.</strong> The image ships with a default ADB key pair so that
-wireless debugging works out of the box. This means <strong>anyone with network access
-to a device you have connected can authenticate to it.</strong> For anything beyond
-throwaway lab devices, mount your own keys:<pre><code>docker run -it --rm -v &quot;$HOME/.android:/root/.android&quot; -v &quot;$PWD:/work&quot; \
+<li>Run untrusted samples inside the container, not on the host. The container is
+the main isolation layer; do not extract and execute malware on your host.</li>
+<li><code>/work</code> is mounted read-write. The launcher maps your current directory into the
+container as <code>/work</code>, so whatever the tools write (or a malicious sample that
+gets code execution) lands on your real filesystem. Run jddlab from a dedicated
+working directory, not from your home directory or the root of a source tree.</li>
+<li>The image ships a default ADB key pair so that wireless debugging from inside the
+container works without setup. The key is the same in every copy of the public
+image, so anyone with network access to a device that authorized it can connect
+to that device. For anything beyond throwaway lab devices, use the host ADB
+server (the launcher and the MCP server pick it up automatically, and it uses your
+own key) or mount your own keys:<pre><code>docker run -it --rm -v &quot;$HOME/.android:/root/.android&quot; -v &quot;$PWD:/work&quot; \
     stanislavpovolotsky/jddlab:latest
 </code></pre>
 </li>
-<li><strong>Some tools reach the network.</strong> For example <code>apk-patcher</code> downloads Frida
-gadgets and <code>objection</code> may fetch releases. Review a tool's behavior before
-running it in an isolated/offline environment.</li>
-<li><strong>The MCP server executes Docker commands on your behalf.</strong> When you expose the
-MCP server to an AI client, that client can run any bundled jddlab command
-against paths you make available. Only connect it to clients you trust and scope
-the mounted directories.</li>
-<li><strong>Do not run the container with <code>--privileged</code> or the host Docker socket</strong> unless
-you fully understand the consequences; jddlab does not require them.</li>
+<li>Some tools use the network. The Frida gadgets are baked into the image, but
+<code>objection</code> checks for updates, <code>blutter</code> downloads Dart SDK sources the first
+time it sees a Dart version, and <code>apk-patcher --online</code> downloads gadgets. Check
+what a tool does before relying on it in an offline environment.</li>
+<li>The MCP server runs Docker commands for the AI client connected to it: the client
+can run any bundled jddlab command against the paths it is given. Connect only
+clients you trust and limit the directories they work with.</li>
+<li>jddlab does not need <code>--privileged</code> or the host Docker socket. Don't add them
+unless you know what they expose.</li>
 </ul>
 <h2 id="supported-versions">Supported versions</h2>
 <p>Only the latest published image (<code>stanislavpovolotsky/jddlab:latest</code>) and the
-latest launcher/MCP release receive fixes. Please update (<code>jddlab update</code>) before
-reporting an issue.</p>
+latest launcher/MCP release receive fixes. Run <code>jddlab update</code> before reporting
+an issue.</p>
 
 </article>
 <script src="hljs/highlight.min.js"></script>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Native Library &amp;amp; JNI Analysis - jddlab Edition</title>
+<title>Native library and JNI analysis with jddlab</title>
 <link rel="stylesheet" href="../../hljs/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="../../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
 <style>
@@ -1274,34 +1274,29 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 
-<h1 id="native-library--jni-analysis---jddlab-edition">Native Library &amp; JNI Analysis - jddlab Edition</h1>
-<p><strong>Version</strong>: 1.0 | <strong>Last Updated</strong>: 2026-08 | <strong>Difficulty</strong>: Advanced</p>
-<blockquote>
+<h1 id="native-library-and-jni-analysis-with-jddlab">Native library and JNI analysis with jddlab</h1>
+<p>Version 1.0, 2026-08.</p>
 <p>How to analyze the native (<code>.so</code>) side of an Android app: map JNI methods to their
-native implementations, decompile ARM/ARM64/x86 code with <strong>Ghidra (headless)</strong>, and
-tie it back to the Java layer. Every tool runs inside the
-<code>stanislavpovolotsky/jddlab</code> Docker container via the <strong>jddlab MCP server</strong>.</p>
-</blockquote>
-<hr />
-<h2 id="table-of-contents">Table of Contents</h2>
+native implementations, decompile ARM/ARM64/x86 code with headless Ghidra, and tie it
+back to the Java layer. Every tool runs inside the <code>stanislavpovolotsky/jddlab</code> Docker
+container through the jddlab MCP server.</p>
+<h2 id="table-of-contents">Table of contents</h2>
 <ol>
-<li><a href="#1-why-native-analysis">Why Native Analysis</a></li>
-<li><a href="#2-toolchain-overview">Toolchain Overview</a></li>
-<li><a href="#3-step-1-extract-native-libraries--jni-bindings">Step 1: Extract Native Libraries &amp; JNI Bindings</a></li>
-<li><a href="#4-step-2-map-java-native-methods-to-symbols">Step 2: Map Java <code>native</code> Methods to Symbols</a></li>
-<li><a href="#5-step-3-decompile-with-ghidra-headless">Step 3: Decompile with Ghidra (headless)</a></li>
-<li><a href="#6-step-4-custom-ghidra-scripts">Step 4: Custom Ghidra Scripts</a></li>
-<li><a href="#7-reading-the-output--common-targets">Reading the Output &amp; Common Targets</a></li>
+<li><a href="#1-why-native-analysis">Why native analysis</a></li>
+<li><a href="#2-toolchain-overview">Toolchain overview</a></li>
+<li><a href="#3-step-1-extract-native-libraries--jni-bindings">Step 1: extract native libraries &amp; JNI bindings</a></li>
+<li><a href="#4-step-2-map-java-native-methods-to-symbols">Step 2: map Java <code>native</code> methods to symbols</a></li>
+<li><a href="#5-step-3-decompile-with-ghidra-headless">Step 3: decompile with Ghidra (headless)</a></li>
+<li><a href="#6-step-4-custom-ghidra-scripts">Step 4: custom Ghidra scripts</a></li>
+<li><a href="#7-reading-the-output--common-targets">Reading the output &amp; common targets</a></li>
 <li><a href="#8-troubleshooting">Troubleshooting</a></li>
 </ol>
-<hr />
-<h2 id="1-why-native-analysis">1. Why Native Analysis</h2>
-<p>Apps increasingly move security-critical logic into native code: string/crypto key
-storage, TLS pinning, root/tamper detection, license checks, and DRM. When the Java
-layer is a thin shell that calls <code>native</code> methods, the real logic is in
-<code>lib/&lt;abi&gt;/*.so</code> and you must analyze the machine code.</p>
-<hr />
-<h2 id="2-toolchain-overview">2. Toolchain Overview</h2>
+<h2 id="1-why-native-analysis">1. Why native analysis</h2>
+<p>Apps often keep security logic in native code: string and crypto key storage, TLS
+pinning, root/tamper detection, license checks, DRM. When the Java layer only calls
+<code>native</code> methods, the logic is in <code>lib/&lt;abi&gt;/*.so</code> and you have to analyze the machine
+code.</p>
+<h2 id="2-toolchain-overview">2. Toolchain overview</h2>
 <table>
 <thead>
 <tr>
@@ -1340,13 +1335,12 @@ layer is a thin shell that calls <code>native</code> methods, the real logic is 
 </table>
 <p><code>.so</code> files are ELF shared objects. There is one per ABI: <code>arm64-v8a</code> (most modern
 phones), <code>armeabi-v7a</code> (older/32-bit), <code>x86_64</code>/<code>x86</code> (emulators). Analyze the ABI you
-run on - usually <code>arm64-v8a</code>.</p>
-<hr />
-<h2 id="3-step-1-extract-native-libraries--jni-bindings">3. Step 1: Extract Native Libraries &amp; JNI Bindings</h2>
-<p><code>extract_jni</code> parses an <strong>APK</strong> and lists its JNI method signatures, which helps
-correlate Java <code>native</code> methods with the native functions. Its CLI is
-<code>extract_jni &lt;apk&gt; [-o &lt;file.json&gt;]</code>: with <code>-o</code> it writes a <strong>JSON file</strong> (not a
-directory), and without <code>-o</code> it prints the JSON to stdout.</p>
+run on, usually <code>arm64-v8a</code>.</p>
+<h2 id="3-step-1-extract-native-libraries--jni-bindings">3. Step 1: extract native libraries &amp; JNI bindings</h2>
+<p><code>extract_jni</code> parses an APK and lists its JNI method signatures, which helps match
+Java <code>native</code> methods to native functions. Its CLI is
+<code>extract_jni &lt;apk&gt; [-o &lt;file.json&gt;]</code>: with <code>-o</code> it writes a JSON file (not a
+directory), without <code>-o</code> it prints the JSON to stdout.</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_extract_jni&quot;,
   &quot;args&quot;: [&quot;target.apk&quot;, &quot;-o&quot;, &quot;jni_methods.json&quot;],
@@ -1355,8 +1349,8 @@ directory), and without <code>-o</code> it prints the JSON to stdout.</p>
 }
 </code></pre>
 <blockquote>
-<p><code>extract_jni</code> does <strong>not</strong> extract the <code>.so</code> files themselves - it only reports the
-JNI method signatures. Get the <code>.so</code> binaries with <code>apktool</code>/<code>jadx</code> (below).</p>
+<p><code>extract_jni</code> only reports the JNI method signatures; it doesn't extract the <code>.so</code>
+files. Get the binaries with <code>apktool</code>/<code>jadx</code> (below).</p>
 </blockquote>
 <p>If you just need the raw <code>.so</code> files, decode the APK and read <code>lib/&lt;abi&gt;/</code>:</p>
 <pre><code class="language-json">{
@@ -1367,10 +1361,9 @@ JNI method signatures. Get the <code>.so</code> binaries with <code>apktool</cod
 }
 </code></pre>
 <p>(<code>-s</code> skips smali for speed; <code>lib/</code> is still extracted.)</p>
-<hr />
-<h2 id="4-step-2-map-java-native-methods-to-symbols">4. Step 2: Map Java <code>native</code> Methods to Symbols</h2>
-<p>Two JNI binding styles - know which you're facing:</p>
-<p><strong>a) Static binding (exported symbols).</strong> The native function is named
+<h2 id="4-step-2-map-java-native-methods-to-symbols">4. Step 2: map Java <code>native</code> methods to symbols</h2>
+<p>There are two JNI binding styles.</p>
+<p>a) Static binding (exported symbols). The native function is named
 <code>Java_&lt;pkg&gt;_&lt;Class&gt;_&lt;method&gt;</code>. Decompile Java with <code>jddlab_jadx</code>, find the <code>native</code>
 declarations, then match them to exports in the <code>.so</code> (e.g. <code>Java_com_example_Crypto_decrypt</code>).</p>
 <p>To list exported symbols, use an interactive jddlab shell (binutils is in the image):</p>
@@ -1380,17 +1373,16 @@ nm -D --defined-only dec/lib/arm64-v8a/libnative.so | grep Java_
 </code></pre>
 <p>Ghidra's symbol tree (§5) also lists the <code>Java_...</code> exports directly, so you can skip
 this step if you go straight to decompilation.</p>
-<p><strong>b) Dynamic binding (<code>RegisterNatives</code>).</strong> No <code>Java_...</code> exports - the app registers
-methods at runtime, usually from <code>JNI_OnLoad</code>. Start your Ghidra analysis at
+<p>b) Dynamic binding (<code>RegisterNatives</code>). There are no <code>Java_...</code> exports: the app
+registers methods at runtime, usually from <code>JNI_OnLoad</code>. Start your Ghidra analysis at
 <code>JNI_OnLoad</code>, find the <code>RegisterNatives</code> call, and read the <code>JNINativeMethod</code> table
 (method name, signature, function pointer) it passes. <code>extract_jni</code> (§3) often surfaces
 this mapping for you.</p>
-<hr />
-<h2 id="5-step-3-decompile-with-ghidra-headless">5. Step 3: Decompile with Ghidra (headless)</h2>
-<p><code>ghidra-decompile</code> runs Ghidra headless and emits decompiled C for a binary. Its CLI
-is <strong>positional</strong> - <code>ghidra-decompile &lt;input-binary&gt; [&lt;output.c&gt;]</code> - and the output is
-a <strong>single <code>.c</code> file</strong> (defaults to <code>&lt;input&gt;.c</code> if you omit it). Do NOT pass <code>-i</code>/<code>-o</code>
-flags or a directory:</p>
+<h2 id="5-step-3-decompile-with-ghidra-headless">5. Step 3: decompile with Ghidra (headless)</h2>
+<p><code>ghidra-decompile</code> runs Ghidra headless and writes decompiled C for a binary. Its CLI
+is positional, <code>ghidra-decompile &lt;input-binary&gt; [&lt;output.c&gt;]</code>, and the output is a
+single <code>.c</code> file (<code>&lt;input&gt;.c</code> if you omit it). Don't pass <code>-i</code>/<code>-o</code> flags or a
+directory:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_ghidra_decompile&quot;,
   &quot;args&quot;: [&quot;dec/lib/arm64-v8a/libnative.so&quot;, &quot;libnative.decompiled.c&quot;],
@@ -1399,15 +1391,14 @@ flags or a directory:</p>
   &quot;timeout_seconds&quot;: 3600
 }
 </code></pre>
-<p>Ghidra analysis is CPU/RAM heavy - give it a generous <code>timeout_seconds</code> and ensure
-Docker has enough memory. The decompiled C can be large; grep it for the JNI functions
+<p>Ghidra analysis needs a lot of CPU and RAM: give it a large <code>timeout_seconds</code> and
+enough Docker memory. The decompiled C can be large; grep it for the JNI functions
 (<code>Java_...</code>) instead of reading it whole. See <code>tools/ghidra-decompile.md</code> for details.</p>
 <p>For a full project (multiple binaries, scripting, cross-references), use the headless
 analyzer directly via <code>jddlab_ghidra</code> with a project dir and <code>-import</code>.</p>
-<hr />
-<h2 id="6-step-4-custom-ghidra-scripts">6. Step 4: Custom Ghidra Scripts</h2>
-<p>The image bundles a headless-friendly decompile script; you can run your own analysis
-scripts through the full <code>ghidra</code> analyzer. A typical headless invocation:</p>
+<h2 id="6-step-4-custom-ghidra-scripts">6. Step 4: custom Ghidra scripts</h2>
+<p>The image bundles a decompile script for headless use, and you can run your own
+analysis scripts through the full <code>ghidra</code> analyzer. A typical headless call:</p>
 <pre><code class="language-json">{
   &quot;tool&quot;: &quot;jddlab_ghidra&quot;,
   &quot;args&quot;: [
@@ -1424,25 +1415,23 @@ scripts through the full <code>ghidra</code> analyzer. A typical headless invoca
 <p>Use post-scripts to auto-locate <code>RegisterNatives</code>, dump strings/xrefs, or emit
 decompiled C for just the JNI-exported functions. See the bundled
 <code>ghidra/custom-scripts/CustomDecompileScript.java</code> for a starting template.</p>
-<hr />
-<h2 id="7-reading-the-output--common-targets">7. Reading the Output &amp; Common Targets</h2>
+<h2 id="7-reading-the-output--common-targets">7. Reading the output &amp; common targets</h2>
 <p>Once you have decompiled C, focus on what the Java layer delegated to native:</p>
 <ul>
-<li><strong>String/key hiding:</strong> look for byte arrays assembled at runtime, XOR/AES loops, and
+<li>String/key hiding: look for byte arrays assembled at runtime, XOR/AES loops, and
 <code>AStrcpy</code>/<code>memcpy</code> into a decrypt buffer. Cross-reference with strings that never
 appear in the Java layer.</li>
-<li><strong>Root/tamper detection:</strong> <code>stat</code>/<code>access</code> on <code>/system/bin/su</code>, <code>getprop</code>,
+<li>Root/tamper detection: <code>stat</code>/<code>access</code> on <code>/system/bin/su</code>, <code>getprop</code>,
 <code>/proc/self/maps</code> reads, package-name checks, signature (<code>GET_SIGNATURES</code>) verified
 natively.</li>
-<li><strong>TLS pinning in native:</strong> BoringSSL/OpenSSL calls (<code>SSL_CTX_set_custom_verify</code>,
+<li>TLS pinning in native code: BoringSSL/OpenSSL calls (<code>SSL_CTX_set_custom_verify</code>,
 <code>SSL_get_peer_certificate</code>), embedded certificate/pubkey hashes.</li>
-<li><strong>Anti-Frida/anti-debug:</strong> scans of <code>/proc/self/maps</code> for <code>frida</code>/<code>gum</code>, <code>ptrace</code>
+<li>Anti-Frida/anti-debug: scans of <code>/proc/self/maps</code> for <code>frida</code>/<code>gum</code>, <code>ptrace</code>
 self-attach, thread-name checks.</li>
 </ul>
-<p>To defeat a native check you typically patch the <code>.so</code> (flip a branch / return
-constant) and repackage the APK - align, sign, and reinstall (see the
-<strong>android-apk-patch</strong> and <strong>ssl-unpinning</strong> skills).</p>
-<hr />
+<p>To defeat a native check, patch the <code>.so</code> (flip a branch or return a constant), then
+repackage, align, sign and reinstall the APK (see the android-apk-patch and
+ssl-unpinning skills).</p>
 <h2 id="8-troubleshooting">8. Troubleshooting</h2>
 <table>
 <thead>

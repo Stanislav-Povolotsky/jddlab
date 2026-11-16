@@ -1274,11 +1274,22 @@ body { margin: 0; background: #ffffff; }
 <div class="page-nav"><a href="../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
 <h1 id="krakatau2">krakatau2</h1>
-<p>Krakatau v2 Java bytecode toolkit.</p>
+<p>Krakatau v2 is a Java bytecode assembler and disassembler, not a decompiler. It converts
+<code>.class</code>/<code>.jar</code> files to an editable text assembly (<code>.j</code>) and back, even for
+obfuscated code. For Android, convert DEX to a jar first (<code>d2j-dex2jar</code>).</p>
 <h2 id="main-modes">Main modes</h2>
+<ul>
+<li><code>dis [--out &lt;dir|.zip|.jar|.j&gt;] [-r|--roundtrip] &lt;input.class|.jar&gt;</code>: disassemble.
+<code>--roundtrip</code> produces assembly that reassembles to the identical binary.</li>
+<li><code>asm --out &lt;out.jar|.zip|.class&gt; &lt;input.j|.zip&gt;</code>: assemble.</li>
+</ul>
 <p>Run <code>krakatau2 help</code> for the complete subcommand list. The short alias <code>krak2</code> is also available.</p>
-<h2 id="example">Example</h2>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;help&quot;]}
+<h2 id="examples">Examples</h2>
+<p>Disassemble a jar into a zip of <code>.j</code> files:</p>
+<pre><code class="language-json">{&quot;args&quot;:[&quot;dis&quot;,&quot;--out&quot;,&quot;app-asm.zip&quot;,&quot;app.jar&quot;],&quot;input_paths&quot;:[&quot;app.jar&quot;],&quot;output_paths&quot;:[&quot;app-asm.zip&quot;]}
+</code></pre>
+<p>Assemble it back:</p>
+<pre><code class="language-json">{&quot;args&quot;:[&quot;asm&quot;,&quot;--out&quot;,&quot;app-patched.jar&quot;,&quot;app-asm.zip&quot;],&quot;input_paths&quot;:[&quot;app-asm.zip&quot;],&quot;output_paths&quot;:[&quot;app-patched.jar&quot;]}
 </code></pre>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>

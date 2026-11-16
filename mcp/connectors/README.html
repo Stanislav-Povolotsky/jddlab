@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MCP Connector Examples</title>
+<title>MCP connector examples</title>
 <link rel="stylesheet" href="../../hljs/github.min.css" media="(prefers-color-scheme: light)">
 <link rel="stylesheet" href="../../hljs/github-dark.min.css" media="(prefers-color-scheme: dark)">
 <style>
@@ -1273,8 +1273,8 @@ body { margin: 0; background: #ffffff; }
 <body>
 <div class="page-nav"><a href="../../index.html">jddlab</a> &middot; <a href="https://github.com/Stanislav-Povolotsky/jddlab">View on GitHub</a></div>
 <article class="markdown-body">
-<h1 id="mcp-connector-examples">MCP Connector Examples</h1>
-<p>This directory contains example connector snippets for the jddlab MCP server.</p>
+<h1 id="mcp-connector-examples">MCP connector examples</h1>
+<p>Connector snippets for the jddlab MCP server.</p>
 <p>Replace <code>&lt;REPO_PATH&gt;</code> with the absolute path to this repository. On Windows, either use doubled backslashes in JSON or use forward slashes:</p>
 <pre><code class="language-text">C:/Private/Dropbox/Projects/Tools/jddlab-Android-Decompile-Deobfuscate
 </code></pre>
@@ -1282,7 +1282,7 @@ body { margin: 0; background: #ffffff; }
 <pre><code class="language-text">python &lt;REPO_PATH&gt;/mcp/server.py
 </code></pre>
 <p>The server uses stdio transport and exposes one MCP tool per jddlab command, plus a generic <code>jddlab_run</code> tool.</p>
-<h2 id="recommended-installation">Recommended Installation</h2>
+<h2 id="recommended-installation">Recommended installation</h2>
 <p>If you installed the standalone <code>jddlab</code> launcher, use its MCP subcommand:</p>
 <pre><code class="language-shell">jddlab mcp add claude-cli
 jddlab mcp add claude-desktop
@@ -1290,7 +1290,7 @@ jddlab mcp add codex
 jddlab mcp add vscode
 jddlab mcp doctor
 </code></pre>
-<p>The launcher copies the MCP server out of the Docker image (from <code>/usr/local/jddlab/host</code>) into <code>~/.jddlab/mcp/current</code> using <code>docker cp</code>, then runs the installer from there. The examples below are useful for manual setup or troubleshooting.</p>
+<p>The launcher copies the MCP server out of the Docker image (from <code>/usr/local/jddlab/host</code>) into <code>~/.jddlab/mcp/current</code> using <code>docker cp</code>, then runs the installer from there. Use the snippets below for manual setup or troubleshooting.</p>
 <h2 id="prerequisites">Prerequisites</h2>
 <ul>
 <li>Python 3.10 or newer.</li>
@@ -1330,15 +1330,15 @@ args = [&quot;&lt;REPO_PATH&gt;/mcp/server.py&quot;]
 startup_timeout_sec = 120
 </code></pre>
 <p>Restart Codex after editing the config.</p>
-<h2 id="vs-code-and-other-mcp-clients">VS Code and Other MCP Clients</h2>
+<h2 id="vs-code-and-other-mcp-clients">VS Code and other MCP clients</h2>
 <p>Use <code>vscode-mcp.json</code> or <code>generic-mcp.json</code> as a starting point. Any MCP client that supports stdio servers can run this server with:</p>
 <pre><code class="language-json">{
   &quot;command&quot;: &quot;python&quot;,
   &quot;args&quot;: [&quot;&lt;REPO_PATH&gt;/mcp/server.py&quot;]
 }
 </code></pre>
-<h2 id="smoke-test">Smoke Test</h2>
-<p>You can test that the server process starts:</p>
+<h2 id="smoke-test">Smoke test</h2>
+<p>Check that the server process starts:</p>
 <pre><code class="language-shell">python &lt;REPO_PATH&gt;/mcp/server.py --list-commands
 </code></pre>
 <p>To test a real command through MCP, call a wrapper tool such as <code>jddlab_apktool</code> with:</p>

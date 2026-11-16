@@ -1279,7 +1279,16 @@ body { margin: 0; background: #ffffff; }
 <pre><code class="language-text">simplify &lt;input&gt; [options]
 </code></pre>
 <h2 id="common-arguments">Common arguments</h2>
-<p>Run <code>simplify -h</code> for the complete option list. Typical arguments include input APK/DEX/smali targets, output locations, class or method filters, execution limits, and verbosity flags.</p>
+<ul>
+<li><code>-o &lt;file&gt;</code>: output DEX.</li>
+<li><code>-it &lt;regex&gt;</code> / <code>-et &lt;regex&gt;</code>: only include / exclude classes and methods matching
+the regex (e.g. <code>-it 'com/example/Crypto'</code>).</li>
+<li><code>-ie</code>: ignore errors while executing methods (needed when the app uses Android
+framework classes simplify's VM can't load).</li>
+<li><code>--max-execution-time &lt;s&gt;</code>, <code>--max-call-depth &lt;n&gt;</code>, <code>--max-address-visits &lt;n&gt;</code>: execution limits.</li>
+<li><code>-q</code>, <code>-v &lt;level&gt;</code>: quiet / verbose.</li>
+</ul>
+<p>Run <code>simplify -h</code> for all options.</p>
 <h2 id="example">Example</h2>
 <pre><code class="language-json">{&quot;args&quot;:[&quot;classes.dex&quot;,&quot;-o&quot;,&quot;simplified.dex&quot;],&quot;input_paths&quot;:[&quot;classes.dex&quot;],&quot;output_paths&quot;:[&quot;simplified.dex&quot;]}
 </code></pre>

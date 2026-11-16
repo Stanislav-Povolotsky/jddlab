@@ -1277,15 +1277,15 @@ body { margin: 0; background: #ffffff; }
 <p>Align uncompressed data in an Android APK file to 4-byte boundaries.</p>
 <p>Part of the Android SDK Build Tools. Available in the jddlab Docker image at
 <code>/usr/local/android-sdk-linux/build-tools/current/zipalign</code>.</p>
-<p>Alignment is required for efficient memory mapping during app loading. It MUST be
-performed <strong>before</strong> signing with <code>apksigner</code> - running <code>zipalign</code> after signing
-invalidates v2/v3 signatures.</p>
+<p>Alignment lets Android memory-map uncompressed data when loading the app. Align
+before signing with <code>apksigner</code>: running <code>zipalign</code> after signing invalidates v2/v3
+signatures.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-text">zipalign [-f] [-p] [-v] [-z] &lt;align&gt; &lt;infile.apk&gt; &lt;outfile.apk&gt;
 zipalign -c [-p] [-v] &lt;align&gt; &lt;infile.apk&gt;
 </code></pre>
 <ul>
-<li><code>&lt;align&gt;</code>: Alignment in bytes (use <strong>4</strong> for standard APKs).</li>
+<li><code>&lt;align&gt;</code>: Alignment in bytes (<code>4</code> for APKs).</li>
 <li><code>&lt;infile.apk&gt;</code>: Input APK.</li>
 <li><code>&lt;outfile.apk&gt;</code>: Output APK (when not using <code>-c</code>).</li>
 </ul>
@@ -1313,8 +1313,8 @@ zipalign -c [-p] [-v] &lt;align&gt; &lt;infile.apk&gt;
 </code></pre>
 <h2 id="correct-workflow-order">Correct workflow order</h2>
 <pre><code>1. apktool b decompiled/ -o rebuilt.apk
-2. zipalign -v -p 4 rebuilt.apk rebuilt_aligned.apk   ← FIRST
-3. apksigner sign --ks key.keystore rebuilt_aligned.apk ← SECOND
+2. zipalign -v -p 4 rebuilt.apk rebuilt_aligned.apk
+3. apksigner sign --ks key.keystore rebuilt_aligned.apk
 </code></pre>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>

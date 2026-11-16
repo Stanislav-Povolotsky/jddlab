@@ -1286,11 +1286,26 @@ body { margin: 0; background: #ffffff; }
 <li><code>api</code>: start objection API server in headless mode.</li>
 <li><code>signapk</code>: zipalign and sign an APK with the objection key.</li>
 </ul>
+<h2 id="frida-gadget">Frida gadget</h2>
+<p><code>patchapk</code> injects the Frida gadget baked into the image, without downloading it:
+the latest 17.x for <code>objection</code>, 16.1.3 for <code>objection@16</code> (old Android versions).
+<code>--gadget-version &lt;ver&gt;</code> uses the baked gadget when that version is baked in and
+downloads it otherwise; <code>JDDLAB_FRIDA_ONLINE=1</code> restores the original behaviour
+(download the latest gadget from GitHub). Without <code>-a &lt;abi&gt;</code> the architecture is
+read from the connected device with <code>adb</code>.</p>
 <h2 id="examples">Examples</h2>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;patchapk&quot;,&quot;--source&quot;,&quot;app.apk&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;],&quot;output_paths&quot;:[&quot;app.objection.apk&quot;]}
+<pre><code class="language-json">{&quot;args&quot;:[&quot;patchapk&quot;,&quot;--source&quot;,&quot;app.apk&quot;,&quot;-a&quot;,&quot;arm64-v8a&quot;],&quot;input_paths&quot;:[&quot;app.apk&quot;],&quot;output_paths&quot;:[&quot;app.objection.apk&quot;]}
 </code></pre>
-<pre><code class="language-json">{&quot;args&quot;:[&quot;-g&quot;,&quot;Gadget&quot;,&quot;explore&quot;,&quot;-s&quot;,&quot;android sslpinning disable&quot;],&quot;extra_mounts&quot;:[{&quot;host&quot;:&quot;~/.android&quot;,&quot;container&quot;:&quot;/root/.android&quot;,&quot;mode&quot;:&quot;rw&quot;}],&quot;timeout_seconds&quot;:3600}
+<p><code>explore</code> is an interactive REPL. Through MCP run single commands with <code>run</code> (the
+gadget-injected app must be running; the device is reached through the host ADB
+server, see <code>adb.md</code>):</p>
+<pre><code class="language-json">{&quot;args&quot;:[&quot;-n&quot;,&quot;Gadget&quot;,&quot;run&quot;,&quot;android hooking list activities&quot;],&quot;timeout_seconds&quot;:120}
 </code></pre>
+<p><code>run</code> unloads its agent right after the command, so hooks it installs (for example
+<code>android sslpinning disable</code>) don't stay active. Keep them with an interactive
+<code>explore</code> session, or load a script with <code>frida -U -n Gadget -l &lt;script&gt; -q -t &lt;seconds&gt;</code>.</p>
+<p><code>patchapk</code> adds the INTERNET permission the gadget needs to listen for clients.
+<code>objection@16</code> uses <code>-g Gadget</code> instead of <code>-n Gadget</code>.</p>
 <h2 id="mcp-wrapper-arguments">MCP wrapper arguments</h2>
 <p>Every MCP wrapper for this command accepts:</p>
 <ul>
